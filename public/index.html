@@ -666,11 +666,9 @@ function pixCRC(str) {
   return h;
 }
 function gerarPix(valor) {
-  var p = pixF('00','01') + pixF('26', pixF('00','BR.GOV.BCB.PIX') + pixF('01',PIX_CHAVE)) + pixF('52','0000') + pixF('53','986') + pixF('54',parseFloat(valor).toFixed(2)) + pixF('58','BR') + pixF('59',PIX_NOME.substring(0,25)) + pixF('60',PIX_CIDADE.substring(0,15)) + pixF('62',pixF('05','SXQR')) + '6304';
-  var cod = p + pixCRC(p);
-  window._pixCod = cod;
+  window._pixCod = PIX_CHAVE;
   var el = document.getElementById('pix-codigo');
-  if (el) el.textContent = cod;
+  if (el) el.textContent = PIX_CHAVE;
 }
 function copiarPix() {
   if (!window._pixCod) { showToast('Selecione itens primeiro!'); return; }
