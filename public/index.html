@@ -615,16 +615,13 @@ function setPay(t, el) {
 
 // BAIRROS
 function normB(b) {
-  var map = {'A':['a','\u00e1','\u00e0','\u00e3','\u00e2'],'E':['e','\u00e9','\u00e8','\u00ea'],'I':['i','\u00ed','\u00ec'],'O':['o','\u00f3','\u00f2','\u00f5','\u00f4'],'U':['u','\u00fa','\u00f9'],'C':['c','\u00e7']};
-  var r = b.toUpperCase();
-  var keys = Object.keys(map);
-  for (var k=0; k<keys.length; k++) {
-    var key = keys[k];
-    for (var v=0; v<map[key].length; v++) {
-      while (r.indexOf(map[key][v].toUpperCase()) >= 0) r = r.replace(map[key][v].toUpperCase(), key);
-      while (r.indexOf(map[key][v]) >= 0) r = r.replace(map[key][v], key);
-    }
-  }
+  var r = b.toUpperCase()
+    .replace(/[ÁÀÃÂáàãâ]/g,'A')
+    .replace(/[ÉÈÊéèê]/g,'E')
+    .replace(/[ÍÌíì]/g,'I')
+    .replace(/[ÓÒÕÔóòõô]/g,'O')
+    .replace(/[ÚÙúù]/g,'U')
+    .replace(/[Çç]/g,'C');
   return r.replace(/[^A-Z0-9 ]/g,'').trim();
 }
 
