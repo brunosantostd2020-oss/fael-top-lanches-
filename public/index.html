@@ -610,11 +610,12 @@ function renderProducts(cat) {
   if (!items.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhum produto nesta categoria</p>'; return; }
   for (var i=0; i<items.length; i++) {
     var pr = items[i];
+    var cleanDesc = (pr.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim();
     html += '<div class="pc">';
     html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
     html += '<div class="pinfo">';
     html += '<div class="pname">' + pr.name + '</div>';
-    html += '<div class="pdesc">' + (pr.description||'') + '</div>';
+    html += '<div class="pdesc">' + cleanDesc + '</div>';
     html += '<div class="pfooter">';
     html += '<div class="pprice">R$ ' + parseFloat(pr.price).toFixed(2).replace('.',',') + '</div>';
     html += '<button class="abtn" onclick="addCart(' + pr.id + ')" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
