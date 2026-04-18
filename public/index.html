@@ -1108,46 +1108,32 @@ function playNotificationSound() {
   
   try {
     var audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    var oscillator = audioContext.createOscillator();
-    var gainNode = audioContext.createGain();
+    var masterGain = audioContext.createGain();
+    masterGain.connect(audioContext.destination);
+    masterGain.gain.value = 0.4;
     
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    function beep(freq, startTime, duration, gain) {
+      var osc = audioContext.createOscillator();
+      var oscGain = audioContext.createGain();
+      osc.connect(oscGain);
+      oscGain.connect(masterGain);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      oscGain.gain.setValueAtTime(gain, startTime);
+      oscGain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    }
     
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
+    var t = audioContext.currentTime;
     
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
-    
-    setTimeout(function() {
-      var osc2 = audioContext.createOscillator();
-      var gain2 = audioContext.createGain();
-      osc2.connect(gain2);
-      gain2.connect(audioContext.destination);
-      osc2.frequency.value = 600;
-      osc2.type = 'sine';
-      gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      osc2.start(audioContext.currentTime);
-      osc2.stop(audioContext.currentTime + 0.5);
-    }, 200);
-    
-    setTimeout(function() {
-      var osc3 = audioContext.createOscillator();
-      var gain3 = audioContext.createGain();
-      osc3.connect(gain3);
-      gain3.connect(audioContext.destination);
-      osc3.frequency.value = 800;
-      osc3.type = 'sine';
-      gain3.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gain3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      osc3.start(audioContext.currentTime);
-      osc3.stop(audioContext.currentTime + 0.5);
-    }, 400);
+    // PADRÃO: "ATENÇÃO - NOVO PEDIDO" repetido (15 segundos)
+    beep(800, t + 0.0, 0.3, 0.5); beep(800, t + 0.35, 0.3, 0.5); beep(1000, t + 0.7, 0.6, 0.6);
+    beep(600, t + 2.0, 0.25, 0.4); beep(700, t + 2.3, 0.25, 0.4); beep(800, t + 2.6, 0.25, 0.4); beep(900, t + 2.9, 0.5, 0.5);
+    beep(800, t + 5.0, 0.3, 0.5); beep(800, t + 5.35, 0.3, 0.5); beep(1000, t + 5.7, 0.6, 0.6);
+    beep(600, t + 7.0, 0.25, 0.4); beep(700, t + 7.3, 0.25, 0.4); beep(800, t + 7.6, 0.25, 0.4); beep(900, t + 7.9, 0.5, 0.5);
+    beep(1000, t + 10.0, 0.2, 0.6); beep(1000, t + 10.25, 0.2, 0.6); beep(1000, t + 10.5, 0.2, 0.6); beep(1200, t + 10.8, 0.4, 0.7);
+    beep(800, t + 12.0, 0.3, 0.5); beep(900, t + 12.4, 0.3, 0.5); beep(1000, t + 12.8, 0.3, 0.5); beep(1100, t + 13.2, 0.3, 0.6); beep(1200, t + 13.6, 1.0, 0.7);
   } catch(e) {
     console.log('Erro ao tocar som:', e);
   }
