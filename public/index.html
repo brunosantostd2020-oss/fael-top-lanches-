@@ -248,13 +248,32 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
               <div class="po" onclick="setPay('credito',this)"><span class="pyi">&#128179;</span>Credito</div>
               <div class="po" onclick="setPay('debito',this)"><span class="pyi">&#127974;</span>Debito</div>
             </div>
-            <div id="pix-info" style="display:none;margin-top:9px">
-              <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:12px;text-align:center">
-                <div style="font-size:.85rem;font-weight:900;color:#15803d;margin-bottom:8px">PAGAMENTO VIA PIX</div>
-                <div style="font-size:.75rem;font-weight:800;color:#555;margin-bottom:4px">Chave PIX (Copia e Cola):</div>
-                <div id="pix-codigo" style="background:#fff;border:2px dashed #22c55e;border-radius:8px;padding:8px;font-family:monospace;font-size:.6rem;word-break:break-all;color:#333;text-align:left"></div>
-                <button onclick="copiarPix()" style="margin-top:8px;background:#22c55e;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-weight:800;font-size:.82rem;cursor:pointer;width:100%">Copiar Codigo PIX</button>
-                <div style="font-size:.72rem;color:#888;margin-top:8px">Apos pagar envie o comprovante pelo WhatsApp!</div>
+            <div id="pix-info" style="display:none;margin-top:12px">
+              <div style="background:linear-gradient(135deg,#00B09B,#96C93D);border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(0,176,155,0.2)">
+                <div style="text-align:center;margin-bottom:16px">
+                  <div style="font-size:2.5rem;margin-bottom:8px">💳</div>
+                  <div style="font-size:1.1rem;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,0.2)">Pagamento via PIX</div>
+                  <div style="font-size:.78rem;color:#e0f7ed;margin-top:4px">Rápido, seguro e sem taxas</div>
+                </div>
+                <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.1)">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                    <div style="width:32px;height:32px;background:linear-gradient(135deg,#00B09B,#96C93D);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">📋</div>
+                    <div style="font-size:.85rem;font-weight:800;color:#333">Chave PIX (Copia e Cola)</div>
+                  </div>
+                  <div id="pix-codigo" style="background:#f8f9fa;border:2px solid #e9ecef;border-radius:10px;padding:14px;font-family:'Courier New',monospace;font-size:.68rem;word-break:break-all;color:#495057;line-height:1.6;max-height:120px;overflow-y:auto"></div>
+                  <button onclick="copiarPix()" style="margin-top:12px;background:linear-gradient(135deg,#00B09B,#96C93D);color:#fff;border:none;padding:14px 20px;border-radius:10px;font-weight:900;font-size:.88rem;cursor:pointer;width:100%;box-shadow:0 4px 12px rgba(0,176,155,0.3);transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(0,176,155,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(0,176,155,0.3)'">
+                    <span style="margin-right:8px">📋</span>COPIAR CÓDIGO PIX
+                  </button>
+                </div>
+                <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:12px;margin-top:12px;backdrop-filter:blur(10px)">
+                  <div style="display:flex;align-items:start;gap:10px">
+                    <div style="font-size:1.3rem;flex-shrink:0">💬</div>
+                    <div>
+                      <div style="font-size:.82rem;font-weight:800;color:#fff;margin-bottom:4px">Importante:</div>
+                      <div style="font-size:.76rem;color:#e0f7ed;line-height:1.5">Após efetuar o pagamento, envie o comprovante pelo WhatsApp para confirmar seu pedido!</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div id="troco-f" style="display:none;margin-top:9px">
@@ -510,8 +529,7 @@ function renderProducts(cat) {
     var tams = [
       {cod:'G',label:'G - Grande',preco:65},
       {cod:'GG',label:'GG - Especial',preco:75},
-      {cod:'GGG',label:'GGG - Gigante',preco:90},
-      {cod:'MODA',label:'Moda do Fael',preco:95}
+      {cod:'GGG',label:'GGG - Gigante',preco:90}
     ];
     for (var t=0; t<tams.length; t++) {
       var tam = tams[t];
@@ -1117,11 +1135,10 @@ function buildPM() {
       '<div class="fg"><label>Preco (R$)</label><input id="pf-price" type="number" step="0.50" min="0" placeholder="0.00"></div></div>' +
       '<div id="pizza-tam-box" style="display:none;background:#fff8f0;border:2px solid var(--y);border-radius:12px;padding:1rem;margin-bottom:12px">' +
       '<div style="font-weight:900;font-size:.9rem;color:var(--yd);margin-bottom:10px">Precos por Tamanho de Pizza</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">' +
       '<div class="fg"><label style="background:var(--r);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">G - Grande</label><input id="pf-pg" type="number" step="0.50" min="0" placeholder="65.00"></div>' +
       '<div class="fg"><label style="background:#7C3AED;color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">GG - Especial</label><input id="pf-pgg" type="number" step="0.50" min="0" placeholder="75.00"></div>' +
       '<div class="fg"><label style="background:var(--bk);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">GGG - Gigante</label><input id="pf-pggg" type="number" step="0.50" min="0" placeholder="90.00"></div>' +
-      '<div class="fg"><label style="background:#F7B731;color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">Moda do Fael</label><input id="pf-pmoda" type="number" step="0.50" min="0" placeholder="95.00"></div>' +
       '</div></div>' +
       '<div class="fg" style="margin-bottom:12px"><label>Descricao</label><input id="pf-desc" placeholder="Ingredientes..."></div>' +
       '<button class="fsub" onclick="saveProd()">Salvar</button><button class="fcancel" onclick="closePF()">Cancelar</button>' +
@@ -1130,7 +1147,7 @@ function buildPM() {
 }
 
 function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=c==='pizzas'?'block':'none'; }
-function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; document.getElementById('pf-desc').value=p.description||''; togPizza();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg','pf-pmoda'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
+function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; document.getElementById('pf-desc').value=p.description||''; togPizza();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
 function editProd(id){ showPF(id); }
 function delProd(id){ if(!confirm('Confirmar?'))return; api('DELETE','/products/'+id,null,true).then(function(){showToast('Produto atualizado!');aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);}); }
 function closePF(){ var b=document.getElementById('prod-form-box'); if(b)b.style.display='none'; editProdId=null; }
