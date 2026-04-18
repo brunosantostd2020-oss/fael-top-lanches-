@@ -645,11 +645,16 @@ function filterBebidas(tipo) {
   window.currentBebidasFilter = tipo;
   var bebidas = window.allBebidasProducts || [];
   
-  // Filtrar por tipo (baseado na descrição ou nome do produto)
+  // Filtrar por tipo (baseado nas tags ou descrição/nome do produto)
   var filtered = bebidas;
   if (tipo !== 'todas') {
     filtered = bebidas.filter(function(b) {
       var texto = (b.name + ' ' + (b.description||'')).toLowerCase();
+      // Primeiro verificar se tem tag
+      if (tipo === 'refrigerante' && texto.includes('##refri##')) return true;
+      if (tipo === 'suco-leite' && texto.includes('##suco-leite##')) return true;
+      if (tipo === 'suco-agua' && texto.includes('##suco-agua##')) return true;
+      // Se não tem tag, verificar por palavras-chave
       if (tipo === 'refrigerante') {
         return texto.includes('refrigerante') || texto.includes('refri') || texto.includes('coca') || texto.includes('pepsi') || texto.includes('guaraná') || texto.includes('fanta') || texto.includes('sprite');
       } else if (tipo === 'suco-leite') {
@@ -667,11 +672,12 @@ function filterBebidas(tipo) {
   } else {
     for (var i=0; i<filtered.length; i++) {
       var pr = filtered[i];
+      var cleanDesc = (pr.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim();
       html += '<div class="pc">';
       html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
       html += '<div class="pinfo">';
       html += '<div class="pname">' + pr.name + '</div>';
-      html += '<div class="pdesc">' + (pr.description||'') + '</div>';
+      html += '<div class="pdesc">' + cleanDesc + '</div>';
       html += '<div class="pfooter">';
       html += '<div class="pprice">R$ ' + parseFloat(pr.price).toFixed(2).replace('.',',') + '</div>';
       html += '<button class="abtn" onclick="addCart(' + pr.id + ')" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
@@ -1260,8 +1266,18 @@ function buildPM() {
       '<div id="prod-form-box" style="display:none" class="form-box">' +
       '<h3 id="pf-title">Novo Produto</h3>' +
       '<div class="frow"><div class="fg"><label>Emoji</label><input id="pf-emoji" placeholder="&#127828;" maxlength="4"></div><div class="fg"><label>Nome</label><input id="pf-name" placeholder="X-Burguer"></div></div>' +
-      '<div class="frow"><div class="fg"><label>Categoria</label><select id="pf-cat" onchange="togPizza()"><option value="lanches">Lanches</option><option value="pizzas">Pizzas</option><option value="omelete">Omelete</option><option value="cachorro_quente">Cachorro Quente</option><option value="bebidas">Bebidas</option><option value="porcoes">Porcoes</option></select></div>' +
+      '<div class="frow"><div class="fg"><label>Categoria</label><select id="pf-cat" onchange="togPizza();togBebida()"><option value="lanches">Lanches</option><option value="pizzas">Pizzas</option><option value="omelete">Omelete</option><option value="cachorro_quente">Cachorro Quente</option><option value="bebidas">Bebidas</option><option value="porcoes">Porcoes</option></select></div>' +
       '<div class="fg"><label>Preco (R$)</label><input id="pf-price" type="number" step="0.50" min="0" placeholder="0.00"></div></div>' +
+      '<div id="bebida-subcat-box" style="display:none;background:#e3f2fd;border:2px solid #2196F3;border-radius:12px;padding:1rem;margin-bottom:12px">' +
+      '<div style="font-weight:900;font-size:.9rem;color:#1976D2;margin-bottom:10px">📌 Subcategoria da Bebida</div>' +
+      '<div style="font-size:.75rem;color:#555;margin-bottom:10px">Para facilitar a busca dos clientes, classifique a bebida:</div>' +
+      '<select id="pf-bebida-subcat" style="width:100%;padding:10px;border:2px solid #2196F3;border-radius:8px;font-size:.9rem;font-weight:600">' +
+      '<option value="">Nenhuma (aparece em Todas)</option>' +
+      '<option value="refrigerante">🥤 Refrigerante (Coca, Pepsi, Guaraná, etc)</option>' +
+      '<option value="suco-leite">🥛 Suco ao Leite (Vitaminas, Milk Shakes)</option>' +
+      '<option value="suco-agua">🧃 Suco à Água (Sucos Naturais)</option>' +
+      '</select>' +
+      '</div>' +
       '<div id="pizza-tam-box" style="display:none;background:#fff8f0;border:2px solid var(--y);border-radius:12px;padding:1rem;margin-bottom:12px">' +
       '<div style="font-weight:900;font-size:.9rem;color:var(--yd);margin-bottom:10px">Precos por Tamanho de Pizza</div>' +
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">' +
@@ -1276,7 +1292,8 @@ function buildPM() {
 }
 
 function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=c==='pizzas'?'block':'none'; }
-function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; document.getElementById('pf-desc').value=p.description||''; togPizza();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
+function togBebida(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('bebida-subcat-box'); if(b) b.style.display=c==='bebidas'?'block':'none'; }
+function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; var cleanDesc=(p.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim(); document.getElementById('pf-desc').value=cleanDesc; var subcatField=document.getElementById('pf-bebida-subcat'); if(subcatField&&p.description){var desc=p.description.toLowerCase();if(desc.includes('##refri##'))subcatField.value='refrigerante';else if(desc.includes('##suco-leite##'))subcatField.value='suco-leite';else if(desc.includes('##suco-agua##'))subcatField.value='suco-agua';else subcatField.value='';} togPizza();togBebida();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var sc=document.getElementById('pf-bebida-subcat');if(sc)sc.value='';var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();togBebida();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
 function editProd(id){ showPF(id); }
 function delProd(id){ if(!confirm('Confirmar?'))return; api('DELETE','/products/'+id,null,true).then(function(){showToast('Produto atualizado!');aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);}); }
 function closePF(){ var b=document.getElementById('prod-form-box'); if(b)b.style.display='none'; editProdId=null; }
@@ -1285,6 +1302,18 @@ function saveProd(){
   var name=document.getElementById('pf-name').value.trim();
   var category=document.getElementById('pf-cat').value;
   var description=document.getElementById('pf-desc').value.trim();
+  
+  // Se for bebida, adicionar tag de subcategoria na descrição
+  if(category==='bebidas'){
+    var subcat=document.getElementById('pf-bebida-subcat').value;
+    // Remover tags antigas primeiro
+    description=description.replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim();
+    // Adicionar nova tag se houver subcategoria
+    if(subcat==='refrigerante') description+=' ##refri##';
+    else if(subcat==='suco-leite') description+=' ##suco-leite##';
+    else if(subcat==='suco-agua') description+=' ##suco-agua##';
+  }
+  
   if(!name){showToast('Informe o nome!');return;}
   if(category==='pizzas'){
     var pg=parseFloat(document.getElementById('pf-pg').value)||0;
