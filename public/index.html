@@ -507,7 +507,12 @@ function renderProducts(cat) {
   if (cat === 'pizzas_tam') {
     var pizzas = allProducts.filter(function(p) { return p.category === 'pizzas' && p.active; });
     if (!pizzas.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma pizza cadastrada</p>'; return; }
-    var tams = [{cod:'G',label:'G - Grande',preco:65},{cod:'GG',label:'GG - Especial',preco:75},{cod:'GGG',label:'GGG - Gigante',preco:90}];
+    var tams = [
+      {cod:'G',label:'G - Grande',preco:65},
+      {cod:'GG',label:'GG - Especial',preco:75},
+      {cod:'GGG',label:'GGG - Gigante',preco:90},
+      {cod:'MODA',label:'Moda do Fael',preco:95}
+    ];
     for (var t=0; t<tams.length; t++) {
       var tam = tams[t];
       html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);overflow:hidden;margin-bottom:1.2rem">';
@@ -1112,10 +1117,11 @@ function buildPM() {
       '<div class="fg"><label>Preco (R$)</label><input id="pf-price" type="number" step="0.50" min="0" placeholder="0.00"></div></div>' +
       '<div id="pizza-tam-box" style="display:none;background:#fff8f0;border:2px solid var(--y);border-radius:12px;padding:1rem;margin-bottom:12px">' +
       '<div style="font-weight:900;font-size:.9rem;color:var(--yd);margin-bottom:10px">Precos por Tamanho de Pizza</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">' +
+      '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">' +
       '<div class="fg"><label style="background:var(--r);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">G - Grande</label><input id="pf-pg" type="number" step="0.50" min="0" placeholder="65.00"></div>' +
       '<div class="fg"><label style="background:#7C3AED;color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">GG - Especial</label><input id="pf-pgg" type="number" step="0.50" min="0" placeholder="75.00"></div>' +
       '<div class="fg"><label style="background:var(--bk);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">GGG - Gigante</label><input id="pf-pggg" type="number" step="0.50" min="0" placeholder="90.00"></div>' +
+      '<div class="fg"><label style="background:#F7B731;color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">Moda do Fael</label><input id="pf-pmoda" type="number" step="0.50" min="0" placeholder="95.00"></div>' +
       '</div></div>' +
       '<div class="fg" style="margin-bottom:12px"><label>Descricao</label><input id="pf-desc" placeholder="Ingredientes..."></div>' +
       '<button class="fsub" onclick="saveProd()">Salvar</button><button class="fcancel" onclick="closePF()">Cancelar</button>' +
@@ -1124,7 +1130,7 @@ function buildPM() {
 }
 
 function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=c==='pizzas'?'block':'none'; }
-function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; document.getElementById('pf-desc').value=p.description||''; togPizza();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
+function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; document.getElementById('pf-desc').value=p.description||''; togPizza();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg','pf-pmoda'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
 function editProd(id){ showPF(id); }
 function delProd(id){ if(!confirm('Confirmar?'))return; api('DELETE','/products/'+id,null,true).then(function(){showToast('Produto atualizado!');aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);}); }
 function closePF(){ var b=document.getElementById('prod-form-box'); if(b)b.style.display='none'; editProdId=null; }
@@ -1220,12 +1226,16 @@ function setStatusManual(status){
 }
 
 function loadStatusManual(){
-  api('GET','/auth/settings',null,false)
-    .then(function(cfg) {
-      statusManualCache = cfg.manual_status || 'auto';
+  api('GET','/auth/status',null,false)
+    .then(function(data) {
+      statusManualCache = data.manual_status || 'auto';
       updateStatus();
     })
-    .catch(function(e){ console.log('Erro ao carregar status:', e); });
+    .catch(function(e){ 
+      console.log('Erro ao carregar status:', e);
+      statusManualCache = 'auto';
+      updateStatus();
+    });
 }
 function saveConfig(key, value){
   api('PUT', '/auth/settings/'+key, {value:value}, true)
@@ -1310,6 +1320,30 @@ function buildCfg() {
       html += '</div>';
       html += '<div style="margin-top:12px;font-size:.75rem;color:#888;text-align:center">O som toca e/ou a impressão acontece automaticamente quando um novo pedido é recebido</div>';
       html += '</div>';
+      // Reset de Pedidos
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.2rem">';
+      html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem;color:#EF4444">⚠️ Zona Perigosa</h3>';
+      html += '<div style="background:#fff5f5;border:2px solid #EF4444;border-radius:12px;padding:1.2rem;margin-bottom:1rem">';
+      html += '<div style="text-align:center;margin-bottom:1rem">';
+      html += '<div style="font-size:3rem;margin-bottom:8px">🗑️</div>';
+      html += '<div style="font-weight:900;font-size:1.1rem;color:#991b1b;margin-bottom:6px">Reset de Pedidos e Faturamento</div>';
+      html += '<div style="font-size:.85rem;color:#666;line-height:1.6">Esta ação irá DELETAR PERMANENTEMENTE todos os pedidos e zerar o faturamento. Use apenas para começar um novo período do zero.</div>';
+      html += '</div>';
+      html += '<div style="background:#fff;border-radius:10px;padding:1rem;margin-bottom:1rem;border:2px solid #FEE2E2">';
+      html += '<div style="font-size:.82rem;color:#991b1b;font-weight:700;margin-bottom:8px">⚠️ Esta ação NÃO pode ser desfeita!</div>';
+      html += '<ul style="font-size:.78rem;color:#666;padding-left:1.2rem;line-height:1.8">';
+      html += '<li>Todos os pedidos serão deletados</li>';
+      html += '<li>Histórico de faturamento será zerado</li>';
+      html += '<li>Contadores voltam para #001</li>';
+      html += '<li>Estatísticas serão perdidas</li>';
+      html += '</ul>';
+      html += '</div>';
+      html += '<div style="display:flex;gap:8px;align-items:center">';
+      html += '<input type="text" id="confirm-reset" placeholder="Digite RESETAR para confirmar" style="flex:1;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:.88rem;outline:none;text-transform:uppercase">';
+      html += '<button onclick="resetAllOrders()" style="background:#EF4444;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:900;font-size:.88rem;cursor:pointer;white-space:nowrap">RESETAR TUDO</button>';
+      html += '</div>';
+      html += '<div style="margin-top:8px;font-size:.72rem;color:#888;text-align:center">Digite exatamente "RESETAR" (sem aspas) e clique no botão</div>';
+      html += '</div></div>';
       // Sair
       html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem"><button style="background:#EF4444;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:800;font-size:.85rem;cursor:pointer" onclick="logout()">Sair do Admin</button></div>';
       return html;
@@ -1342,6 +1376,29 @@ function toggleAutoPrint(enabled) {
   showToast(enabled ? 'Impressão automática ATIVADA! 🖨️' : 'Impressão automática DESATIVADA');
   var label = document.querySelector('#cfg-autoprint + span');
   if (label) label.textContent = enabled ? 'Ativado' : 'Desativado';
+}
+
+function resetAllOrders() {
+  var confirmText = document.getElementById('confirm-reset');
+  if (!confirmText || confirmText.value.toUpperCase() !== 'RESETAR') {
+    showToast('Digite RESETAR para confirmar!');
+    return;
+  }
+  
+  if (!confirm('TEM CERTEZA ABSOLUTA? Esta ação é IRREVERSÍVEL!\n\n- Todos os pedidos serão deletados\n- Faturamento será zerado\n- Histórico será perdido\n\nDeseja continuar?')) {
+    return;
+  }
+  
+  api('DELETE', '/orders/reset-all', null, true)
+    .then(function() {
+      confirmText.value = '';
+      showToast('✅ Todos os pedidos e faturamento foram resetados!');
+      loadAdmStats();
+      loadAdmContent(curATab);
+    })
+    .catch(function(e) {
+      showToast('Erro ao resetar: ' + e.message);
+    });
 }
 
 function logout(){ adminToken=null; localStorage.removeItem('fael_token'); showPage('cardapio'); showToast('Saiu do Admin'); }
