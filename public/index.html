@@ -549,6 +549,27 @@ function renderProducts(cat) {
       }
       html += '</div></div>';
     }
+    
+    // PIZZA ESPECIAL - MODA DO FAEL
+    html += '<div style="background:#fff;border-radius:14px;box-shadow:0 6px 30px rgba(247,183,49,0.3);overflow:hidden;margin-bottom:1.2rem;border:3px solid var(--y)">';
+    html += '<div style="background:linear-gradient(135deg,#F7B731,#E59E00);color:#fff;padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
+    html += '<span style="font-size:2rem">👑</span>';
+    html += '<span style="font-family:Impact,sans-serif;font-size:1.4rem;text-shadow:2px 2px 4px rgba(0,0,0,0.3)">PIZZA MODA DO FAEL</span>';
+    html += '</div>';
+    html += '<span style="background:rgba(0,0,0,0.3);padding:6px 18px;border-radius:25px;font-weight:900;font-size:1.1rem;backdrop-filter:blur(10px)">R$ 95,00</span>';
+    html += '</div>';
+    html += '<div style="background:linear-gradient(to bottom,#fffbf0,#fff);padding:1.5rem">';
+    html += '<div style="display:flex;align-items:center;gap:16px;background:#fff;border:2px solid var(--y);border-radius:12px;padding:1.2rem;box-shadow:0 4px 12px rgba(247,183,49,0.15)">';
+    html += '<span style="font-size:50px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1))">🍕</span>';
+    html += '<div style="flex:1">';
+    html += '<div style="font-weight:900;font-size:1.1rem;margin-bottom:8px;color:var(--yd)">Pizza Exclusiva</div>';
+    html += '<div style="font-size:.88rem;color:#666;line-height:1.6;margin-bottom:10px">Frango, Catupiry, Cheddar, Bacon, Calabresa, Milho, Tomate, Azeitona, Cebola</div>';
+    html += '<div style="display:inline-block;background:#FFF3CD;border:2px solid var(--y);border-radius:20px;padding:4px 12px;font-size:.75rem;font-weight:800;color:var(--yd)">⭐ ESPECIALIDADE DA CASA</div>';
+    html += '</div>';
+    html += '<button class="abtn" style="font-size:.85rem;padding:12px 20px;background:var(--y);color:#fff;font-weight:900" onclick="addCartModaFael()" ' + (op?'':'disabled') + '>' + (op?'+ PEDIR AGORA':'Fechado') + '</button>';
+    html += '</div></div></div>';
+    
     g.innerHTML = html;
     return;
   }
@@ -605,6 +626,22 @@ function addCartTam(id, tam, preco) {
   cart.push({id:p.id, cartId:cid, name:p.name+' ('+tam+')', price:preco, qty:1, emoji:p.emoji, acrescimos:[]});
   updateBadge();
   showToast((p.emoji||'') + ' ' + p.name + ' (' + tam + ') adicionada!');
+}
+
+function addCartModaFael() {
+  if (!isOpen()) { showToast('Estamos fechados!'); return; }
+  var cid = 'moda_fael_' + Date.now();
+  cart.push({
+    id: 'moda_fael', 
+    cartId: cid, 
+    name: 'Pizza Moda do Fael', 
+    price: 95, 
+    qty: 1, 
+    emoji: '👑', 
+    acrescimos: []
+  });
+  updateBadge();
+  showToast('👑 Pizza Moda do Fael adicionada!');
 }
 
 function abrirModalAcr(prodId) {
@@ -1235,17 +1272,24 @@ function setStatusManual(status){
     .then(function() {
       statusManualCache = status;
       updateStatus();
-      var msgs = {aberto:'Lanche ABERTO manualmente!', fechado:'Lanche FECHADO manualmente!', auto:'Voltou ao horario automatico!'};
+      // Forçar reload do status para garantir sincronização
+      setTimeout(function(){ loadStatusManual(); }, 500);
+      var msgs = {aberto:'✅ Lanchonete ABERTA! Pedidos liberados!', fechado:'🔴 Lanchonete FECHADA! Pedidos bloqueados!', auto:'🔄 Modo AUTOMÁTICO ativado!'};
       showToast(msgs[status]||'OK');
       aTab('config', document.querySelector('.atab[onclick*="config"]'));
     })
-    .catch(function(e){ showToast('Erro: '+e.message); });
+    .catch(function(e){ 
+      showToast('❌ Erro ao alterar status: ' + e.message);
+      console.error('Erro setStatusManual:', e);
+    });
 }
 
 function loadStatusManual(){
   api('GET','/auth/status',null,false)
     .then(function(data) {
+      console.log('Status recebido do servidor:', data);
       statusManualCache = data.manual_status || 'auto';
+      console.log('Status cache atualizado:', statusManualCache);
       updateStatus();
     })
     .catch(function(e){ 
