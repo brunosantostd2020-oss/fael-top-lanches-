@@ -65,6 +65,17 @@ router.get('/settings', requireAdmin, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// GET manual status (public - sem autenticação)
+router.get('/status', async (req, res) => {
+  try {
+    const result = await pool.query("SELECT value FROM settings WHERE key = 'manual_status'");
+    const manual_status = result.rows.length ? result.rows[0].value : 'auto';
+    res.json({ manual_status });
+  } catch(e) { 
+    res.json({ manual_status: 'auto' }); 
+  }
+});
+
 // PUT update setting (admin)
 router.put('/settings/:key', requireAdmin, async (req, res) => {
   const { value } = req.body;

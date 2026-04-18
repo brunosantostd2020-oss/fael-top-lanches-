@@ -108,6 +108,7 @@ async function initDB() {
       ['pix_chave', 'cb91d867-3309-4ffb-a028-b5d3925ff0e9'],
       ['pix_nome', 'RAPHAEL GONZAGA CORDEIRO'],
       ['pix_cidade', 'BRASILIA'],
+      ['manual_status', 'auto'],
     ];
     for (const [key, val] of configKeys) {
       const exists = await client.query("SELECT value FROM settings WHERE key=$1", [key]);

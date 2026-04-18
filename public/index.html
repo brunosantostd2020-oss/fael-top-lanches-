@@ -1390,8 +1390,10 @@ var statusManualCache = 'auto';
 function getStatusManual(){ return statusManualCache; }
 
 function setStatusManual(status){
+  console.log('Setando status manual para:', status);
   api('PUT', '/auth/settings/manual_status', {value:status}, true)
-    .then(function() {
+    .then(function(response) {
+      console.log('Status salvo com sucesso:', response);
       statusManualCache = status;
       updateStatus();
       // Forçar reload do status para garantir sincronização
@@ -1401,6 +1403,7 @@ function setStatusManual(status){
       aTab('config', document.querySelector('.atab[onclick*="config"]'));
     })
     .catch(function(e){ 
+      console.error('Erro completo:', e);
       showToast('❌ Erro ao alterar status: ' + e.message);
       console.error('Erro setStatusManual:', e);
     });

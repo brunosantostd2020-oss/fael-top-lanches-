@@ -126,4 +126,22 @@ router.get('/stats/summary', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// DELETE reset all orders (admin only - DANGER!)
+router.delete('/reset-all', requireAdmin, async (req, res) => {
+  try {
+    // Delete all order items first (foreign key constraint)
+    await pool.query("DELETE FROM order_items");
+    // Delete all orders
+    await pool.query("DELETE FROM orders");
+    // Reset the sequence to start from 1 again
+    await pool.query("ALTER SEQUENCE orders_id_seq RESTART WITH 1");
+    res.json({ 
+      success: true, 
+      message: 'Todos os pedidos e faturamento foram resetados com sucesso!' 
+    });
+  } catch (e) { 
+    res.status(500).json({ error: e.message }); 
+  }
+});
+
 module.exports = router;
