@@ -442,7 +442,7 @@ function api(method, path, body, auth) {
 }
 
 function isOpen() {
-  var manual = localStorage.getItem('fael_status_manual');
+  var manual = statusManualCache;
   if (manual === 'aberto') return true;
   if (manual === 'fechado') return false;
   var n = new Date(), d = n.getDay(), m = n.getHours()*60 + n.getMinutes();
@@ -556,8 +556,22 @@ function filterCat(cat, el) {
 // ACRESCIMOS
 function addCart(id) {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
-  if (allAcrescimos.length > 0) { abrirModalAcr(id); }
-  else { addCartDireto(id, []); }
+  
+  // Buscar o produto para verificar a categoria
+  var p = allProducts.filter(function(x){return x.id===id;})[0];
+  if (!p) return;
+  
+  // Categorias que permitem acréscimos
+  var categoriasComAcrescimo = ['lanches', 'pizzas_tam', 'omelete', 'cachorro_quente', 'porcoes'];
+  
+  // Verificar se a categoria do produto permite acréscimos
+  var permiteAcrescimo = categoriasComAcrescimo.indexOf(p.category) >= 0;
+  
+  if (allAcrescimos.length > 0 && permiteAcrescimo) { 
+    abrirModalAcr(id); 
+  } else { 
+    addCartDireto(id, []); 
+  }
 }
 
 function addCartTam(id, tam, preco) {
@@ -1189,13 +1203,29 @@ function buildRev() {
 }
 
 // CONFIG ADMIN
-function getStatusManual(){ return localStorage.getItem('fael_status_manual')||'auto'; }
+var statusManualCache = 'auto';
+
+function getStatusManual(){ return statusManualCache; }
+
 function setStatusManual(status){
-  localStorage.setItem('fael_status_manual', status);
-  updateStatus();
-  var msgs = {aberto:'Lanche ABERTO manualmente!', fechado:'Lanche FECHADO manualmente!', auto:'Voltou ao horario automatico!'};
-  showToast(msgs[status]||'OK');
-  aTab('config', document.querySelector('.atab[onclick*="config"]'));
+  api('PUT', '/auth/settings/manual_status', {value:status}, true)
+    .then(function() {
+      statusManualCache = status;
+      updateStatus();
+      var msgs = {aberto:'Lanche ABERTO manualmente!', fechado:'Lanche FECHADO manualmente!', auto:'Voltou ao horario automatico!'};
+      showToast(msgs[status]||'OK');
+      aTab('config', document.querySelector('.atab[onclick*="config"]'));
+    })
+    .catch(function(e){ showToast('Erro: '+e.message); });
+}
+
+function loadStatusManual(){
+  api('GET','/auth/settings',null,false)
+    .then(function(cfg) {
+      statusManualCache = cfg.manual_status || 'auto';
+      updateStatus();
+    })
+    .catch(function(e){ console.log('Erro ao carregar status:', e); });
 }
 function saveConfig(key, value){
   api('PUT', '/auth/settings/'+key, {value:value}, true)
@@ -1338,8 +1368,10 @@ function showToast(msg) {
 loadProducts();
 loadAcrescimos();
 loadConfigs();
+loadStatusManual();
 updateStatus();
 setInterval(function(){ 
+  loadStatusManual();
   if(adminToken && document.getElementById('page-admin').classList.contains('active')) {
     loadAdmStats();
   } else if (adminToken) {
