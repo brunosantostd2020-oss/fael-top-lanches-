@@ -582,6 +582,30 @@ function renderProducts(cat) {
     g.innerHTML = html;
     return;
   }
+  
+  // BEBIDAS COM SUBCATEGORIAS
+  if (cat === 'bebidas') {
+    var bebidas = allProducts.filter(function(p) { return p.category === 'bebidas' && p.active; });
+    if (!bebidas.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma bebida cadastrada</p>'; return; }
+    
+    // Abas de subcategorias
+    html += '<div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center">';
+    html += '<button id="bebida-todas" class="bebida-tab" onclick="filterBebidas(\'todas\')" style="background:var(--r);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s">Todas</button>';
+    html += '<button id="bebida-refrigerante" class="bebida-tab" onclick="filterBebidas(\'refrigerante\')" style="background:#fff;color:var(--bk);border:2px solid #ddd;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s">🥤 Refrigerante</button>';
+    html += '<button id="bebida-suco-leite" class="bebida-tab" onclick="filterBebidas(\'suco-leite\')" style="background:#fff;color:var(--bk);border:2px solid #ddd;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s">🥛 Suco ao Leite</button>';
+    html += '<button id="bebida-suco-agua" class="bebida-tab" onclick="filterBebidas(\'suco-agua\')" style="background:#fff;color:var(--bk);border:2px solid #ddd;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s">🧃 Suco à Água</button>';
+    html += '</div>';
+    
+    // Container das bebidas
+    html += '<div id="bebidas-container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.2rem"></div>';
+    
+    g.innerHTML = html;
+    window.currentBebidasFilter = 'todas';
+    window.allBebidasProducts = bebidas;
+    filterBebidas('todas');
+    return;
+  }
+  
   var items = cat === 'todos' ? allProducts.filter(function(p){return p.active;}) : allProducts.filter(function(p){return p.category===cat&&p.active;});
   if (!items.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhum produto nesta categoria</p>'; return; }
   for (var i=0; i<items.length; i++) {
@@ -597,6 +621,65 @@ function renderProducts(cat) {
     html += '</div></div></div>';
   }
   g.innerHTML = html;
+}
+
+function filterBebidas(tipo) {
+  var op = isOpen();
+  var container = document.getElementById('bebidas-container');
+  if (!container) return;
+  
+  // Atualizar abas ativas
+  var tabs = document.querySelectorAll('.bebida-tab');
+  for (var i=0; i<tabs.length; i++) {
+    tabs[i].style.background = '#fff';
+    tabs[i].style.color = 'var(--bk)';
+    tabs[i].style.border = '2px solid #ddd';
+  }
+  var activeTab = document.getElementById('bebida-' + tipo);
+  if (activeTab) {
+    activeTab.style.background = 'var(--r)';
+    activeTab.style.color = '#fff';
+    activeTab.style.border = '2px solid var(--r)';
+  }
+  
+  window.currentBebidasFilter = tipo;
+  var bebidas = window.allBebidasProducts || [];
+  
+  // Filtrar por tipo (baseado na descrição ou nome do produto)
+  var filtered = bebidas;
+  if (tipo !== 'todas') {
+    filtered = bebidas.filter(function(b) {
+      var texto = (b.name + ' ' + (b.description||'')).toLowerCase();
+      if (tipo === 'refrigerante') {
+        return texto.includes('refrigerante') || texto.includes('refri') || texto.includes('coca') || texto.includes('pepsi') || texto.includes('guaraná') || texto.includes('fanta') || texto.includes('sprite');
+      } else if (tipo === 'suco-leite') {
+        return texto.includes('leite') || texto.includes('vitamina') || texto.includes('milk shake');
+      } else if (tipo === 'suco-agua') {
+        return texto.includes('suco') && !texto.includes('leite');
+      }
+      return false;
+    });
+  }
+  
+  var html = '';
+  if (!filtered.length) {
+    html = '<p style="color:#aaa;padding:2rem;text-align:center;grid-column:1/-1">Nenhuma bebida nesta categoria</p>';
+  } else {
+    for (var i=0; i<filtered.length; i++) {
+      var pr = filtered[i];
+      html += '<div class="pc">';
+      html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
+      html += '<div class="pinfo">';
+      html += '<div class="pname">' + pr.name + '</div>';
+      html += '<div class="pdesc">' + (pr.description||'') + '</div>';
+      html += '<div class="pfooter">';
+      html += '<div class="pprice">R$ ' + parseFloat(pr.price).toFixed(2).replace('.',',') + '</div>';
+      html += '<button class="abtn" onclick="addCart(' + pr.id + ')" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
+      html += '</div></div></div>';
+    }
+  }
+  
+  container.innerHTML = html;
 }
 
 function filterCat(cat, el) {
