@@ -184,6 +184,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   <nav>
     <button class="active" onclick="showPage('cardapio')">&#127828; Cardapio</button>
     <button onclick="showPage('carrinho')" class="cbtn">&#128722; Carrinho<span class="cbadge" id="cart-badge">0</span></button>
+    <button onclick="showPage('entregas')">&#128666; Entregas</button>
     <button onclick="openAdmin()">&#9881; Admin</button>
   </nav>
 </header>
@@ -193,7 +194,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   <div class="badges">
     <span class="badge" id="status-badge"><span id="status-txt">Verificando...</span></span>
     <span class="badge">30-45 min entrega</span>
-    <span class="badge">Entrega GRATIS</span>
+    <span class="badge">Entrega GRÁTIS em alguns bairros</span>
     <span class="badge" id="wa-badge">Carregando...</span>
   </div>
 </div>
@@ -273,6 +274,98 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     </div>
   </div>
 </div>
+<div class="page" id="page-entregas">
+  <h2 class="sec-title">Valores de <span>Entrega</span></h2>
+  
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-bottom:2rem">
+    <!-- Entrega GRÁTIS -->
+    <div style="background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden">
+      <div style="background:#22c55e;color:#fff;padding:1.2rem;text-align:center">
+        <div style="font-size:2.2rem;font-weight:900;font-family:Impact,sans-serif">GRÁTIS</div>
+        <div style="font-size:.9rem;font-weight:700;opacity:.95">Entrega Gratuita</div>
+      </div>
+      <div style="padding:1.3rem">
+        <div style="font-weight:900;margin-bottom:1rem;color:#666;font-size:.92rem;text-align:center">Bairros atendidos:</div>
+        <div style="display:flex;flex-direction:column;gap:.6rem">
+          <div style="padding:.6rem;background:#f0fdf4;border-radius:8px;font-size:.88rem;font-weight:700;color:#15803d;text-align:center">Taquara Preta</div>
+          <div style="padding:.6rem;background:#f0fdf4;border-radius:8px;font-size:.88rem;font-weight:700;color:#15803d;text-align:center">São Marcos</div>
+          <div style="padding:.6rem;background:#f0fdf4;border-radius:8px;font-size:.88rem;font-weight:700;color:#15803d;text-align:center">São Cristóvão</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entrega R$ 5,00 -->
+    <div style="background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden">
+      <div style="background:#3b82f6;color:#fff;padding:1.2rem;text-align:center">
+        <div style="font-size:2.2rem;font-weight:900;font-family:Impact,sans-serif">R$ 5,00</div>
+        <div style="font-size:.9rem;font-weight:700;opacity:.95">Taxa de Entrega</div>
+      </div>
+      <div style="padding:1.3rem">
+        <div style="font-weight:900;margin-bottom:1rem;color:#666;font-size:.92rem;text-align:center">Bairros atendidos:</div>
+        <div style="display:flex;flex-direction:column;gap:.6rem">
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Paraíso</div>
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Bom Pastor</div>
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Dico Leite</div>
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">São Pedro</div>
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Primavera</div>
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Meca</div>
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Santa Clara</div>
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Ibraim</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entrega R$ 7,00 -->
+    <div style="background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden">
+      <div style="background:var(--y);color:var(--bk);padding:1.2rem;text-align:center">
+        <div style="font-size:2.2rem;font-weight:900;font-family:Impact,sans-serif">R$ 7,00</div>
+        <div style="font-size:.9rem;font-weight:700;opacity:.85">Taxa de Entrega</div>
+      </div>
+      <div style="padding:1.3rem">
+        <div style="font-weight:900;margin-bottom:1rem;color:#666;font-size:.92rem;text-align:center">Bairros atendidos:</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Centro</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Vila Reis</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">São Vicente</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Justino</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">João Riguete</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Leonardo</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Ime Faragem</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Isabel Tavares</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Guanabara</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">São Diniz</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Marote</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Pampulha</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Bairro de Fátima</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Bairro Haide</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Sebastião Adolfo</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Menezes</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Bandeirantes</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Independência</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Colinas</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Granjaria</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Sol Nascente</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Pousa Alegre</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#fff5f5;border:2px solid var(--r);border-radius:var(--rad);padding:1.3rem;text-align:center;margin-bottom:2rem">
+    <div style="font-size:2rem;margin-bottom:.6rem">🏍️</div>
+    <div style="font-weight:900;font-size:1rem;color:var(--rd);margin-bottom:.5rem">Informação Importante</div>
+    <div style="font-size:.88rem;color:#666;line-height:1.7">
+      Consulte sempre o valor da entrega para seu bairro antes de finalizar o pedido.<br>
+      Para outros bairros não listados, entre em contato pelo WhatsApp.
+    </div>
+  </div>
+
+  <div style="text-align:center">
+    <button onclick="showPage('cardapio')" style="background:var(--r);color:#fff;border:none;padding:13px 30px;border-radius:12px;font-weight:900;font-size:1rem;cursor:pointer;font-family:Impact,sans-serif;letter-spacing:.5px">
+      VER CARDÁPIO
+    </button>
+  </div>
+</div>
 <div class="page" id="page-admin">
   <h2 class="sec-title">Painel <span>Admin</span></h2>
   <div class="stats" id="admin-stats"></div>
@@ -320,14 +413,18 @@ var PIX_CHAVE = '+5532998204435';
 var PIX_NOME = 'RAPHAEL GONZAGA CORDEIRO';
 var PIX_CIDADE = 'CATAGUASES';
 var OPEN_DAYS = [0,1,3,4,5,6];
-var BAIRROS_GRATIS = ['SAO CRISTOVAO','TAQUARA PRETA','SAO MARCOS'];
-var BAIRROS_TAXA5 = ['SAO VICENTE','CENTRO','PARAISO','PAMPULHA','SAO DINIZ','SEBASTIAO ADOLFO','MAROTE','MENEZES','GRANJARIA','ISABEL TAVARES','LEONARDO','ANA CARRARA','VILA REIS'];
+var BAIRROS_GRATIS = ['TAQUARA PRETA','SAO MARCOS','SAO CRISTOVAO'];
+var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM'];
+var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE'];
 var adminToken = localStorage.getItem('fael_token') || null;
 var allProducts = [], allAcrescimos = [], cart = [];
 var curDel = 'entrega', curPay = 'dinheiro', curATab = 'todos';
 var editProdId = null, editAcrId = null;
 var taxaAtual = 0, bairroOk = true;
 var produtoParaAdicionar = null, acrSelecionados = [];
+var lastOrderCheck = 0;
+var notificationEnabled = localStorage.getItem('fael_notification') !== 'false';
+var autoPrintEnabled = localStorage.getItem('fael_autoprint') !== 'false';
 
 function api(method, path, body, auth) {
   var h = {'Content-Type': 'application/json'};
@@ -634,23 +731,28 @@ function verificarTaxa() {
   if (!bn || bn.length < 3) {
     if (info) info.style.display='none';
     taxaAtual=0; bairroOk=true;
-    if (disp) { disp.textContent='GRATIS'; row.style.color='#22c55e'; }
+    if (disp) { disp.textContent='--'; row.style.color='#999'; }
     calcSum(); return;
   }
-  var isG = false, isT = false;
+  var isG = false, isT5 = false, isT7 = false;
   for (var i=0; i<BAIRROS_GRATIS.length; i++) { if (bn.indexOf(BAIRROS_GRATIS[i])>=0 || BAIRROS_GRATIS[i].indexOf(bn)>=0) { isG=true; break; } }
-  if (!isG) for (var j=0; j<BAIRROS_TAXA5.length; j++) { if (bn.indexOf(BAIRROS_TAXA5[j])>=0 || BAIRROS_TAXA5[j].indexOf(bn)>=0) { isT=true; break; } }
+  if (!isG) for (var j=0; j<BAIRROS_TAXA5.length; j++) { if (bn.indexOf(BAIRROS_TAXA5[j])>=0 || BAIRROS_TAXA5[j].indexOf(bn)>=0) { isT5=true; break; } }
+  if (!isG && !isT5) for (var k=0; k<BAIRROS_TAXA7.length; k++) { if (bn.indexOf(BAIRROS_TAXA7[k])>=0 || BAIRROS_TAXA7[k].indexOf(bn)>=0) { isT7=true; break; } }
   if (isG) {
     taxaAtual=0; bairroOk=true;
     if (info) { info.style.display='block'; info.style.background='#f0fdf4'; info.style.border='2px solid #22c55e'; info.style.color='#15803d'; info.textContent='Entrega GRATIS para este bairro!'; }
     if (disp) { disp.textContent='GRATIS'; row.style.color='#22c55e'; }
-  } else if (isT) {
+  } else if (isT5) {
     taxaAtual=5; bairroOk=true;
-    if (info) { info.style.display='block'; info.style.background='#fffbe6'; info.style.border='2px solid #F7B731'; info.style.color='#856404'; info.textContent='Taxa de entrega: R$ 5,00'; }
-    if (disp) { disp.textContent='R$ 5,00'; row.style.color='#856404'; }
+    if (info) { info.style.display='block'; info.style.background='#f0fdf4'; info.style.border='2px solid #22c55e'; info.style.color='#15803d'; info.textContent='Taxa de entrega: R$ 5,00'; }
+    if (disp) { disp.textContent='R$ 5,00'; row.style.color='#15803d'; }
+  } else if (isT7) {
+    taxaAtual=7; bairroOk=true;
+    if (info) { info.style.display='block'; info.style.background='#fffbe6'; info.style.border='2px solid #F7B731'; info.style.color='#C47D00'; info.textContent='Taxa de entrega: R$ 7,00'; }
+    if (disp) { disp.textContent='R$ 7,00'; row.style.color='#C47D00'; }
   } else {
     taxaAtual=0; bairroOk=false;
-    if (info) { info.style.display='block'; info.style.background='#fff5f5'; info.style.border='2px solid #EF4444'; info.style.color='#991B1B'; info.textContent='Nao entregamos neste bairro ainda.'; }
+    if (info) { info.style.display='block'; info.style.background='#fff5f5'; info.style.border='2px solid #EF4444'; info.style.color='#991B1B'; info.textContent='Nao entregamos neste bairro ainda. Entre em contato pelo WhatsApp.'; }
     if (disp) { disp.textContent='--'; row.style.color='#EF4444'; }
   }
   calcSum();
@@ -805,8 +907,79 @@ function loadAdmStats() {
         '<div class="sc"><div class="si">&#128176;</div><div class="sv">R$'+parseFloat(s.revenue).toFixed(0)+'</div><div class="sl">Total</div></div>' +
         '<div class="sc"><div class="si">&#128197;</div><div class="sv">R$'+parseFloat(s.today_revenue).toFixed(0)+'</div><div class="sl">Hoje</div></div>' +
         '<div class="sc"><div class="si">&#128722;</div><div class="sv">'+s.today_orders+'</div><div class="sl">Hoje</div></div>';
+      checkNewOrders();
     })
     .catch(function(e) { if (e.message.indexOf('Token')>=0) { adminToken=null; localStorage.removeItem('fael_token'); } });
+}
+
+function checkNewOrders() {
+  if (!adminToken) return;
+  api('GET', '/orders?status=pendente&limit=1', null, true)
+    .then(function(orders) {
+      if (orders.length > 0) {
+        var latestOrderId = orders[0].id;
+        if (lastOrderCheck > 0 && latestOrderId > lastOrderCheck) {
+          playNotificationSound();
+          if (autoPrintEnabled) {
+            setTimeout(function(){ printOrd(latestOrderId); }, 500);
+          }
+        }
+        lastOrderCheck = Math.max(lastOrderCheck, latestOrderId);
+      }
+    })
+    .catch(function(e) { console.log('Erro ao verificar pedidos:', e); });
+}
+
+function playNotificationSound() {
+  if (!notificationEnabled) return;
+  
+  try {
+    var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    var oscillator = audioContext.createOscillator();
+    var gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+    
+    setTimeout(function() {
+      var osc2 = audioContext.createOscillator();
+      var gain2 = audioContext.createGain();
+      osc2.connect(gain2);
+      gain2.connect(audioContext.destination);
+      osc2.frequency.value = 600;
+      osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      osc2.start(audioContext.currentTime);
+      osc2.stop(audioContext.currentTime + 0.5);
+    }, 200);
+    
+    setTimeout(function() {
+      var osc3 = audioContext.createOscillator();
+      var gain3 = audioContext.createGain();
+      osc3.connect(gain3);
+      gain3.connect(audioContext.destination);
+      osc3.frequency.value = 800;
+      osc3.type = 'sine';
+      gain3.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gain3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      osc3.start(audioContext.currentTime);
+      osc3.stop(audioContext.currentTime + 0.5);
+    }, 400);
+  } catch(e) {
+    console.log('Erro ao tocar som:', e);
+  }
+  
+  showToast('🔔 NOVO PEDIDO RECEBIDO!');
 }
 
 function loadAdmContent(f) {
@@ -1086,6 +1259,27 @@ function buildCfg() {
       html += '<div><div style="font-size:.73rem;font-weight:800;color:#666;margin-bottom:3px">Nome do recebedor</div><input id="cfg-pix-nome" value="'+pnome+'" style="width:100%;padding:8px;border:2px solid #e8e8e8;border-radius:8px;font-size:.82rem;outline:none"><button onclick="saveConfig(\'pix_nome\',document.getElementById(\'cfg-pix-nome\').value)" style="margin-top:4px;background:#22c55e;color:#fff;border:none;padding:6px;border-radius:8px;font-weight:800;font-size:.72rem;cursor:pointer;width:100%">Salvar</button></div>';
       html += '<div><div style="font-size:.73rem;font-weight:800;color:#666;margin-bottom:3px">Cidade</div><input id="cfg-pix-cidade" value="'+pcidade+'" style="width:100%;padding:8px;border:2px solid #e8e8e8;border-radius:8px;font-size:.82rem;outline:none"><button onclick="saveConfig(\'pix_cidade\',document.getElementById(\'cfg-pix-cidade\').value)" style="margin-top:4px;background:#22c55e;color:#fff;border:none;padding:6px;border-radius:8px;font-weight:800;font-size:.72rem;cursor:pointer;width:100%">Salvar</button></div>';
       html += '</div></div>';
+      // Notificações e Impressão
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.2rem">';
+      html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem">Alertas de Pedidos</h3>';
+      html += '<div style="background:#fffbe6;border:2px solid #F7B731;border-radius:12px;padding:1rem;margin-bottom:1rem;text-align:center">';
+      html += '<div style="font-size:2rem;margin-bottom:6px">🔔</div>';
+      html += '<div style="font-size:.85rem;color:#856404;line-height:1.6">Configure como deseja ser notificado quando um novo pedido chegar</div>';
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+      html += '<div style="border:2px solid #e8e8e8;border-radius:10px;padding:1rem;text-align:center">';
+      html += '<div style="font-size:1.5rem;margin-bottom:8px">🔊</div>';
+      html += '<div style="font-weight:800;font-size:.88rem;margin-bottom:8px">Som de Notificação</div>';
+      html += '<label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer"><input type="checkbox" id="cfg-notification" '+(notificationEnabled?'checked':'')+' onchange="toggleNotification(this.checked)" style="width:18px;height:18px;cursor:pointer"><span style="font-size:.82rem;font-weight:700">'+(notificationEnabled?'Ativado':'Desativado')+'</span></label>';
+      html += '</div>';
+      html += '<div style="border:2px solid #e8e8e8;border-radius:10px;padding:1rem;text-align:center">';
+      html += '<div style="font-size:1.5rem;margin-bottom:8px">🖨️</div>';
+      html += '<div style="font-weight:800;font-size:.88rem;margin-bottom:8px">Impressão Automática</div>';
+      html += '<label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer"><input type="checkbox" id="cfg-autoprint" '+(autoPrintEnabled?'checked':'')+' onchange="toggleAutoPrint(this.checked)" style="width:18px;height:18px;cursor:pointer"><span style="font-size:.82rem;font-weight:700">'+(autoPrintEnabled?'Ativado':'Desativado')+'</span></label>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div style="margin-top:12px;font-size:.75rem;color:#888;text-align:center">O som toca e/ou a impressão acontece automaticamente quando um novo pedido é recebido</div>';
+      html += '</div>';
       // Sair
       html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem"><button style="background:#EF4444;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:800;font-size:.85rem;cursor:pointer" onclick="logout()">Sair do Admin</button></div>';
       return html;
@@ -1103,6 +1297,23 @@ function changePwd(){
     .then(function(){showToast('Senha alterada!');['pwd-old','pwd-new','pwd-cf'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});})
     .catch(function(e){showToast('Erro: '+e.message);});
 }
+
+function toggleNotification(enabled) {
+  notificationEnabled = enabled;
+  localStorage.setItem('fael_notification', enabled ? 'true' : 'false');
+  showToast(enabled ? 'Som de notificação ATIVADO! 🔊' : 'Som de notificação DESATIVADO');
+  var label = document.querySelector('#cfg-notification + span');
+  if (label) label.textContent = enabled ? 'Ativado' : 'Desativado';
+}
+
+function toggleAutoPrint(enabled) {
+  autoPrintEnabled = enabled;
+  localStorage.setItem('fael_autoprint', enabled ? 'true' : 'false');
+  showToast(enabled ? 'Impressão automática ATIVADA! 🖨️' : 'Impressão automática DESATIVADA');
+  var label = document.querySelector('#cfg-autoprint + span');
+  if (label) label.textContent = enabled ? 'Ativado' : 'Desativado';
+}
+
 function logout(){ adminToken=null; localStorage.removeItem('fael_token'); showPage('cardapio'); showToast('Saiu do Admin'); }
 
 function showPage(pg) {
@@ -1111,10 +1322,10 @@ function showPage(pg) {
   var navBtns = document.querySelectorAll('nav button');
   for (var j=0; j<navBtns.length; j++) navBtns[j].classList.remove('active');
   document.getElementById('page-'+pg).classList.add('active');
-  var m = {cardapio:0, carrinho:1, admin:2};
+  var m = {cardapio:0, carrinho:1, entregas:2, admin:3};
   if (m[pg]!==undefined && navBtns[m[pg]]) navBtns[m[pg]].classList.add('active');
   if (pg==='carrinho') renderCart();
-  if (pg==='admin') { renderAdmin(); if (navBtns[2]) navBtns[2].classList.add('active'); }
+  if (pg==='admin') { renderAdmin(); if (navBtns[3]) navBtns[3].classList.add('active'); }
 }
 
 function showToast(msg) {
@@ -1128,7 +1339,13 @@ loadProducts();
 loadAcrescimos();
 loadConfigs();
 updateStatus();
-setInterval(function(){ if(adminToken && document.getElementById('page-admin').classList.contains('active')) loadAdmStats(); }, 30000);
+setInterval(function(){ 
+  if(adminToken && document.getElementById('page-admin').classList.contains('active')) {
+    loadAdmStats();
+  } else if (adminToken) {
+    checkNewOrders();
+  }
+}, 15000);
 </script>
 </body>
 </html>
