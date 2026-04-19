@@ -1142,6 +1142,29 @@ function playNotificationSound() {
   if (!notificationEnabled) return;
   
   try {
+    // Tocar arquivo de áudio personalizado
+    var audio = new Audio('/notification.mp3');
+    audio.volume = 0.8; // 80% do volume máximo
+    
+    // Tentar tocar o áudio
+    audio.play().catch(function(error) {
+      console.log('Erro ao tocar áudio personalizado:', error);
+      // Fallback: tocar som sintetizado se o arquivo não existir
+      playSynthSound();
+    });
+    
+  } catch(e) {
+    console.log('Erro ao tocar som:', e);
+    // Fallback para som sintetizado
+    playSynthSound();
+  }
+  
+  showToast('🔔 NOVO PEDIDO RECEBIDO!');
+}
+
+// Função de fallback com som sintetizado (caso o arquivo MP3 não exista)
+function playSynthSound() {
+  try {
     var audioContext = new (window.AudioContext || window.webkitAudioContext)();
     var masterGain = audioContext.createGain();
     masterGain.connect(audioContext.destination);
@@ -1162,18 +1185,13 @@ function playNotificationSound() {
     
     var t = audioContext.currentTime;
     
-    // PADRÃO: "ATENÇÃO - NOVO PEDIDO" repetido (15 segundos)
-    beep(800, t + 0.0, 0.3, 0.5); beep(800, t + 0.35, 0.3, 0.5); beep(1000, t + 0.7, 0.6, 0.6);
-    beep(600, t + 2.0, 0.25, 0.4); beep(700, t + 2.3, 0.25, 0.4); beep(800, t + 2.6, 0.25, 0.4); beep(900, t + 2.9, 0.5, 0.5);
-    beep(800, t + 5.0, 0.3, 0.5); beep(800, t + 5.35, 0.3, 0.5); beep(1000, t + 5.7, 0.6, 0.6);
-    beep(600, t + 7.0, 0.25, 0.4); beep(700, t + 7.3, 0.25, 0.4); beep(800, t + 7.6, 0.25, 0.4); beep(900, t + 7.9, 0.5, 0.5);
-    beep(1000, t + 10.0, 0.2, 0.6); beep(1000, t + 10.25, 0.2, 0.6); beep(1000, t + 10.5, 0.2, 0.6); beep(1200, t + 10.8, 0.4, 0.7);
-    beep(800, t + 12.0, 0.3, 0.5); beep(900, t + 12.4, 0.3, 0.5); beep(1000, t + 12.8, 0.3, 0.5); beep(1100, t + 13.2, 0.3, 0.6); beep(1200, t + 13.6, 1.0, 0.7);
+    // Som de fallback mais curto (3 segundos)
+    beep(800, t + 0.0, 0.3, 0.5); 
+    beep(1000, t + 0.5, 0.3, 0.6);
+    beep(1200, t + 1.0, 0.5, 0.7);
   } catch(e) {
-    console.log('Erro ao tocar som:', e);
+    console.log('Erro no som sintetizado:', e);
   }
-  
-  showToast('🔔 NOVO PEDIDO RECEBIDO!');
 }
 
 function loadAdmContent(f) {
