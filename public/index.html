@@ -141,6 +141,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .acr-item .acr-val{display:block;font-size:.75rem;color:#888}
 .acr-item.selected .acr-val{color:var(--r)}
 #login-screen{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:flex;align-items:center;justify-content:center}
+#login-gerenciamento-screen{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:flex;align-items:center;justify-content:center}
 .login-box{background:#fff;border-radius:var(--rad);padding:2rem;max-width:360px;width:90%;text-align:center}
 .login-box .li{font-size:52px;margin-bottom:12px}
 .login-box h2{font-family:Impact,sans-serif;font-size:1.7rem;margin-bottom:5px}
@@ -179,6 +180,16 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button onclick="doLogin()">ENTRAR</button>
   </div>
 </div>
+<div id="login-gerenciamento-screen" style="display:none">
+  <div class="login-box">
+    <div class="li">&#128200;</div>
+    <h2>Gerenciamento</h2>
+    <p>Digite a senha do gerente</p>
+    <input type="password" id="login-gerenciamento-pwd" placeholder="Senha" onkeydown="if(event.key==='Enter')doLoginGerenciamento()">
+    <div class="login-err" id="login-gerenciamento-err">Senha incorreta!</div>
+    <button onclick="doLoginGerenciamento()">ENTRAR</button>
+  </div>
+</div>
 <header>
   <div class="logo" onclick="showPage('cardapio')">
     <div class="logo-ic">&#127829;</div>
@@ -189,6 +200,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button onclick="showPage('carrinho')" class="cbtn">&#128722; Carrinho<span class="cbadge" id="cart-badge">0</span></button>
     <button onclick="showPage('entregas')">&#128666; Entregas</button>
     <button onclick="openAdmin()">&#9881; Admin</button>
+    <button onclick="openGerenciamento()">&#128200; Gerenciamento</button>
   </nav>
 </header>
 <div class="hero">
@@ -397,12 +409,20 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button class="atab" onclick="aTab('preparo',this)">Preparo</button>
     <button class="atab" onclick="aTab('entrega',this)">Entrega</button>
     <button class="atab" onclick="aTab('entregue',this)">Entregues</button>
-    <button class="atab" onclick="aTab('faturamento',this)">Faturamento</button>
     <button class="atab" onclick="aTab('acrescimos',this)">Acrescimos</button>
     <button class="atab" onclick="aTab('produtos',this)">Produtos</button>
     <button class="atab" onclick="aTab('config',this)">Config</button>
   </div>
   <div id="admin-content"></div>
+</div>
+<div class="page" id="page-gerenciamento">
+  <h2 class="sec-title">&#128200; <span>Gerenciamento</span></h2>
+  <div class="stats" id="gerenciamento-stats"></div>
+  <div class="adm-tabs">
+    <button class="atab active" onclick="gTab('faturamento',this)">Faturamento</button>
+    <button class="atab" onclick="gTab('relatorios',this)">Relatórios</button>
+  </div>
+  <div id="gerenciamento-content"></div>
 </div>
 <div class="mo" id="modal">
   <div class="md">
@@ -439,6 +459,7 @@ var BAIRROS_GRATIS = ['TAQUARA PRETA','SAO MARCOS','SAO CRISTOVAO'];
 var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM'];
 var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE'];
 var adminToken = localStorage.getItem('fael_token') || null;
+var gerenciamentoToken = localStorage.getItem('fael_gerenciamento_token') || null;
 var allProducts = [], allAcrescimos = [], cart = [];
 var curDel = 'entrega', curPay = 'dinheiro', curATab = 'todos';
 var editProdId = null, editAcrId = null;
@@ -1146,7 +1167,6 @@ function loadAdmContent(f) {
   if (f === 'produtos') { buildPM().then(function(h){el.innerHTML=h;}); return; }
   if (f === 'acrescimos') { buildAcrMgr().then(function(h){el.innerHTML=h;}); return; }
   if (f === 'config') { buildCfg().then(function(h){el.innerHTML=h;}); return; }
-  if (f === 'faturamento') { buildRev().then(function(h){el.innerHTML=h;}); return; }
   el.innerHTML = '<div class="loading"><span class="spin">&#9203;</span>Carregando...</div>';
   var url = '/orders' + (f!=='todos' ? '?status='+f : '');
   api('GET', url, null, true)
@@ -1191,9 +1211,47 @@ function oCard(o, isAdm) {
 function advSt(id) {
   var o = null; if (window._admOrd) for (var i=0; i<window._admOrd.length; i++) if (window._admOrd[i].id===id) { o=window._admOrd[i]; break; }
   if (!o || !NS[o.status]) return;
-  api('PATCH', '/orders/'+id+'/status', {status:NS[o.status]}, true)
-    .then(function() { o.status=NS[o.status]; var c=document.getElementById('oc-'+id); if(c) c.outerHTML=oCard(o,true); loadAdmStats(); showToast('Status atualizado!'); })
+  
+  var newStatus = NS[o.status];
+  
+  api('PATCH', '/orders/'+id+'/status', {status:newStatus}, true)
+    .then(function() { 
+      o.status = newStatus; 
+      var c=document.getElementById('oc-'+id); 
+      if(c) c.outerHTML=oCard(o,true); 
+      loadAdmStats(); 
+      showToast('Status atualizado!'); 
+      
+      // Enviar notificação WhatsApp automaticamente
+      enviarNotificacaoStatus(o, newStatus);
+    })
     .catch(function(e){showToast(e.message);});
+}
+
+function enviarNotificacaoStatus(order, status) {
+  // Mensagens para cada status
+  var mensagens = {
+    'preparo': '✅ Olá *' + order.client_name + '*!\n\nSeu pedido *#' + String(order.id).padStart(3,'0') + '* está sendo preparado com carinho! 👨‍🍳\n\nEm breve estará pronto!',
+    'entrega': '🚀 *' + order.client_name + '*, seu pedido *#' + String(order.id).padStart(3,'0') + '* saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
+    'entregue': '🎉 Pedido *#' + String(order.id).padStart(3,'0') + '* entregue com sucesso!\n\n*Obrigado pela preferência, ' + order.client_name + '!*\n\nVolte sempre! ❤️🍕'
+  };
+  
+  var msg = mensagens[status];
+  if (!msg) return; // Não tem mensagem para esse status
+  
+  // Limpar telefone (remover caracteres especiais)
+  var phone = order.client_phone.replace(/\D/g, '');
+  
+  // Garantir que tem 55 (Brasil) + DDD
+  if (!phone.startsWith('55')) {
+    phone = '55' + phone;
+  }
+  
+  // Abrir WhatsApp Web com mensagem pronta
+  var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+  
+  showToast('📱 WhatsApp aberto! Só apertar ENVIAR');
 }
 function cancelOrd(id) {
   var o = null; if (window._admOrd) for (var i=0; i<window._admOrd.length; i++) if (window._admOrd[i].id===id) { o=window._admOrd[i]; break; }
@@ -1579,6 +1637,77 @@ function resetAllOrders() {
 }
 
 function logout(){ adminToken=null; localStorage.removeItem('fael_token'); showPage('cardapio'); showToast('Saiu do Admin'); }
+
+// GERENCIAMENTO
+var curGTab = 'faturamento';
+
+function openGerenciamento() {
+  if (gerenciamentoToken) { showPage('gerenciamento'); loadGerenciamentoStats(); loadGerenciamentoContent(curGTab); return; }
+  document.getElementById('login-gerenciamento-screen').style.display = 'flex';
+  document.getElementById('login-gerenciamento-pwd').value = '';
+  document.getElementById('login-gerenciamento-err').style.display = 'none';
+  setTimeout(function(){ document.getElementById('login-gerenciamento-pwd').focus(); }, 100);
+}
+
+function doLoginGerenciamento() {
+  var pwd = document.getElementById('login-gerenciamento-pwd').value;
+  // Senha fixa: "gerente123" (você pode mudar depois)
+  if (pwd === 'gerente123') {
+    gerenciamentoToken = 'gerenciamento_token_' + Date.now();
+    localStorage.setItem('fael_gerenciamento_token', gerenciamentoToken);
+    document.getElementById('login-gerenciamento-screen').style.display = 'none';
+    showPage('gerenciamento');
+    loadGerenciamentoStats();
+    loadGerenciamentoContent(curGTab);
+  } else {
+    document.getElementById('login-gerenciamento-err').style.display = 'block';
+    document.getElementById('login-gerenciamento-pwd').value = '';
+  }
+}
+
+function gTab(tab, el) {
+  curGTab = tab;
+  var tabs = document.querySelectorAll('#page-gerenciamento .atab');
+  for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  loadGerenciamentoContent(tab);
+}
+
+function loadGerenciamentoStats() {
+  if (!gerenciamentoToken) return;
+  api('GET', '/orders?status=todos', null, true).then(function(orders) {
+    var total = 0;
+    var hoje = new Date().toLocaleDateString('pt-BR').split('/').reverse().join('-');
+    var hojeTotal = 0;
+    for (var i=0; i<orders.length; i++) {
+      if (orders[i].status !== 'cancelado') {
+        total += parseFloat(orders[i].total);
+        var orderDate = orders[i].created_at.split(' ')[0].split('/').reverse().join('-');
+        if (orderDate === hoje) hojeTotal += parseFloat(orders[i].total);
+      }
+    }
+    var html = '<div class="scard"><div class="sc-l">TOTAL GERAL</div><div class="sc-v">R$ ' + total.toFixed(2).replace('.',',') + '</div></div>';
+    html += '<div class="scard"><div class="sc-l">HOJE</div><div class="sc-v">R$ ' + hojeTotal.toFixed(2).replace('.',',') + '</div></div>';
+    document.getElementById('gerenciamento-stats').innerHTML = html;
+  });
+}
+
+function loadGerenciamentoContent(tab) {
+  if (!gerenciamentoToken) return;
+  var el = document.getElementById('gerenciamento-content');
+  if (tab === 'faturamento') {
+    buildRev().then(function(h){ el.innerHTML = h; });
+  } else if (tab === 'relatorios') {
+    el.innerHTML = '<div style="padding:2rem;text-align:center"><h3>Relatórios em desenvolvimento</h3></div>';
+  }
+}
+
+function logoutGerenciamento() {
+  gerenciamentoToken = null;
+  localStorage.removeItem('fael_gerenciamento_token');
+  showPage('cardapio');
+  showToast('Saiu do Gerenciamento');
+}
 
 function showPage(pg) {
   var pages = document.querySelectorAll('.page');
