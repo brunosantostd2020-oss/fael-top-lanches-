@@ -125,6 +125,21 @@ async function initDB() {
       console.log('✅ Senha admin criada (padrão: 1234)');
     }
 
+    // Senha gerenciamento padrão
+    const gerPwdRes = await client.query("SELECT value FROM settings WHERE key = 'gerenciamento_password'");
+    if (gerPwdRes.rows.length === 0) {
+      const hash = bcrypt.hashSync('gerente123', 10);
+      await client.query("INSERT INTO settings (key, value) VALUES ('gerenciamento_password', $1)", [hash]);
+      console.log('✅ Senha gerenciamento criada (padrão: gerente123)');
+    }
+
+    // Chave PIX padrão
+    const pixRes = await client.query("SELECT value FROM settings WHERE key = 'pix_chave'");
+    if (pixRes.rows.length === 0) {
+      await client.query("INSERT INTO settings (key, value) VALUES ('pix_chave', '32999754142')");
+      console.log('✅ Chave PIX configurada: 32999754142');
+    }
+
     // Produtos padrão
     const prodRes = await client.query("SELECT COUNT(*) FROM products");
     if (parseInt(prodRes.rows[0].count) === 0) {

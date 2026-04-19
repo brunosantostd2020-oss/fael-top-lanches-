@@ -421,6 +421,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   <div class="adm-tabs">
     <button class="atab active" onclick="gTab('faturamento',this)">Faturamento</button>
     <button class="atab" onclick="gTab('relatorios',this)">Relatórios</button>
+    <button class="atab" onclick="gTab('config',this)">Config</button>
   </div>
   <div id="gerenciamento-content"></div>
 </div>
@@ -451,7 +452,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 <div id="toast"></div>
 <script>
 var WA = '5532998204435';
-var PIX_CHAVE = '+5532998204435';
+var PIX_CHAVE = '32999754142';
 var PIX_NOME = 'RAPHAEL GONZAGA CORDEIRO';
 var PIX_CIDADE = 'CATAGUASES';
 var OPEN_DAYS = [0,1,3,4,5,6];
@@ -515,19 +516,31 @@ function updateStatus() {
 }
 
 function loadConfigs() {
-  fetch('/api/auth/settings', {headers: adminToken ? {'Authorization': 'Bearer '+adminToken} : {}})
+  // Carregar configurações públicas (PIX, WhatsApp) - sem precisar de login
+  fetch('/api/auth/public-settings')
     .then(function(r) { return r.json(); })
     .then(function(s) {
       if (s.whatsapp) { WA = s.whatsapp; }
       if (s.pix_chave) { PIX_CHAVE = s.pix_chave; }
       if (s.pix_nome) { PIX_NOME = s.pix_nome; }
       if (s.pix_cidade) { PIX_CIDADE = s.pix_cidade; }
-      var wb = document.getElementById('wa-badge');
-      if (wb) wb.textContent = '(32) 99820-4435';
-    }).catch(function() {
-      var wb = document.getElementById('wa-badge');
-      if (wb) wb.textContent = '(32) 99820-4435';
+    }).catch(function(e) {
+      console.log('Erro ao carregar configurações:', e);
     });
+  
+  // Carregar configurações admin (se estiver logado)
+  if (adminToken) {
+    fetch('/api/auth/settings', {headers: {'Authorization': 'Bearer '+adminToken}})
+      .then(function(r) { return r.json(); })
+      .then(function(s) {
+        if (s.whatsapp) { WA = s.whatsapp; }
+        if (s.pix_chave) { PIX_CHAVE = s.pix_chave; }
+        if (s.pix_nome) { PIX_NOME = s.pix_nome; }
+        if (s.pix_cidade) { PIX_CIDADE = s.pix_cidade; }
+      }).catch(function(e) {
+        console.log('Erro ao carregar settings admin:', e);
+      });
+  }
 }
 
 function loadProducts() {
@@ -1098,8 +1111,6 @@ function loadAdmStats() {
         '<div class="sc"><div class="si">&#128203;</div><div class="sv">'+s.total_orders+'</div><div class="sl">Total</div></div>' +
         '<div class="sc"><div class="si">&#9203;</div><div class="sv">'+s.pending+'</div><div class="sl">Pendentes</div></div>' +
         '<div class="sc"><div class="si">&#128653;</div><div class="sv">'+s.in_delivery+'</div><div class="sl">Entrega</div></div>' +
-        '<div class="sc"><div class="si">&#128176;</div><div class="sv">R$'+parseFloat(s.revenue).toFixed(0)+'</div><div class="sl">Total</div></div>' +
-        '<div class="sc"><div class="si">&#128197;</div><div class="sv">R$'+parseFloat(s.today_revenue).toFixed(0)+'</div><div class="sl">Hoje</div></div>' +
         '<div class="sc"><div class="si">&#128722;</div><div class="sv">'+s.today_orders+'</div><div class="sl">Hoje</div></div>';
       checkNewOrders();
     })
@@ -1651,18 +1662,20 @@ function openGerenciamento() {
 
 function doLoginGerenciamento() {
   var pwd = document.getElementById('login-gerenciamento-pwd').value;
-  // Senha fixa: "gerente123" (você pode mudar depois)
-  if (pwd === 'gerente123') {
-    gerenciamentoToken = 'gerenciamento_token_' + Date.now();
-    localStorage.setItem('fael_gerenciamento_token', gerenciamentoToken);
-    document.getElementById('login-gerenciamento-screen').style.display = 'none';
-    showPage('gerenciamento');
-    loadGerenciamentoStats();
-    loadGerenciamentoContent(curGTab);
-  } else {
-    document.getElementById('login-gerenciamento-err').style.display = 'block';
-    document.getElementById('login-gerenciamento-pwd').value = '';
-  }
+  
+  api('POST', '/auth/login-gerenciamento', {password: pwd})
+    .then(function(r) {
+      gerenciamentoToken = r.token;
+      localStorage.setItem('fael_gerenciamento_token', gerenciamentoToken);
+      document.getElementById('login-gerenciamento-screen').style.display = 'none';
+      showPage('gerenciamento');
+      loadGerenciamentoStats();
+      loadGerenciamentoContent(curGTab);
+    })
+    .catch(function() {
+      document.getElementById('login-gerenciamento-err').style.display = 'block';
+      document.getElementById('login-gerenciamento-pwd').value = '';
+    });
 }
 
 function gTab(tab, el) {
@@ -1675,20 +1688,43 @@ function gTab(tab, el) {
 
 function loadGerenciamentoStats() {
   if (!gerenciamentoToken) return;
-  api('GET', '/orders?status=todos', null, true).then(function(orders) {
+  
+  // Usar rota específica do gerenciamento com autenticação
+  fetch('/api/gerenciamento/stats', {
+    headers: { 'Authorization': 'Bearer ' + gerenciamentoToken }
+  })
+  .then(function(res) { 
+    if (res.status === 401) {
+      gerenciamentoToken = null;
+      localStorage.removeItem('fael_gerenciamento_token');
+      showPage('cardapio');
+      showToast('Sessão expirada. Faça login novamente.');
+      throw new Error('Token expirado');
+    }
+    return res.json(); 
+  })
+  .then(function(orders) {
     var total = 0;
-    var hoje = new Date().toLocaleDateString('pt-BR').split('/').reverse().join('-');
+    var hoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     var hojeTotal = 0;
+    
     for (var i=0; i<orders.length; i++) {
-      if (orders[i].status !== 'cancelado') {
-        total += parseFloat(orders[i].total);
-        var orderDate = orders[i].created_at.split(' ')[0].split('/').reverse().join('-');
-        if (orderDate === hoje) hojeTotal += parseFloat(orders[i].total);
+      var orderTotal = parseFloat(orders[i].total);
+      total += orderTotal;
+      
+      if (orders[i].order_date === hoje) {
+        hojeTotal += orderTotal;
       }
     }
+    
     var html = '<div class="scard"><div class="sc-l">TOTAL GERAL</div><div class="sc-v">R$ ' + total.toFixed(2).replace('.',',') + '</div></div>';
     html += '<div class="scard"><div class="sc-l">HOJE</div><div class="sc-v">R$ ' + hojeTotal.toFixed(2).replace('.',',') + '</div></div>';
     document.getElementById('gerenciamento-stats').innerHTML = html;
+  })
+  .catch(function(e) {
+    if (e.message !== 'Token expirado') {
+      console.error('Erro ao carregar stats:', e);
+    }
   });
 }
 
@@ -1699,7 +1735,41 @@ function loadGerenciamentoContent(tab) {
     buildRev().then(function(h){ el.innerHTML = h; });
   } else if (tab === 'relatorios') {
     el.innerHTML = '<div style="padding:2rem;text-align:center"><h3>Relatórios em desenvolvimento</h3></div>';
+  } else if (tab === 'config') {
+    buildGerenciamentoConfig().then(function(h){ el.innerHTML = h; });
   }
+}
+
+function buildGerenciamentoConfig() {
+  return new Promise(function(resolve) {
+    var html = '<div style="max-width:600px;margin:0 auto">';
+    
+    // Alterar Senha
+    html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.5rem">';
+    html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem">&#128274; Alterar Senha do Gerenciamento</h3>';
+    html += '<div style="margin-bottom:1rem">';
+    html += '<label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem">Senha Atual</label>';
+    html += '<input type="password" id="gerente-old-pwd" placeholder="Digite a senha atual" style="width:100%;padding:10px;border:2px solid #e8e8e8;border-radius:8px;font-size:.9rem">';
+    html += '</div>';
+    html += '<div style="margin-bottom:1rem">';
+    html += '<label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem">Nova Senha</label>';
+    html += '<input type="password" id="gerente-new-pwd" placeholder="Digite a nova senha" style="width:100%;padding:10px;border:2px solid #e8e8e8;border-radius:8px;font-size:.9rem">';
+    html += '</div>';
+    html += '<div style="margin-bottom:1rem">';
+    html += '<label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem">Confirmar Nova Senha</label>';
+    html += '<input type="password" id="gerente-confirm-pwd" placeholder="Confirme a nova senha" style="width:100%;padding:10px;border:2px solid #e8e8e8;border-radius:8px;font-size:.9rem">';
+    html += '</div>';
+    html += '<button onclick="changeGerenteSenha()" style="width:100%;background:var(--r);color:#fff;border:none;padding:12px;border-radius:10px;font-family:Impact,sans-serif;font-size:1.1rem;cursor:pointer">ALTERAR SENHA</button>';
+    html += '</div>';
+    
+    // Botão Sair
+    html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem">';
+    html += '<button onclick="logoutGerenciamento()" style="width:100%;background:#666;color:#fff;border:none;padding:12px;border-radius:10px;font-family:Impact,sans-serif;font-size:1.1rem;cursor:pointer">&#128682; SAIR DO GERENCIAMENTO</button>';
+    html += '</div>';
+    
+    html += '</div>';
+    resolve(html);
+  });
 }
 
 function logoutGerenciamento() {
@@ -1707,6 +1777,47 @@ function logoutGerenciamento() {
   localStorage.removeItem('fael_gerenciamento_token');
   showPage('cardapio');
   showToast('Saiu do Gerenciamento');
+}
+
+function changeGerenteSenha() {
+  var oldPwd = document.getElementById('gerente-old-pwd').value;
+  var newPwd = document.getElementById('gerente-new-pwd').value;
+  var confirmPwd = document.getElementById('gerente-confirm-pwd').value;
+  
+  if (!oldPwd || !newPwd || !confirmPwd) {
+    showToast('⚠️ Preencha todos os campos!');
+    return;
+  }
+  
+  // Verificar senha atual
+  var senhaAtual = localStorage.getItem('fael_gerente_senha') || 'gerente123';
+  if (oldPwd !== senhaAtual) {
+    showToast('❌ Senha atual incorreta!');
+    document.getElementById('gerente-old-pwd').value = '';
+    return;
+  }
+  
+  // Validar nova senha
+  if (newPwd.length < 6) {
+    showToast('⚠️ Nova senha deve ter no mínimo 6 caracteres!');
+    return;
+  }
+  
+  if (newPwd !== confirmPwd) {
+    showToast('❌ As senhas não conferem!');
+    document.getElementById('gerente-confirm-pwd').value = '';
+    return;
+  }
+  
+  // Salvar nova senha
+  localStorage.setItem('fael_gerente_senha', newPwd);
+  
+  // Limpar campos
+  document.getElementById('gerente-old-pwd').value = '';
+  document.getElementById('gerente-new-pwd').value = '';
+  document.getElementById('gerente-confirm-pwd').value = '';
+  
+  showToast('✅ Senha alterada com sucesso!');
 }
 
 function showPage(pg) {
