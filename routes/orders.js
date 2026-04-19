@@ -9,8 +9,8 @@ async function getOrderWithItems(id) {
   const order = oRes.rows[0];
   const iRes = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [id]);
   order.items = iRes.rows;
-  // Format date
-  order.created_at = new Date(order.created_at).toLocaleString('pt-BR');
+  // Format date com timezone de Brasília
+  order.created_at = new Date(order.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   return order;
 }
 
@@ -31,7 +31,8 @@ router.get('/', requireAdmin, async (req, res) => {
     for (const o of orders) {
       const iRes = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [o.id]);
       o.items = iRes.rows;
-      o.created_at = new Date(o.created_at).toLocaleString('pt-BR');
+      // Formatar data para horário de Brasília
+      o.created_at = new Date(o.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     }
     res.json(orders);
   } catch (e) { res.status(500).json({ error: e.message }); }

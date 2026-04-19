@@ -402,6 +402,9 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 </div>
 <div class="page" id="page-admin">
   <h2 class="sec-title">Painel <span>Admin</span></h2>
+  <div style="text-align:center;margin-bottom:8px">
+    <span id="admin-last-update" style="font-size:.7rem;color:#888;font-weight:600"></span>
+  </div>
   <div class="stats" id="admin-stats"></div>
   <div class="adm-tabs">
     <button class="atab active" onclick="aTab('todos',this)">Todos</button>
@@ -1102,7 +1105,7 @@ function aTab(tab, el) {
   loadAdmContent(tab);
 }
 
-function renderAdmin() { loadAdmStats(); loadAdmContent(curATab); }
+function renderAdmin() { loadAdmStats(); loadAdmContent(curATab); updateAdminTimestamp(); }
 
 function loadAdmStats() {
   api('GET', '/orders/stats/summary', null, true)
@@ -1844,14 +1847,35 @@ loadAcrescimos();
 loadConfigs();
 loadStatusManual();
 updateStatus();
+
+// Função para atualizar timestamp
+function updateAdminTimestamp() {
+  var now = new Date();
+  var hours = String(now.getHours()).padStart(2, '0');
+  var minutes = String(now.getMinutes()).padStart(2, '0');
+  var seconds = String(now.getSeconds()).padStart(2, '0');
+  var el = document.getElementById('admin-last-update');
+  if (el) {
+    el.innerHTML = '🔄 Atualizado às ' + hours + ':' + minutes + ':' + seconds;
+    // Animar brevemente
+    el.style.color = '#22c55e';
+    setTimeout(function() { el.style.color = '#888'; }, 1000);
+  }
+}
+
 setInterval(function(){ 
   loadStatusManual();
   if(adminToken && document.getElementById('page-admin').classList.contains('active')) {
+    // Atualizar estatísticas
     loadAdmStats();
+    // Atualizar conteúdo da aba atual (sem sair dela)
+    loadAdmContent(curATab);
+    // Atualizar timestamp
+    updateAdminTimestamp();
   } else if (adminToken) {
     checkNewOrders();
   }
-}, 15000);
+}, 30000); // A cada 30 segundos
 </script>
 
 <footer style="background:#1a1a1a;color:#888;text-align:center;padding:2rem 1rem;margin-top:4rem;border-top:1px solid #333">

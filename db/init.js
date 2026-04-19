@@ -5,11 +5,16 @@ const bcrypt = require('bcryptjs');
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // Configurar timezone para Brasília
+  options: '-c timezone=America/Sao_Paulo'
 });
 
 async function initDB() {
   const client = await pool.connect();
   try {
+    // Configurar timezone para Brasília (horário de Brasília - UTC-3)
+    await client.query("SET timezone = 'America/Sao_Paulo'");
+    
     // Tabela de produtos
     await client.query(`
       CREATE TABLE IF NOT EXISTS products (
