@@ -165,13 +165,6 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--bk);color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:.82rem;transform:translateY(70px);opacity:0;transition:all .3s;z-index:500;border-left:4px solid var(--y);max-width:280px}
 #toast.show{transform:translateY(0);opacity:1}
 @media print{body *{visibility:hidden}#print-area,#print-area *{visibility:visible}#print-area{position:fixed;left:0;top:0;width:100%;background:white;padding:20px}}
-@media(max-width:600px){
-  header{height:auto;padding:0.8rem 1rem;flex-direction:column;gap:8px}
-  nav{width:100%;justify-content:center;gap:4px}
-  nav button{font-size:10px;padding:6px 8px}
-  .logo-tx{font-size:0.95rem}
-  .logo-ic{width:36px;height:36px;font-size:18px}
-}
 #print-area{display:none}
 </style>
 </head>
@@ -458,44 +451,6 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button onclick="fecharModalAcr()" style="width:100%;margin-top:8px;background:#fff;color:#666;border:2px solid #ddd;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">Algo Mais? 🤔</button>
   </div>
 </div>
-<div class="mo" id="modal-metade">
-  <div class="md" style="max-width:550px">
-    <div style="font-size:48px;margin-bottom:8px">🍕</div>
-    <h2 style="margin-bottom:4px">Pizza Metade e Metade</h2>
-    <p style="margin-bottom:14px;font-size:.85rem;color:#888">Escolha 2 sabores e o tamanho</p>
-    
-    <div style="margin-bottom:20px">
-      <label style="display:block;font-weight:700;margin-bottom:8px;color:#333">Tamanho:</label>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <button class="tam-btn" onclick="selecionarTamMetade('G',65)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s">G - R$ 65</button>
-        <button class="tam-btn" onclick="selecionarTamMetade('GG',75)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s">GG - R$ 75</button>
-        <button class="tam-btn" onclick="selecionarTamMetade('GGG',90)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s">Família - R$ 90</button>
-      </div>
-    </div>
-    
-    <div style="margin-bottom:16px">
-      <label style="display:block;font-weight:700;margin-bottom:8px;color:#333">1º Sabor:</label>
-      <select id="sabor1" style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:.95rem">
-        <option value="">Selecione...</option>
-      </select>
-    </div>
-    
-    <div style="margin-bottom:20px">
-      <label style="display:block;font-weight:700;margin-bottom:8px;color:#333">2º Sabor:</label>
-      <select id="sabor2" style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:.95rem">
-        <option value="">Selecione...</option>
-      </select>
-    </div>
-    
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid #f0f0f0;margin-bottom:12px">
-      <span style="font-weight:800;font-size:.9rem">Total:</span>
-      <span id="metade-total" style="font-weight:900;color:var(--r);font-size:1.2rem">Selecione o tamanho</span>
-    </div>
-    
-    <button class="md-btn" onclick="confirmarMetadeMetade()" style="width:100%;padding:13px;font-size:1rem">Adicionar ao Carrinho</button>
-    <button onclick="fecharModalMetade()" style="width:100%;margin-top:8px;background:#fff;color:#666;border:2px solid #ddd;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">Cancelar</button>
-  </div>
-</div>
 <div id="print-area"></div>
 <div id="toast"></div>
 <script>
@@ -642,16 +597,6 @@ function renderProducts(cat) {
       }
       html += '</div></div>';
     }
-    
-    // PIZZA METADE/METADE
-    html += '<div style="background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(214,40,40,0.15);overflow:hidden;margin-bottom:1.2rem;border:2px solid var(--r)">';
-    html += '<div style="background:var(--r);color:#fff;padding:1rem 1.2rem;text-align:center">';
-    html += '<div style="font-family:Poppins,sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:-0.5px">🍕 MONTE SUA PIZZA METADE E METADE</div>';
-    html += '<div style="font-size:.85rem;margin-top:6px;opacity:0.9">Escolha 2 sabores diferentes!</div>';
-    html += '</div>';
-    html += '<div style="padding:1.5rem;text-align:center">';
-    html += '<button class="abtn" style="font-family:Inter,sans-serif;font-size:.95rem;padding:14px 32px;background:var(--r);color:#fff;font-weight:800;max-width:280px;width:100%" onclick="abrirMetadeMetade()" ' + (op?'':'disabled') + '>' + (op?'🍕 MONTAR PIZZA METADE/METADE':'Fechado') + '</button>';
-    html += '</div></div>';
     
     // PIZZA ESPECIAL - MODA DO FAEL
     html += '<div style="background:#fff;border-radius:14px;box-shadow:0 6px 30px rgba(247,183,49,0.3);overflow:hidden;margin-bottom:1.2rem;border:3px solid var(--y)">';
@@ -813,32 +758,26 @@ function addCartTam(id, tam, preco) {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
   var p = allProducts.filter(function(x){return x.id===id;})[0];
   if (!p) return;
-  
-  // Converter código do tamanho para nome amigável
-  var tamNome = tam;
-  if (tam === 'P') tamNome = 'Pequena';
-  if (tam === 'M') tamNome = 'Média';
-  if (tam === 'G') tamNome = 'Grande';
-  if (tam === 'GG') tamNome = 'Gigante';
-  if (tam === 'GGG') tamNome = 'Tamanho Família';
-  
   var cid = id + '_' + tam + '_' + Date.now();
-  cart.push({id:p.id, cartId:cid, name:p.name+' ('+tamNome+')', price:preco, qty:1, emoji:p.emoji, acrescimos:[]});
+  cart.push({id:p.id, cartId:cid, name:p.name+' ('+tam+')', price:preco, qty:1, emoji:p.emoji, acrescimos:[]});
   updateBadge();
-  showToast((p.emoji||'') + ' ' + p.name + ' (' + tamNome + ') adicionada!');
+  showToast((p.emoji||'') + ' ' + p.name + ' (' + tam + ') adicionada!');
 }
 
 function addCartModaFael() {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
-  // Abrir modal de acréscimos para Pizza Moda do Fael
-  produtoParaAdicionar = {
-    id: 'moda_fael',
-    name: 'Pizza Moda do Fael',
-    price: 95,
-    emoji: '👑',
-    category: 'pizzas_tam'
-  };
-  abrirModalAcr('moda_fael');
+  var cid = 'moda_fael_' + Date.now();
+  cart.push({
+    id: 'moda_fael', 
+    cartId: cid, 
+    name: 'Pizza Moda do Fael', 
+    price: 95, 
+    qty: 1, 
+    emoji: '👑', 
+    acrescimos: []
+  });
+  updateBadge();
+  showToast('👑 Pizza Moda do Fael adicionada!');
 }
 
 function abrirModalAcr(prodId) {
@@ -890,117 +829,6 @@ function fecharModalAcr() {
   document.getElementById('modal-acr').classList.remove('open');
   produtoParaAdicionar = null;
   acrSelecionados = [];
-}
-
-// FUNÇÕES PIZZA METADE/METADE
-var metadeTamanho = null;
-var metadePreco = 0;
-
-function abrirMetadeMetade() {
-  if (!isOpen()) { showToast('Estamos fechados!'); return; }
-  
-  // Preencher selects com sabores de pizza
-  var pizzas = allProducts.filter(function(p) { return p.category === 'pizzas' && p.active; });
-  var html = '<option value="">Selecione...</option>';
-  for (var i=0; i<pizzas.length; i++) {
-    html += '<option value="' + pizzas[i].id + '">' + (pizzas[i].emoji||'🍕') + ' ' + pizzas[i].name + '</option>';
-  }
-  document.getElementById('sabor1').innerHTML = html;
-  document.getElementById('sabor2').innerHTML = html;
-  
-  // Resetar seleção
-  metadeTamanho = null;
-  metadePreco = 0;
-  document.getElementById('metade-total').textContent = 'Selecione o tamanho';
-  
-  // Resetar botões de tamanho
-  var btns = document.querySelectorAll('.tam-btn');
-  for (var j=0; j<btns.length; j++) {
-    btns[j].style.borderColor = '#ddd';
-    btns[j].style.background = '#fff';
-    btns[j].style.color = '#333';
-  }
-  
-  document.getElementById('modal-metade').classList.add('open');
-}
-
-function selecionarTamMetade(tam, preco) {
-  metadeTamanho = tam;
-  metadePreco = preco;
-  
-  // Converter código para nome amigável
-  var tamNome = tam;
-  if (tam === 'G') tamNome = 'Grande';
-  if (tam === 'GG') tamNome = 'Gigante';
-  if (tam === 'GGG') tamNome = 'Tamanho Família';
-  
-  document.getElementById('metade-total').textContent = 'R$ ' + preco.toFixed(2).replace('.',',');
-  
-  // Destacar botão selecionado
-  var btns = document.querySelectorAll('.tam-btn');
-  for (var i=0; i<btns.length; i++) {
-    btns[i].style.borderColor = '#ddd';
-    btns[i].style.background = '#fff';
-    btns[i].style.color = '#333';
-  }
-  event.target.style.borderColor = 'var(--r)';
-  event.target.style.background = 'var(--r)';
-  event.target.style.color = '#fff';
-}
-
-function confirmarMetadeMetade() {
-  if (!metadeTamanho) {
-    showToast('⚠️ Selecione o tamanho!');
-    return;
-  }
-  
-  var sabor1Id = document.getElementById('sabor1').value;
-  var sabor2Id = document.getElementById('sabor2').value;
-  
-  if (!sabor1Id || !sabor2Id) {
-    showToast('⚠️ Selecione os 2 sabores!');
-    return;
-  }
-  
-  if (sabor1Id === sabor2Id) {
-    showToast('⚠️ Escolha sabores diferentes!');
-    return;
-  }
-  
-  // Buscar nomes dos sabores
-  var p1 = allProducts.filter(function(p){return p.id==sabor1Id;})[0];
-  var p2 = allProducts.filter(function(p){return p.id==sabor2Id;})[0];
-  
-  if (!p1 || !p2) return;
-  
-  // Converter código para nome amigável
-  var tamNome = metadeTamanho;
-  if (metadeTamanho === 'G') tamNome = 'Grande';
-  if (metadeTamanho === 'GG') tamNome = 'Gigante';
-  if (metadeTamanho === 'GGG') tamNome = 'Tamanho Família';
-  
-  var nomeCompleto = '🍕 Pizza Metade/Metade (' + tamNome + ') - ' + p1.name + ' + ' + p2.name;
-  
-  var cid = 'metade_' + Date.now();
-  cart.push({
-    id: 'pizza_metade',
-    cartId: cid,
-    name: nomeCompleto,
-    price: metadePreco,
-    qty: 1,
-    emoji: '🍕',
-    acrescimos: []
-  });
-  
-  updateBadge();
-  showToast('🍕 Pizza Metade/Metade adicionada!');
-  fecharModalMetade();
-}
-
-function fecharModalMetade() {
-  document.getElementById('modal-metade').classList.remove('open');
-  metadeTamanho = null;
-  metadePreco = 0;
 }
 
 function addCartDireto(id, acrescimos) {
@@ -2056,12 +1884,12 @@ function updateAdminTimestamp() {
 setInterval(function(){ 
   loadStatusManual();
   if(adminToken && document.getElementById('page-admin').classList.contains('active')) {
-    // Atualizar SOMENTE se estiver na aba Pendentes
-    if (curATab === 'pend') {
-      loadAdmStats();
-      loadAdmContent('pend');
-      updateAdminTimestamp();
-    }
+    // Atualizar estatísticas
+    loadAdmStats();
+    // Atualizar conteúdo da aba atual (sem sair dela)
+    loadAdmContent(curATab);
+    // Atualizar timestamp
+    updateAdminTimestamp();
   } else if (adminToken) {
     checkNewOrders();
   }
