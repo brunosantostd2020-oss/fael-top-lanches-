@@ -1698,15 +1698,28 @@ function loadAdmContent(f) {
     .then(function(orders) {
       window._admOrd = orders;
       if (!orders.length) { el.innerHTML = '<div style="text-align:center;padding:3rem;color:#aaa;background:#fff;border-radius:14px"><div style="font-size:42px">&#128237;</div><div style="margin-top:10px;font-weight:800">Nenhum pedido</div></div>'; return; }
-      var html = '<div class="olist">';
-      for (var i=0; i<orders.length; i++) html += oCard(orders[i], true);
+      
+      var html = '';
+      
+      // Mostrar botão de exclusão apenas em "todos" ou abas finalizadas
+      var mostrarExclusao = f === 'todos' || f === 'entregue' || f === 'cancelado';
+      
+      if (mostrarExclusao) {
+        html += '<div style="margin-bottom:1rem;background:#fff;padding:1rem;border-radius:10px;display:flex;justify-content:space-between;align-items:center">';
+        html += '<div><input type="checkbox" id="select-all-orders" onclick="toggleAllOrders(this)" style="width:18px;height:18px;cursor:pointer"> <label for="select-all-orders" style="cursor:pointer;font-weight:700">Selecionar Todos</label></div>';
+        html += '<button onclick="excluirPedidosSelecionados()" style="background:var(--r);color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:800;cursor:pointer;font-size:.9rem;display:flex;align-items:center;gap:8px"><span>🗑️</span>Excluir Selecionados</button>';
+        html += '</div>';
+      }
+      
+      html += '<div class="olist">';
+      for (var i=0; i<orders.length; i++) html += oCard(orders[i], true, mostrarExclusao);
       html += '</div>';
       el.innerHTML = html;
     })
     .catch(function(e) { el.innerHTML = '<p style="color:var(--r);padding:2rem">Erro: '+e.message+'</p>'; });
 }
 
-function oCard(o, isAdm) {
+function oCard(o, isAdm, mostrarCheckbox) {
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Credito',debito:'Debito'};
   var DM = {entrega:'Delivery',retirada:'Retirada'};
   var st = o.status || 'pendente';
@@ -1719,8 +1732,15 @@ function oCard(o, isAdm) {
     acts += '<button class="sbtn wa" onclick="waOrd('+o.id+')">WhatsApp</button>';
     acts += '<button class="sbtn print" onclick="printOrd('+o.id+')">Imprimir</button>';
   }
-  var html = '<div class="oc '+st+'" id="oc-'+o.id+'">';
-  html += '<div class="och"><div><div class="oid">#'+String(o.id).padStart(3,'0')+' - '+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
+  
+  var html = '<div class="oc '+st+'" id="oc-'+o.id+'" style="position:relative">';
+  
+  // Checkbox de seleção (só para pedidos finalizados)
+  if (mostrarCheckbox && (st === 'entregue' || st === 'cancelado')) {
+    html += '<div style="position:absolute;top:12px;left:12px;z-index:10"><input type="checkbox" class="order-checkbox" data-order-id="'+o.id+'" data-total="'+o.total+'" style="width:20px;height:20px;cursor:pointer"></div>';
+  }
+  
+  html += '<div class="och" style="'+(mostrarCheckbox && (st === 'entregue' || st === 'cancelado') ? 'padding-left:40px' : '')+'"><div><div class="oid">#'+String(o.id).padStart(3,'0')+' - '+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
   html += '<div class="ocb">';
   html += '<div class="oib"><div class="oit">Itens</div><div class="oiv">'+iNames+'</div></div>';
   html += '<div class="oib"><div class="oit">Entrega</div><div class="oiv">'+(DM[o.delivery_type]||'--')+'</div><div style="font-size:.72rem;color:#888;margin-top:2px">'+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
@@ -1784,6 +1804,70 @@ function cancelOrd(id) {
   api('PATCH', '/orders/'+id+'/status', {status:'cancelado'}, true)
     .then(function() { o.status='cancelado'; var c=document.getElementById('oc-'+id); if(c) c.outerHTML=oCard(o,true); loadAdmStats(); showToast('Pedido cancelado!'); })
     .catch(function(e){showToast(e.message);});
+}
+
+// FUNÇÕES DE EXCLUSÃO EM MASSA
+function toggleAllOrders(checkbox) {
+  var checkboxes = document.querySelectorAll('.order-checkbox');
+  for (var i = 0; i < checkboxes.length; i++) {
+    checkboxes[i].checked = checkbox.checked;
+  }
+}
+
+function excluirPedidosSelecionados() {
+  var checkboxes = document.querySelectorAll('.order-checkbox:checked');
+  
+  if (checkboxes.length === 0) {
+    showToast('Selecione ao menos um pedido para excluir');
+    return;
+  }
+  
+  var ids = [];
+  var totalValor = 0;
+  
+  for (var i = 0; i < checkboxes.length; i++) {
+    ids.push(parseInt(checkboxes[i].getAttribute('data-order-id')));
+    totalValor += parseFloat(checkboxes[i].getAttribute('data-total'));
+  }
+  
+  var confirmMsg = 'Tem certeza que deseja excluir ' + ids.length + ' pedido(s)?\n\n';
+  confirmMsg += 'Total: R$ ' + totalValor.toFixed(2).replace('.', ',') + '\n\n';
+  confirmMsg += 'ATENÇÃO: Esta ação é IRREVERSÍVEL e os valores serão removidos do faturamento!';
+  
+  if (!confirm(confirmMsg)) return;
+  
+  // Mostrar loading
+  var btn = event.target;
+  var originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span style="animation:spin 1s linear infinite">⏳</span> Excluindo...';
+  
+  // Excluir pedidos um por um
+  var promises = ids.map(function(id) {
+    return api('DELETE', '/orders/' + id, null, true);
+  });
+  
+  Promise.all(promises)
+    .then(function() {
+      // Remover da tela
+      ids.forEach(function(id) {
+        var card = document.getElementById('oc-' + id);
+        if (card) card.remove();
+      });
+      
+      // Atualizar estatísticas
+      loadAdmStats();
+      
+      // Recarregar conteúdo
+      loadAdmContent(curATab);
+      
+      showToast('✅ ' + ids.length + ' pedido(s) excluído(s) com sucesso!');
+    })
+    .catch(function(e) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      showToast('Erro ao excluir: ' + e.message);
+    });
 }
 function waOrd(id) {
   var o = null; if (window._admOrd) for (var i=0; i<window._admOrd.length; i++) if (window._admOrd[i].id===id) { o=window._admOrd[i]; break; }

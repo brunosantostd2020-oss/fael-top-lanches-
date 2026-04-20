@@ -145,4 +145,37 @@ router.delete('/reset-all', requireAdmin, async (req, res) => {
   }
 });
 
+// DELETE individual order (admin only)
+router.delete('/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Verificar se pedido existe
+    const orderCheck = await pool.query('SELECT id, status FROM orders WHERE id = $1', [id]);
+    if (orderCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+    
+    // Só permite excluir pedidos finalizados (entregue ou cancelado)
+    const status = orderCheck.rows[0].status;
+    if (status !== 'entregue' && status !== 'cancelado') {
+      return res.status(400).json({ 
+        error: 'Só é permitido excluir pedidos entregues ou cancelados. Cancele o pedido primeiro.' 
+      });
+    }
+    
+    // Delete order items first (foreign key constraint)
+    await pool.query('DELETE FROM order_items WHERE order_id = $1', [id]);
+    
+    // Delete the order
+    await pool.query('DELETE FROM orders WHERE id = $1', [id]);
+    
+    res.json({ 
+      success: true, 
+      message: 'Pedido excluído com sucesso!' 
+    });
+  } catch (e) { 
+    res.status(500).json({ error: e.message }); 
+  }
+});
+
 module.exports = router;
