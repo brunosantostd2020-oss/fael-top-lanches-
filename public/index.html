@@ -501,9 +501,9 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <div style="margin-bottom:20px">
       <label style="display:block;font-weight:700;margin-bottom:8px;color:#333">Tamanho:</label>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <button class="tam-btn" onclick="selecionarTamMetade('G',65)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s">G - R$ 65</button>
-        <button class="tam-btn" onclick="selecionarTamMetade('GG',75)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s">GG - R$ 75</button>
-        <button class="tam-btn" onclick="selecionarTamMetade('GGG',90)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s">Família - R$ 90</button>
+        <button class="tam-btn" onclick="selecionarTamMetade('G',65)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">G<br><span style="font-size:.7rem;font-weight:600;color:#666">6 pedaços</span><br>R$ 65</button>
+        <button class="tam-btn" onclick="selecionarTamMetade('GG',75)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">GG<br><span style="font-size:.7rem;font-weight:600;color:#666">8 pedaços</span><br>R$ 75</button>
+        <button class="tam-btn" onclick="selecionarTamMetade('GGG',90)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">Família<br><span style="font-size:.7rem;font-weight:600;color:#666">12 pedaços</span><br>R$ 90</button>
       </div>
     </div>
     
@@ -691,13 +691,13 @@ function renderProducts(cat, subcat) {
     html += '<div style="text-align:center;margin-bottom:2rem">';
     html += '<h3 style="font-family:Poppins,sans-serif;font-size:1.5rem;margin-bottom:1.5rem;color:var(--bk)">Escolha uma categoria:</h3>';
     html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;max-width:900px;margin:0 auto">';
-    html += '<button onclick="renderProducts(\'pizzas_tam\',\'tradicionais\')" style="background:linear-gradient(135deg,#E63946,#C1121F);color:#fff;border:none;padding:2rem 1.5rem;border-radius:14px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:800;font-size:1.1rem;box-shadow:0 4px 15px rgba(230,57,70,0.3);transition:all .2s">';
+    html += '<button onclick="abrirMetadeMetade()" style="background:linear-gradient(135deg,#E63946,#C1121F);color:#fff;border:none;padding:2rem 1.5rem;border-radius:14px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:800;font-size:1.1rem;box-shadow:0 4px 15px rgba(230,57,70,0.3);transition:all .2s">';
     html += '<div style="font-size:3rem;margin-bottom:8px">🍕</div>';
     html += 'MONTE SUA PIZZA GIGANTE';
     html += '</button>';
-    html += '<button onclick="renderProducts(\'pizzas_tam\',\'especiais\')" style="background:linear-gradient(135deg,var(--y),var(--yd));color:#fff;border:none;padding:2rem 1.5rem;border-radius:14px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:800;font-size:1.1rem;box-shadow:0 4px 15px rgba(247,183,49,0.3);transition:all .2s">';
+    html += '<button onclick="renderProducts(\'pizzas_tam\',\'moda_fael\')" style="background:linear-gradient(135deg,var(--y),var(--yd));color:#fff;border:none;padding:2rem 1.5rem;border-radius:14px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:800;font-size:1.1rem;box-shadow:0 4px 15px rgba(247,183,49,0.3);transition:all .2s">';
     html += '<div style="font-size:3rem;margin-bottom:8px">👑</div>';
-    html += 'PIZZAS ESPECIAIS';
+    html += 'MODA DO FAEL';
     html += '</button>';
     html += '<button onclick="renderProducts(\'pizzas_tam\',\'todas_pizzas\')" style="background:linear-gradient(135deg,#2A9D8F,#264653);color:#fff;border:none;padding:2rem 1.5rem;border-radius:14px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:800;font-size:1.1rem;box-shadow:0 4px 15px rgba(42,157,143,0.3);transition:all .2s">';
     html += '<div style="font-size:3rem;margin-bottom:8px">🍕</div>';
@@ -713,23 +713,20 @@ function renderProducts(cat, subcat) {
     var pizzas = allProducts.filter(function(p) { return p.category === 'pizzas' && p.active; });
     
     // Aplicar filtro de subcategoria
-    if (subcat === 'tradicionais') {
+    if (subcat === 'moda_fael') {
+      // Só Pizza Moda do Fael
       pizzas = pizzas.filter(function(p) {
         var nome = p.name.toLowerCase();
-        return nome.includes('calabresa') || nome.includes('mussarela') || 
-               nome.includes('marguerita') || nome.includes('portuguesa') ||
-               nome.includes('napolitana') || nome.includes('quatro queijos') ||
-               nome.includes('frango') && !nome.includes('especial');
+        return nome.includes('moda do fael');
       });
-    } else if (subcat === 'especiais') {
+    } else if (subcat === 'todas_pizzas') {
+      // Todas as pizzas EXCETO Moda do Fael
       pizzas = pizzas.filter(function(p) {
         var nome = p.name.toLowerCase();
-        return nome.includes('especial') || nome.includes('suprema') ||
-               nome.includes('bacon') || nome.includes('toscana') ||
-               nome.includes('vegetariana') || nome.includes('atum');
+        return !nome.includes('moda do fael');
       });
     }
-    // se subcat === 'todas_pizzas', mostra todas (não filtra)
+    // se subcat não definido, mostra botões de categoria (já tratado acima)
     
     if (!pizzas.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma pizza nesta categoria</p>'; return; }
     
@@ -740,9 +737,9 @@ function renderProducts(cat, subcat) {
     html += '</button></div>';
     
     var tams = [
-      {cod:'G',label:'G - Grande',preco:65},
-      {cod:'GG',label:'GG - Especial',preco:75},
-      {cod:'GGG',label:'Tamanho Família',preco:90}
+      {cod:'G',label:'G - Grande (6 pedaços)',preco:65},
+      {cod:'GG',label:'GG - Especial (8 pedaços)',preco:75},
+      {cod:'GGG',label:'Tamanho Família (12 pedaços)',preco:90}
     ];
     for (var t=0; t<tams.length; t++) {
       var tam = tams[t];
@@ -1099,8 +1096,12 @@ var metadePreco = 0;
 function abrirMetadeMetade() {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
   
-  // Preencher selects com sabores de pizza
-  var pizzas = allProducts.filter(function(p) { return p.category === 'pizzas' && p.active; });
+  // Preencher selects com sabores de pizza (EXCETO Moda do Fael)
+  var pizzas = allProducts.filter(function(p) { 
+    if (p.category !== 'pizzas' || !p.active) return false;
+    var nome = p.name.toLowerCase();
+    return !nome.includes('moda do fael'); // Exclui Moda do Fael
+  });
   var html = '<option value="">Selecione...</option>';
   for (var i=0; i<pizzas.length; i++) {
     html += '<option value="' + pizzas[i].id + '">' + (pizzas[i].emoji||'🍕') + ' ' + pizzas[i].name + '</option>';
