@@ -1626,6 +1626,20 @@ function getForm() {
 
 function valid() {
   if (!cart.length) { showToast('Carrinho vazio!'); return false; }
+
+  // Verificar se o carrinho tem apenas bebidas
+  var categoriasBebida = ['bebidas'];
+  var temSomenteBebidas = cart.every(function(item) {
+    // Buscar o produto pelo nome/id para checar categoria
+    var prod = allProducts.filter(function(p) { return p.id === item.id; })[0];
+    if (!prod) return false; // item especial (pizza metade, moda fael) não é bebida
+    return categoriasBebida.indexOf(prod.category) >= 0;
+  });
+  if (temSomenteBebidas) {
+    showToast('⚠️ Adicione pelo menos um lanche para finalizar o pedido! Não entregamos apenas bebidas.');
+    return false;
+  }
+
   var d = getForm();
   if (!d.name) { showToast('Informe seu nome!'); return false; }
   if (!d.phone) { showToast('Informe seu telefone!'); return false; }
