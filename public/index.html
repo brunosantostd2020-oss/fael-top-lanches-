@@ -332,7 +332,17 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
           <div style="margin-top:.9rem">
             <div class="srow"><span>Subtotal</span><span id="sub-val">R$ 0,00</span></div>
             <div class="srow" id="taxa-row" style="color:#22c55e;font-weight:800"><span>Entrega</span><span id="taxa-display">GRATIS</span></div>
+            <div class="srow" id="desconto-row" style="display:none;color:#22c55e;font-weight:800"><span>Desconto cupom</span><span id="desconto-val">-R$ 0,00</span></div>
             <div class="stot"><span>TOTAL</span><span id="tot-val">R$ 0,00</span></div>
+          </div>
+          <!-- CUPOM DE DESCONTO -->
+          <div id="cupom-box" style="margin-bottom:12px;background:#fff8e1;border:2px solid #F7B731;border-radius:12px;padding:12px">
+            <div style="font-weight:900;font-size:.88rem;color:#C47D00;margin-bottom:8px">🎟️ Cupom de Desconto</div>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="cupom-input" placeholder="Ex: FAEL-AB12CD" style="flex:1;padding:10px;border:2px solid #F7B731;border-radius:8px;font-size:.88rem;font-weight:700;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+              <button onclick="aplicarCupom()" style="background:#F7B731;color:#7a5800;border:none;padding:10px 16px;border-radius:8px;font-weight:900;font-size:.82rem;cursor:pointer;white-space:nowrap">APLICAR</button>
+            </div>
+            <div id="cupom-status" style="display:none;margin-top:8px;font-size:.82rem;font-weight:700;padding:6px 10px;border-radius:6px"></div>
           </div>
           <button class="wabtn" id="wa-btn" onclick="sendWA()">ENVIAR VIA WHATSAPP</button>
         </div>
@@ -447,6 +457,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button class="atab" onclick="aTab('acrescimos',this)">Acrescimos</button>
     <button class="atab" onclick="aTab('produtos',this)">Produtos</button>
     <button class="atab" onclick="aTab('config',this)">Config</button>
+    <button class="atab" onclick="aTab('cupons',this)">🎟️ Cupons</button>
   </div>
   <div id="admin-content"></div>
 </div>
@@ -573,10 +584,11 @@ var allProducts = [], allAcrescimos = [], cart = [];
 var curDel = 'entrega', curPay = 'dinheiro', curATab = 'todos';
 var editProdId = null, editAcrId = null;
 var taxaAtual = 0, bairroOk = true;
+var cupomAtivo = null; // { codigo, desconto_percent }
 var produtoParaAdicionar = null, acrSelecionados = [];
 var lastOrderCheck = 0;
-var notificationEnabled = localStorage.getItem('fael_notification') !== 'false';
-var autoPrintEnabled = localStorage.getItem('fael_autoprint') !== 'false';
+var notificationEnabled = true; // carregado do banco
+var autoPrintEnabled = true;    // carregado do banco
 
 function api(method, path, body, auth) {
   var h = {'Content-Type': 'application/json'};
@@ -645,6 +657,8 @@ function loadConfigs() {
         if (s.pix_chave) { PIX_CHAVE = s.pix_chave; }
         if (s.pix_nome) { PIX_NOME = s.pix_nome; }
         if (s.pix_cidade) { PIX_CIDADE = s.pix_cidade; }
+        if (s.notification !== undefined) notificationEnabled = s.notification !== 'false';
+        if (s.autoprint !== undefined) autoPrintEnabled = s.autoprint !== 'false';
       }).catch(function(e) {
         console.log('Erro ao carregar settings admin:', e);
       });
@@ -1018,14 +1032,32 @@ function addCartTam(id, tam, preco) {
   if (tam === 'G') tamNome = 'Grande';
   if (tam === 'GG') tamNome = 'Gigante';
   if (tam === 'GGG') tamNome = 'Tamanho Família';
-  
-  var cid = id + '_' + tam + '_' + Date.now();
-  var nomeProduto = p.name+' ('+tamNome+')';
-  cart.push({id:p.id, cartId:cid, name:nomeProduto, price:preco, qty:1, emoji:p.emoji, acrescimos:[]});
-  updateBadge();
-  
-  // Abrir modal "Produto Adicionado"
-  mostrarModalProdutoAdicionado((p.emoji||'') + ' ' + nomeProduto);
+
+  var nomeProduto = p.name + ' (' + tamNome + ')';
+
+  // Abrir modal de acréscimos antes de adicionar ao carrinho
+  produtoParaAdicionar = {
+    id: p.id,
+    name: nomeProduto,
+    price: preco,
+    emoji: p.emoji || '🍕',
+    category: 'pizzas_tam'
+  };
+
+  acrSelecionados = [];
+  var lista = document.getElementById('acr-lista');
+  if (!lista) return;
+  var html = '';
+  for (var i=0; i<allAcrescimos.length; i++) {
+    var a = allAcrescimos[i];
+    html += '<div class="acr-item" id="acr-' + a.id + '" onclick="toggleAcr(' + a.id + ')">';
+    html += '<span class="acr-emoji">' + (a.emoji||'+') + '</span>';
+    html += '<span class="acr-nome">' + a.nome + '</span>';
+    html += '<span class="acr-val">+R$ ' + parseFloat(a.valor).toFixed(2).replace('.',',') + '</span></div>';
+  }
+  lista.innerHTML = html;
+  calcAcrTotal();
+  document.getElementById('modal-acr').classList.add('open');
 }
 
 function addCartModaFael() {
@@ -1086,12 +1118,25 @@ function calcAcrTotal() {
 }
 
 function confirmarAcrescimos() {
-  addCartDireto(produtoParaAdicionar, acrSelecionados);
-  fecharModalAcr();
-  // Abrir modal de escolha após adicionar
-  setTimeout(function() {
-    document.getElementById('modal-escolha').classList.add('open');
-  }, 300);
+  // produtoParaAdicionar pode ser um ID (numero) ou um objeto (pizza com tamanho)
+  if (produtoParaAdicionar && typeof produtoParaAdicionar === 'object') {
+    var p = produtoParaAdicionar;
+    var extra = 0;
+    var nomes = acrSelecionados.map(function(a){return a.nome;}).join(', ');
+    for (var j=0; j<acrSelecionados.length; j++) extra += parseFloat(acrSelecionados[j].valor);
+    var nome = acrSelecionados.length > 0 ? p.name + ' (+' + nomes + ')' : p.name;
+    cart.push({id:p.id, cartId:p.id+'_'+Date.now(), name:nome, price:p.price+extra, qty:1, emoji:p.emoji, acrescimos:acrSelecionados});
+    updateBadge();
+    fecharModalAcr();
+    mostrarModalProdutoAdicionado((p.emoji||'') + ' ' + p.name);
+  } else {
+    addCartDireto(produtoParaAdicionar, acrSelecionados);
+    fecharModalAcr();
+    // Abrir modal de escolha após adicionar
+    setTimeout(function() {
+      document.getElementById('modal-escolha').classList.add('open');
+    }, 300);
+  }
 }
 
 function fecharModalAcr() {
@@ -1363,13 +1408,67 @@ function rmItem(cid) {
   updateBadge(); renderCart();
 }
 
+
+function aplicarCupom() {
+  var cod = document.getElementById('cupom-input').value.trim().toUpperCase();
+  var status = document.getElementById('cupom-status');
+  if (!cod) { showToast('Digite um cupom!'); return; }
+  if (cart.length === 0) { showToast('Adicione itens antes de usar o cupom!'); return; }
+  status.style.display = 'block';
+  status.style.background = '#f0f4ff';
+  status.style.color = '#555';
+  status.textContent = '⏳ Verificando...';
+  fetch('/api/cupons/validar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ codigo: cod })
+  })
+  .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error); return d; }); })
+  .then(function(d) {
+    cupomAtivo = { codigo: d.codigo, desconto_percent: d.desconto_percent };
+    status.style.background = '#f0fdf4';
+    status.style.color = '#15803d';
+    status.style.border = '1px solid #22c55e';
+    status.textContent = '✅ Cupom válido! ' + d.desconto_percent + '% de desconto aplicado. (' + d.usos_restantes + ' usos restantes)';
+    calcSum();
+  })
+  .catch(function(e) {
+    cupomAtivo = null;
+    status.style.background = '#fff5f5';
+    status.style.color = '#991B1B';
+    status.style.border = '1px solid #EF4444';
+    status.textContent = '❌ ' + e.message;
+    calcSum();
+  });
+}
+
+function limparCupom() {
+  cupomAtivo = null;
+  var inp = document.getElementById('cupom-input');
+  var status = document.getElementById('cupom-status');
+  if (inp) inp.value = '';
+  if (status) status.style.display = 'none';
+  calcSum();
+}
+
 function calcSum() {
   var sub = 0;
   for (var i=0; i<cart.length; i++) sub += cart[i].price * cart[i].qty;
   var tx = curDel === 'entrega' ? taxaAtual : 0;
+  var desc = 0;
+  if (cupomAtivo) {
+    desc = sub * (cupomAtivo.desconto_percent / 100);
+    var dRow = document.getElementById('desconto-row');
+    var dVal = document.getElementById('desconto-val');
+    if (dRow) dRow.style.display = 'flex';
+    if (dVal) dVal.textContent = '-R$ ' + desc.toFixed(2).replace('.',',');
+  } else {
+    var dRow = document.getElementById('desconto-row');
+    if (dRow) dRow.style.display = 'none';
+  }
   document.getElementById('sub-val').textContent = 'R$ ' + sub.toFixed(2).replace('.',',');
-  document.getElementById('tot-val').textContent = 'R$ ' + (sub+tx).toFixed(2).replace('.',',');
-  if (curPay === 'pix') gerarPix(sub+tx);
+  document.getElementById('tot-val').textContent = 'R$ ' + (sub + tx - desc).toFixed(2).replace('.',',');
+  if (curPay === 'pix') gerarPix(sub + tx - desc);
 }
 
 function setDel(t) {
@@ -1558,7 +1657,8 @@ function sendWA() {
   var sub = 0;
   for (var i=0; i<cart.length; i++) sub += cart[i].price * cart[i].qty;
   var tx = curDel==='entrega' ? taxaAtual : 0;
-  var tot = sub + tx;
+  var desc = cupomAtivo ? sub * (cupomAtivo.desconto_percent / 100) : 0;
+  var tot = sub + tx - desc;
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Cartao de Credito',debito:'Cartao de Debito'};
   var trocov = document.getElementById('troco-v').value;
   var body = {
@@ -1574,6 +1674,16 @@ function sendWA() {
   };
   api('POST', '/orders', body)
     .then(function(order) {
+      // Consumir cupom se aplicado
+      var cupomUsado = cupomAtivo ? { codigo: cupomAtivo.codigo, desconto_percent: cupomAtivo.desconto_percent } : null;
+      if (cupomAtivo) {
+        fetch('/api/cupons/usar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ codigo: cupomAtivo.codigo })
+        }).catch(function(){});
+        limparCupom();
+      }
       var msg = 'PEDIDO - FAEL TOP LANCHES\n';
       msg += '====================\n';
       msg += 'Cliente: ' + d.name + ' | Tel: ' + d.phone + '\n';
@@ -1584,6 +1694,7 @@ function sendWA() {
       for (var i=0; i<cart.length; i++) { msg += cart[i].qty + 'x ' + cart[i].name + ' - R$ ' + (cart[i].price*cart[i].qty).toFixed(2).replace('.',',') + '\n'; }
       msg += '====================\n';
       if (tx > 0) { msg += 'Taxa: R$ ' + tx.toFixed(2).replace('.',',') + '\n'; } else { msg += 'Entrega GRATIS\n'; }
+      if (desc > 0 && cupomUsado) { msg += 'Desconto (' + cupomUsado.desconto_percent + '%): -R$ ' + desc.toFixed(2).replace('.',',') + '\n'; }
       msg += 'TOTAL: R$ ' + tot.toFixed(2).replace('.',',') + '\n';
       msg += PM[curPay] + '\n';
       if (curPay==='dinheiro' && trocov) msg += 'Troco para: R$ ' + parseFloat(trocov).toFixed(2).replace('.',',') + '\n';
@@ -1733,6 +1844,7 @@ function loadAdmContent(f) {
   var el = document.getElementById('admin-content');
   if (f === 'produtos') { buildPM().then(function(h){el.innerHTML=h;}); return; }
   if (f === 'acrescimos') { buildAcrMgr().then(function(h){el.innerHTML=h;}); return; }
+  if (f === 'cupons') { buildCuponsMgr().then(function(h){el.innerHTML=h;}); return; }
   if (f === 'config') { buildCfg().then(function(h){el.innerHTML=h;}); return; }
   el.innerHTML = '<div class="loading"><span class="spin">&#9203;</span>Carregando...</div>';
   var url = '/orders' + (f!=='todos' ? '?status='+f : '');
@@ -2077,6 +2189,115 @@ function saveProd(){
 }
 
 // ACRESCIMOS ADMIN
+
+function buildCuponsMgr() {
+  return new Promise(function(resolve) {
+    var html = '<div style="max-width:700px">';
+    html += '<h3 style="font-family:Impact,sans-serif;font-size:1.5rem;margin-bottom:1rem">🎟️ Cupons de Desconto</h3>';
+
+    // Formulário de geração
+    html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.5rem">';
+    html += '<h4 style="margin-bottom:1rem;font-size:1rem">Gerar novos cupons</h4>';
+    html += '<div class="frow">';
+    html += '<div class="fg"><label>Quantidade (máx 1000)</label><input type="number" id="cp-qtd" value="10" min="1" max="1000"></div>';
+    html += '<div class="fg"><label>Desconto (%)</label><input type="number" id="cp-desc" value="2" min="1" max="100" step="0.5"></div>';
+    html += '</div>';
+    html += '<div class="frow">';
+    html += '<div class="fg"><label>Usos por cupom</label><input type="number" id="cp-usos" value="5" min="1" max="100"></div>';
+    html += '<div class="fg"><label>Validade (horas)</label><input type="number" id="cp-horas" value="2" min="1" max="720"></div>';
+    html += '</div>';
+    html += '<button onclick="gerarCupons()" style="width:100%;background:var(--r);color:#fff;border:none;padding:12px;border-radius:10px;font-family:Impact,sans-serif;font-size:1.1rem;cursor:pointer;margin-top:8px">GERAR CUPONS</button>';
+    html += '</div>';
+
+    // Área de resultado
+    html += '<div id="cp-resultado" style="display:none;background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:1rem;margin-bottom:1.5rem">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html += '<b style="color:#15803d">✅ Cupons gerados!</b>';
+    html += '<button onclick="copiarCupons()" style="background:#22c55e;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:800;font-size:.8rem;cursor:pointer">📋 Copiar Todos</button>';
+    html += '</div>';
+    html += '<textarea id="cp-lista" style="width:100%;height:200px;font-family:Courier New,monospace;font-size:.78rem;border:1px solid #ccc;border-radius:6px;padding:8px;resize:vertical" readonly></textarea>';
+    html += '</div>';
+
+    // Lista de cupons ativos
+    html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem">';
+    html += '<h4 style="margin-bottom:1rem;font-size:1rem">Cupons cadastrados</h4>';
+    html += '<div id="cp-tabela">Carregando...</div>';
+    html += '</div>';
+    html += '</div>';
+
+    resolve(html);
+
+    // Load existing cupons after render
+    setTimeout(function() { loadCuponsTabela(); }, 100);
+  });
+}
+
+function gerarCupons() {
+  var qtd = parseInt(document.getElementById('cp-qtd').value) || 10;
+  var desc = parseFloat(document.getElementById('cp-desc').value) || 2;
+  var usos = parseInt(document.getElementById('cp-usos').value) || 5;
+  var horas = parseInt(document.getElementById('cp-horas').value) || 2;
+  if (qtd < 1 || qtd > 1000) { showToast('Quantidade entre 1 e 1000!'); return; }
+  api('POST', '/cupons/gerar', { quantidade: qtd, desconto_percent: desc, usos_maximos: usos, horas_validade: horas }, true)
+  .then(function(d) {
+    var res = document.getElementById('cp-resultado');
+    var lista = document.getElementById('cp-lista');
+    if (res) res.style.display = 'block';
+    if (lista) lista.value = d.gerados.join('\n');
+    showToast('✅ ' + d.total + ' cupons gerados!');
+    loadCuponsTabela();
+  })
+  .catch(function(e) { showToast('Erro: ' + e.message); });
+}
+
+function copiarCupons() {
+  var lista = document.getElementById('cp-lista');
+  if (!lista) return;
+  lista.select();
+  document.execCommand('copy');
+  showToast('✅ Cupons copiados!');
+}
+
+function loadCuponsTabela() {
+  var el = document.getElementById('cp-tabela');
+  if (!el) return;
+  api('GET', '/cupons', null, true)
+  .then(function(cupons) {
+    if (!cupons.length) { el.innerHTML = '<p style="color:#aaa">Nenhum cupom cadastrado</p>'; return; }
+    var now = new Date();
+    var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.82rem">';
+    html += '<tr style="background:#f8f8f8"><th style="padding:8px;text-align:left">Código</th><th>Desconto</th><th>Usos</th><th>Validade</th><th>Status</th><th></th></tr>';
+    for (var i=0; i<cupons.length; i++) {
+      var c = cupons[i];
+      var exp = new Date(c.expira_em);
+      var expirado = now > exp;
+      var esgotado = c.usos_atuais >= c.usos_maximos;
+      var inativo = !c.ativo;
+      var statusTxt = inativo ? '🚫 Desativado' : expirado ? '⏰ Expirado' : esgotado ? '✅ Esgotado' : '🟢 Ativo';
+      var statusCor = inativo||expirado||esgotado ? '#aaa' : '#15803d';
+      html += '<tr style="border-bottom:1px solid #f0f0f0">';
+      html += '<td style="padding:8px;font-family:monospace;font-weight:700">' + c.codigo + '</td>';
+      html += '<td style="text-align:center">' + c.desconto_percent + '%</td>';
+      html += '<td style="text-align:center">' + c.usos_atuais + '/' + c.usos_maximos + '</td>';
+      html += '<td style="text-align:center;font-size:.75rem">' + exp.toLocaleString('pt-BR') + '</td>';
+      html += '<td style="text-align:center;color:' + statusCor + ';font-weight:700">' + statusTxt + '</td>';
+      html += '<td style="text-align:center">';
+      if (c.ativo && !expirado && !esgotado) html += '<button onclick="desativarCupom(' + c.id + ')" style="background:#EF4444;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:.75rem;cursor:pointer">Desativar</button>';
+      html += '</td></tr>';
+    }
+    html += '</table></div>';
+    el.innerHTML = html;
+  })
+  .catch(function() { el.innerHTML = '<p style="color:#aaa">Erro ao carregar</p>'; });
+}
+
+function desativarCupom(id) {
+  if (!confirm('Desativar este cupom?')) return;
+  api('DELETE', '/cupons/' + id, null, true)
+  .then(function() { showToast('Cupom desativado!'); loadCuponsTabela(); })
+  .catch(function(e) { showToast('Erro: ' + e.message); });
+}
+
 function buildAcrMgr() {
   return api('GET','/acrescimos/all',null,true).then(function(acrs) {
     var lista = '';
@@ -2302,7 +2523,7 @@ function changePwd(){
 
 function toggleNotification(enabled) {
   notificationEnabled = enabled;
-  localStorage.setItem('fael_notification', enabled ? 'true' : 'false');
+  api('PUT', '/auth/settings/notification', { value: enabled ? 'true' : 'false' }, true).catch(function(){});
   showToast(enabled ? 'Som de notificação ATIVADO! 🔊' : 'Som de notificação DESATIVADO');
   var label = document.querySelector('#cfg-notification + span');
   if (label) label.textContent = enabled ? 'Ativado' : 'Desativado';
@@ -2310,7 +2531,7 @@ function toggleNotification(enabled) {
 
 function toggleAutoPrint(enabled) {
   autoPrintEnabled = enabled;
-  localStorage.setItem('fael_autoprint', enabled ? 'true' : 'false');
+  api('PUT', '/auth/settings/autoprint', { value: enabled ? 'true' : 'false' }, true).catch(function(){});
   showToast(enabled ? 'Impressão automática ATIVADA! 🖨️' : 'Impressão automática DESATIVADA');
   var label = document.querySelector('#cfg-autoprint + span');
   if (label) label.textContent = enabled ? 'Ativado' : 'Desativado';
