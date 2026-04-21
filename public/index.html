@@ -1030,15 +1030,19 @@ function addCartTam(id, tam, preco) {
 
 function addCartModaFael() {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
-  // Abrir modal de acréscimos para Pizza Moda do Fael
-  produtoParaAdicionar = {
-    id: 'moda_fael',
-    name: 'Pizza Moda do Fael',
+  // Adicionar diretamente ao carrinho com preço fixo R$ 95,00
+  var cid = 'moda_fael_' + Date.now();
+  cart.push({
+    id: null,
+    cartId: cid,
+    name: 'Moda do Fael',
     price: 95,
+    qty: 1,
     emoji: '👑',
-    category: 'pizzas_tam'
-  };
-  abrirModalAcr('moda_fael');
+    acrescimos: []
+  });
+  updateBadge();
+  mostrarModalProdutoAdicionado('👑 Moda do Fael');
 }
 
 function abrirModalAcr(prodId) {
