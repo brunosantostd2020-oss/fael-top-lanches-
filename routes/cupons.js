@@ -99,12 +99,51 @@ router.get('/', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// DELETE /api/cupons/:id — admin desativa cupom
+// DELETE /api/cupons/:id — apaga cupom permanentemente
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
-    await pool.query("UPDATE cupons SET ativo = false WHERE id = $1", [req.params.id]);
+    await pool.query("DELETE FROM cupons WHERE id = $1", [req.params.id]);
     res.json({ sucesso: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+// DELETE /api/cupons — apaga TODOS os cupons (reset geral)
+router.delete('/', requireAdmin, async (req, res) => {
+  try {
+    const r = await pool.query("DELETE FROM cupons");
+    res.json({ sucesso: true, apagados: r.rowCount });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Reset automático toda quinta-feira às 18:00 (horário de Brasília)
+function agendarResetQuinta() {
+  function proximaQuintaAs18() {
+    const agora = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const diaSemana = agora.getDay(); // 0=dom, 4=qui
+    let diasAteQuinta = (4 - diaSemana + 7) % 7;
+    if (diasAteQuinta === 0 && (agora.getHours() > 18 || (agora.getHours() === 18 && agora.getMinutes() > 0))) {
+      diasAteQuinta = 7; // já passou das 18h de quinta, pega a próxima
+    }
+    const proxQuinta = new Date(agora);
+    proxQuinta.setDate(agora.getDate() + diasAteQuinta);
+    proxQuinta.setHours(18, 0, 0, 0);
+    return proxQuinta.getTime() - agora.getTime();
+  }
+
+  const msAteQuinta = proximaQuintaAs18();
+  console.log(`⏰ Reset de cupons agendado em ${Math.round(msAteQuinta/1000/60)} minutos`);
+
+  setTimeout(async function executarReset() {
+    try {
+      await pool.query("DELETE FROM cupons");
+      console.log('🗑️ Reset automático de cupons executado (quinta 18h)');
+    } catch (e) {
+      console.error('Erro no reset automático de cupons:', e.message);
+    }
+    // Reagendar para a próxima quinta
+    setTimeout(executarReset, proximaQuintaAs18());
+  }, msAteQuinta);
+}
+agendarResetQuinta();
 
 module.exports = router;

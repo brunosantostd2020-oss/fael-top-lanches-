@@ -480,6 +480,26 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button class="md-btn" onclick="closeModal()">Voltar ao Cardapio</button>
   </div>
 </div>
+<!-- MODAL LEMBRETE DE FINALIZAR PEDIDO -->
+<div class="mo" id="modal-lembrete">
+  <div class="md" style="max-width:420px;text-align:center;padding:2rem">
+    <div style="font-size:56px;margin-bottom:12px">🛒</div>
+    <h2 style="font-family:Poppins,sans-serif;font-size:1.3rem;font-weight:900;color:#1a1a1a;margin-bottom:10px;line-height:1.4">Seu pedido está aguardando!</h2>
+    <p style="font-size:.92rem;color:#555;line-height:1.7;margin-bottom:6px">
+      Notamos que você ainda não finalizou sua compra.
+    </p>
+    <p style="font-size:.88rem;color:#888;line-height:1.6;margin-bottom:20px">
+      Seus itens estão reservados no carrinho. Para garantir o recebimento do seu pedido, clique em <b style="color:var(--r)">Finalizar Pedido</b> e envie via WhatsApp.
+    </p>
+    <button onclick="fecharLembrete(true)" style="width:100%;background:var(--r);color:#fff;border:none;padding:14px;border-radius:12px;font-family:Impact,sans-serif;font-size:1.1rem;cursor:pointer;letter-spacing:.5px;margin-bottom:10px">
+      ✅ FINALIZAR PEDIDO AGORA
+    </button>
+    <button onclick="fecharLembrete(false)" style="width:100%;background:#fff;color:#888;border:2px solid #ddd;padding:11px;border-radius:12px;font-weight:700;font-size:.85rem;cursor:pointer">
+      Ainda estou escolhendo
+    </button>
+  </div>
+</div>
+
 <div class="mo" id="modal-acr">
   <div class="md" style="max-width:480px">
     <div style="font-size:48px;margin-bottom:8px">+</div>
@@ -1658,8 +1678,77 @@ function valid() {
 var originalShowPage = showPage;
 showPage = function(page) {
   originalShowPage(page);
-  // Removido carregamento automático de dados por privacidade
+  // Iniciar timer de lembrete ao entrar no carrinho
+  if (page === 'carrinho') {
+    setTimeout(iniciarTimerLembrete, 500);
+  } else {
+    cancelarTimerLembrete();
+    // Fechar modal lembrete se estiver aberto
+    var ml = document.getElementById('modal-lembrete');
+    if (ml) ml.classList.remove('open');
+  }
 };
+
+
+// =============================================
+// SISTEMA DE LEMBRETE DE FINALIZAR PEDIDO
+// =============================================
+var _lembreteTimer = null;
+var _lembreteJaMostrado = false;
+var _LEMBRETE_MS = 2 * 60 * 1000; // 2 minutos
+
+function iniciarTimerLembrete() {
+  cancelarTimerLembrete();
+  // Só ativa se o carrinho tiver itens e a página for o carrinho
+  if (!cart.length) return;
+  var paginaAtual = document.querySelector('.page.active');
+  if (!paginaAtual || paginaAtual.id !== 'page-carrinho') return;
+
+  _lembreteTimer = setTimeout(function() {
+    // Verifica novamente antes de mostrar
+    var pg = document.querySelector('.page.active');
+    if (!pg || pg.id !== 'page-carrinho') return;
+    if (!cart.length) return;
+    // Não mostra se já tem outro modal aberto
+    var modaisAbertos = document.querySelectorAll('.mo.open');
+    if (modaisAbertos.length > 0) return;
+    mostrarLembrete();
+  }, _LEMBRETE_MS);
+}
+
+function cancelarTimerLembrete() {
+  if (_lembreteTimer) { clearTimeout(_lembreteTimer); _lembreteTimer = null; }
+}
+
+function mostrarLembrete() {
+  document.getElementById('modal-lembrete').classList.add('open');
+}
+
+function fecharLembrete(irFinalizar) {
+  document.getElementById('modal-lembrete').classList.remove('open');
+  if (irFinalizar) {
+    // Rola até o botão de finalizar
+    var btn = document.getElementById('wa-btn');
+    if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    // Reinicia o timer pois o cliente ainda está escolhendo
+    iniciarTimerLembrete();
+  }
+}
+
+// Reiniciar timer quando o usuário interagir com a página do carrinho
+function _resetLembreteOnActivity() {
+  var pg = document.querySelector('.page.active');
+  if (pg && pg.id === 'page-carrinho' && cart.length) {
+    cancelarTimerLembrete();
+    iniciarTimerLembrete();
+  }
+}
+
+// Monitorar atividade do usuário
+['click', 'touchstart', 'keydown', 'scroll'].forEach(function(ev) {
+  document.addEventListener(ev, _resetLembreteOnActivity, { passive: true });
+});
 
 function sendWA() {
   var d = valid(); if (!d) return;
@@ -1715,7 +1804,7 @@ function sendWA() {
       if (curPay==='pix' && window._pixCod) { msg += '====================\nCODIGO PIX:\n' + window._pixCod + '\nApos pagar envie o comprovante!\n'; }
       if (d.obs) msg += 'Obs: ' + d.obs + '\n';
       msg += new Date().toLocaleString('pt-BR');
-      cart = []; updateBadge();
+      cart = []; updateBadge(); cancelarTimerLembrete();
       document.getElementById('m-onum').textContent = '';
       document.getElementById('m-msg').textContent = 'Pedido registrado! WhatsApp abrindo...';
       document.getElementById('modal').classList.add('open');
@@ -2207,7 +2296,10 @@ function saveProd(){
 function buildCuponsMgr() {
   return new Promise(function(resolve) {
     var html = '<div style="max-width:700px">';
-    html += '<h3 style="font-family:Impact,sans-serif;font-size:1.5rem;margin-bottom:1rem">🎟️ Cupons de Desconto</h3>';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">';
+    html += '<h3 style="font-family:Impact,sans-serif;font-size:1.5rem;margin:0">🎟️ Cupons de Desconto</h3>';
+    html += '<button onclick="resetTodosCupons()" style="background:#EF4444;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:900;font-size:.8rem;cursor:pointer">🗑️ RESETAR TUDO</button>';
+    html += '</div>';
 
     // Formulário de geração
     html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.5rem">';
@@ -2236,6 +2328,9 @@ function buildCuponsMgr() {
     html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem">';
     html += '<h4 style="margin-bottom:1rem;font-size:1rem">Cupons cadastrados</h4>';
     html += '<div id="cp-tabela">Carregando...</div>';
+    html += '<div style="margin-top:10px;background:#fff8e1;border:2px solid #F7B731;border-radius:8px;padding:8px 12px;font-size:.75rem;color:#7a5800">';
+    html += '⏰ <b>Reset automático:</b> Toda quinta-feira às 18:00 todos os cupons são apagados automaticamente.';
+    html += '</div>';
     html += '</div>';
     html += '</div>';
 
@@ -2296,7 +2391,7 @@ function loadCuponsTabela() {
       html += '<td style="text-align:center;font-size:.75rem">' + exp.toLocaleString('pt-BR') + '</td>';
       html += '<td style="text-align:center;color:' + statusCor + ';font-weight:700">' + statusTxt + '</td>';
       html += '<td style="text-align:center">';
-      if (c.ativo && !expirado && !esgotado) html += '<button onclick="desativarCupom(' + c.id + ')" style="background:#EF4444;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:.75rem;cursor:pointer">Desativar</button>';
+      html += '<button onclick="apagarCupom(' + c.id + ')" style="background:#EF4444;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:.75rem;cursor:pointer">🗑️</button>';
       html += '</td></tr>';
     }
     html += '</table></div>';
@@ -2305,10 +2400,25 @@ function loadCuponsTabela() {
   .catch(function() { el.innerHTML = '<p style="color:#aaa">Erro ao carregar</p>'; });
 }
 
-function desativarCupom(id) {
-  if (!confirm('Desativar este cupom?')) return;
+function apagarCupom(id) {
+  if (!confirm('Apagar este cupom permanentemente?')) return;
   api('DELETE', '/cupons/' + id, null, true)
-  .then(function() { showToast('Cupom desativado!'); loadCuponsTabela(); })
+  .then(function() { showToast('✅ Cupom apagado!'); loadCuponsTabela(); })
+  .catch(function(e) { showToast('Erro: ' + e.message); });
+}
+
+function resetTodosCupons() {
+  if (!confirm('⚠️ Apagar TODOS os cupons? Isso não pode ser desfeito!')) return;
+  api('DELETE', '/cupons', null, true)
+  .then(function(r) {
+    showToast('🗑️ Todos os cupons foram apagados!');
+    // Limpar lista gerada
+    var res = document.getElementById('cp-resultado');
+    var lista = document.getElementById('cp-lista');
+    if (res) res.style.display = 'none';
+    if (lista) lista.value = '';
+    loadCuponsTabela();
+  })
   .catch(function(e) { showToast('Erro: ' + e.message); });
 }
 
