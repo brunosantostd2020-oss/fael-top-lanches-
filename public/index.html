@@ -268,7 +268,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
               <label>Telefone (WhatsApp)</label><input type="tel" id="c-phone" placeholder="(XX) XXXXX-XXXX">
               <label>Rua</label><input type="text" id="c-rua" placeholder="Ex: Rua das Flores">
               <label>Numero</label><input type="text" id="c-num" placeholder="Ex: 123">
-              <label>Bairro</label><input type="text" id="c-bairro" placeholder="Ex: Centro" oninput="verificarTaxa()">
+              <label>Bairro <span style="font-size:.75rem;color:#888;font-weight:500">(o frete é calculado automaticamente)</span></label><input type="text" id="c-bairro" placeholder="Digite seu bairro..." oninput="verificarTaxa()" autocomplete="off">
               <div id="taxa-bairro-info" style="display:none;margin-top:6px;padding:8px 12px;border-radius:8px;font-size:.82rem;font-weight:800"></div>
               <label>Complemento (opcional)</label><input type="text" id="c-comp" placeholder="Apto, bloco...">
             </div>
@@ -311,8 +311,8 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
                 </div>
               </div>
             </div>
-            <div id="troco-f" style="display:none;margin-top:12px">
-              <label style="margin-bottom:8px;display:block">Precisa de troco?</label>
+            <div id="troco-f" style="display:none;margin-top:12px;background:#fffbe6;border:2px solid #F7B731;border-radius:12px;padding:14px">
+              <label style="margin-bottom:10px;display:block;font-size:1rem;font-weight:900;color:#C47D00">💰 Precisa de troco?</label>
               <div style="display:flex;gap:8px;margin-bottom:12px">
                 <button type="button" id="troco-sim" onclick="toggleTroco(true)" style="flex:1;padding:12px;background:#fff;border:2px solid #ddd;border-radius:8px;font-weight:800;font-size:.9rem;cursor:pointer;transition:all .2s">
                   Sim
@@ -464,7 +464,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   <div class="md">
     <div class="md-ic">&#127881;</div>
     <h2>Pedido Enviado!</h2>
-    <div class="md-onum" id="m-onum">#001</div>
+    <div class="md-onum" id="m-onum"></div>
     <p id="m-msg">Pedido registrado!</p>
     <button class="md-btn" onclick="closeModal()">Voltar ao Cardapio</button>
   </div>
@@ -565,7 +565,7 @@ var PIX_NOME = 'RAPHAEL GONZAGA CORDEIRO';
 var PIX_CIDADE = 'CATAGUASES';
 var OPEN_DAYS = [0,1,3,4,5,6];
 var BAIRROS_GRATIS = ['TAQUARA PRETA','SAO MARCOS','SAO CRISTOVAO'];
-var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM'];
+var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','BEIRA RIO'];
 var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE'];
 var adminToken = localStorage.getItem('fael_token') || null;
 var gerenciamentoToken = localStorage.getItem('fael_gerenciamento_token') || null;
@@ -738,7 +738,7 @@ function renderProducts(cat, subcat) {
     return;
   }
   
-  // CATEGORIA MODA DO FAEL (separada, amarelo)
+  // CATEGORIA MODA DO FAEL - pizza única, preço fixo R$ 95,00
   if (cat === 'moda_fael') {
     var pizzasModa = allProducts.filter(function(p) { 
       if (p.category !== 'pizzas' || !p.active) return false;
@@ -751,31 +751,22 @@ function renderProducts(cat, subcat) {
       g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma pizza Moda do Fael cadastrada</p>'; 
       return; 
     }
-    
-    var tams = [
-      {cod:'G',label:'G - Grande (6 pedaços)',preco:70},
-      {cod:'GG',label:'GG - Especial (8 pedaços)',preco:80},
-      {cod:'GGG',label:'Tamanho Família (12 pedaços)',preco:95}
-    ];
-    
-    for (var t=0; t<tams.length; t++) {
-      var tam = tams[t];
-      html += '<div style="background:#fff;border-radius:14px;box-shadow:0 6px 30px rgba(247,183,49,0.3);overflow:hidden;margin-bottom:1.2rem;border:3px solid var(--y)">';
-      html += '<div style="background:linear-gradient(135deg,#F7B731,#E59E00);color:#fff;padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between">';
-      html += '<span style="font-family:Poppins,sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:-0.5px">👑 Moda do Fael ' + tam.label + '</span>';
-      html += '<span style="background:#fff;color:#F7B731;padding:6px 16px;border-radius:25px;font-weight:800;font-size:1rem;font-family:Poppins,sans-serif">R$ ' + tam.preco.toFixed(2).replace('.',',') + '</span>';
-      html += '</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;padding:1.2rem">';
-      for (var p=0; p<pizzasModa.length; p++) {
-        var pizza = pizzasModa[p];
-        html += '<div style="border:2px solid #f0f0f0;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;transition:all .2s;cursor:pointer;background:#fff" onmouseover="this.style.borderColor=\'var(--y)\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.08)\'" onmouseout="this.style.borderColor=\'#f0f0f0\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">';
-        html += '<span style="font-size:52px;margin-bottom:12px">' + (pizza.emoji||'👑') + '</span>';
-        html += '<div style="font-family:Poppins,sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:10px;color:#1a1a1a;letter-spacing:-0.3px">' + pizza.name + '</div>';
-        html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + (pizza.description||'').replace(/##moda_fael##/gi,'').trim() + '</div>';
-        html += '<button class="abtn" style="font-family:Inter,sans-serif;font-size:.8rem;padding:10px 24px;font-weight:700;width:100%;max-width:140px;background:var(--y);border-color:var(--y)" onclick="addCartTam(' + pizza.id + ',\'' + tam.cod + '\',' + tam.preco + ')" ' + (op?'':'disabled') + '>' + (op?'Adicionar':'Fechado') + '</button>';
-        html += '</div>';
-      }
-      html += '</div></div>';
-    }
+
+    var precoModa = 95;
+    html += '<div style="background:#fff;border-radius:14px;box-shadow:0 6px 30px rgba(247,183,49,0.3);overflow:hidden;margin-bottom:1.2rem;border:3px solid var(--y)">';
+    html += '<div style="background:linear-gradient(135deg,#F7B731,#E59E00);color:#fff;padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between">';
+    html += '<span style="font-family:Poppins,sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:-0.5px">👑 Moda do Fael</span>';
+    html += '<span style="background:#fff;color:#F7B731;padding:6px 16px;border-radius:25px;font-weight:800;font-size:1rem;font-family:Poppins,sans-serif">R$ 95,00</span>';
+    html += '</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;padding:1.2rem">';
+    var pizza = pizzasModa[0];
+    var descLimpa = (pizza.description||'').replace(/##moda_fael##/gi,'').trim();
+    html += '<div style="border:2px solid #F7B731;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff">';
+    html += '<span style="font-size:64px;margin-bottom:12px">' + (pizza.emoji||'👑') + '</span>';
+    html += '<div style="font-family:Poppins,sans-serif;font-weight:900;font-size:1.3rem;margin-bottom:10px;color:#1a1a1a;letter-spacing:-0.3px">MODA DO FAEL</div>';
+    if(descLimpa) html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + descLimpa + '</div>';
+    html += '<button class="abtn" style="font-family:Inter,sans-serif;font-size:.9rem;padding:12px 32px;font-weight:800;background:var(--y);border-color:var(--y)" onclick="addCartModaFael()" ' + (op?'':'disabled') + '>' + (op?'Adicionar':'Fechado') + '</button>';
+    html += '</div>';
+    html += '</div></div>';
     
     g.innerHTML = html;
     return;
@@ -1394,10 +1385,18 @@ function setPay(t, el) {
   document.getElementById('pix-info').style.display = t==='pix'?'block':'none';
   document.getElementById('troco-f').style.display = t==='dinheiro'?'block':'none';
   
-  // Resetar estado do troco quando escolhe dinheiro
+  // Ao escolher dinheiro, resetar seleção do troco para o cliente decidir
   if (t === 'dinheiro') {
     setTimeout(function() {
-      toggleTroco(false); // Padrão: Não precisa de troco
+      // Limpar seleção dos botões, deixar cliente escolher
+      var simBtn = document.getElementById('troco-sim');
+      var naoBtn = document.getElementById('troco-nao');
+      var valorField = document.getElementById('troco-valor-field');
+      if (simBtn) { simBtn.style.background='#fff'; simBtn.style.borderColor='#ddd'; simBtn.style.color='#666'; }
+      if (naoBtn) { naoBtn.style.background='#fff'; naoBtn.style.borderColor='#ddd'; naoBtn.style.color='#666'; }
+      if (valorField) valorField.style.display='none';
+      if (document.getElementById('troco-v')) document.getElementById('troco-v').value='';
+      precisaTroco = false;
     }, 100);
   }
   
@@ -1571,7 +1570,7 @@ function sendWA() {
   };
   api('POST', '/orders', body)
     .then(function(order) {
-      var msg = 'PEDIDO #' + String(order.id).padStart(3,'0') + ' - FAEL TOP LANCHES\n';
+      var msg = 'PEDIDO - FAEL TOP LANCHES\n';
       msg += '====================\n';
       msg += 'Cliente: ' + d.name + ' | Tel: ' + d.phone + '\n';
       if (curDel==='entrega') { msg += 'Entrega: Rua ' + d.rua + ', ' + d.num + ' - ' + d.bairro + (d.comp?' ('+d.comp+')':'') + '\n'; }
@@ -1588,7 +1587,7 @@ function sendWA() {
       if (d.obs) msg += 'Obs: ' + d.obs + '\n';
       msg += new Date().toLocaleString('pt-BR');
       cart = []; updateBadge();
-      document.getElementById('m-onum').textContent = '#' + String(order.id).padStart(3,'0');
+      document.getElementById('m-onum').textContent = '';
       document.getElementById('m-msg').textContent = 'Pedido registrado! WhatsApp abrindo...';
       document.getElementById('modal').classList.add('open');
       var mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -1779,7 +1778,7 @@ function oCard(o, isAdm, mostrarCheckbox) {
     html += '<div style="position:absolute;top:12px;left:12px;z-index:10"><input type="checkbox" class="order-checkbox" data-order-id="'+o.id+'" data-total="'+o.total+'" style="width:20px;height:20px;cursor:pointer"></div>';
   }
   
-  html += '<div class="och" style="'+(mostrarCheckbox && (st === 'entregue' || st === 'cancelado') ? 'padding-left:40px' : '')+'"><div><div class="oid">#'+String(o.id).padStart(3,'0')+' - '+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
+  html += '<div class="och" style="'+(mostrarCheckbox && (st === 'entregue' || st === 'cancelado') ? 'padding-left:40px' : '')+'"><div><div class="oid">'+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
   html += '<div class="ocb">';
   html += '<div class="oib"><div class="oit">Itens</div><div class="oiv">'+iNames+'</div></div>';
   html += '<div class="oib"><div class="oit">Entrega</div><div class="oiv">'+(DM[o.delivery_type]||'--')+'</div><div style="font-size:.72rem;color:#888;margin-top:2px">'+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
@@ -1815,9 +1814,9 @@ function advSt(id) {
 function enviarNotificacaoStatus(order, status) {
   // Mensagens para cada status
   var mensagens = {
-    'preparo': '✅ Olá *' + order.client_name + '*!\n\nSeu pedido *#' + String(order.id).padStart(3,'0') + '* está sendo preparado com carinho! 👨‍🍳\n\nEm breve estará pronto!',
-    'entrega': '🚀 *' + order.client_name + '*, seu pedido *#' + String(order.id).padStart(3,'0') + '* saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
-    'entregue': '🎉 Pedido *#' + String(order.id).padStart(3,'0') + '* entregue com sucesso!\n\n*Obrigado pela preferência, ' + order.client_name + '!*\n\nVolte sempre! ❤️🍕'
+    'preparo': '✅ Olá *' + order.client_name + '*!\n\nSeu pedido está sendo preparado com carinho! 👨\u200d🍳\n\nEm breve estará pronto!',
+    'entrega': '🚀 *' + order.client_name + '*, seu pedido saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
+    'entregue': '🎉 Pedido entregue com sucesso!\n\n*Obrigado pela preferência, ' + order.client_name + '!*\n\nVolte sempre! ❤️🍕'
   };
   
   var msg = mensagens[status];
@@ -1912,7 +1911,7 @@ function waOrd(id) {
   var o = null; if (window._admOrd) for (var i=0; i<window._admOrd.length; i++) if (window._admOrd[i].id===id) { o=window._admOrd[i]; break; }
   if (!o) return;
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Credito',debito:'Debito'};
-  var msg = 'PEDIDO #'+String(o.id).padStart(3,'0')+'\n====================\n';
+  var msg = 'PEDIDO - FAEL TOP LANCHES\n====================\n';
   msg += o.client_name+' | '+o.client_phone+'\n';
   msg += (o.address||'')+(o.complement?' - '+o.complement:'')+'\n====================\n';
   var items = o.items || [];
@@ -1930,7 +1929,7 @@ function printOrd(id) {
   for (var i=0; i<items.length; i++) iHtml += '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>'+items[i].quantity+'x '+items[i].product_name+'</span><span>R$ '+parseFloat(items[i].subtotal).toFixed(2).replace('.',',')+'</span></div>';
   var html = '<div style="font-family:Courier New,monospace;max-width:360px;margin:0 auto;padding:20px;font-size:13px;color:#000;border:1px solid #ddd">';
   html += '<div style="text-align:center;margin-bottom:14px"><div style="font-size:26px">&#127828;&#127829;</div><div style="font-size:17px;font-weight:900;letter-spacing:2px">FAEL TOP LANCHES</div><div style="font-size:11px">& PIZZARIA</div><div style="border-top:2px dashed #000;margin:10px 0"></div></div>';
-  html += '<div style="margin-bottom:8px"><div style="font-weight:900;font-size:14px">PEDIDO #'+String(o.id).padStart(3,'0')+'</div><div style="font-size:10px;color:#555">'+o.created_at+'</div></div>';
+  html += '<div style="margin-bottom:8px"><div style="font-weight:900;font-size:14px">PEDIDO</div><div style="font-size:10px;color:#555">'+o.created_at+'</div></div>';
   html += '<div style="margin-bottom:9px;font-size:12px"><div><b>Cliente:</b> '+o.client_name+'</div><div><b>Tel:</b> '+o.client_phone+'</div><div><b>Endereco:</b> '+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
   html += '<div style="border-top:2px dashed #000;border-bottom:2px dashed #000;padding:9px 0;margin:9px 0"><div style="font-weight:900;margin-bottom:6px">ITENS:</div>'+iHtml+'</div>';
   html += '<div style="margin-top:9px;font-size:12px"><div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;border-top:1px solid #000;padding-top:5px"><span>TOTAL</span><span>R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+'</span></div>';
@@ -2429,17 +2428,8 @@ function changeGerenteSenha() {
     return;
   }
   
-  // Verificar senha atual
-  var senhaAtual = localStorage.getItem('fael_gerente_senha') || 'gerente123';
-  if (oldPwd !== senhaAtual) {
-    showToast('❌ Senha atual incorreta!');
-    document.getElementById('gerente-old-pwd').value = '';
-    return;
-  }
-  
-  // Validar nova senha
-  if (newPwd.length < 6) {
-    showToast('⚠️ Nova senha deve ter no mínimo 6 caracteres!');
+  if (newPwd.length < 4) {
+    showToast('⚠️ Nova senha deve ter no mínimo 4 caracteres!');
     return;
   }
   
@@ -2449,15 +2439,23 @@ function changeGerenteSenha() {
     return;
   }
   
-  // Salvar nova senha
-  localStorage.setItem('fael_gerente_senha', newPwd);
-  
-  // Limpar campos
-  document.getElementById('gerente-old-pwd').value = '';
-  document.getElementById('gerente-new-pwd').value = '';
-  document.getElementById('gerente-confirm-pwd').value = '';
-  
-  showToast('✅ Senha alterada com sucesso!');
+  // Chamar API do servidor (salva no banco de dados)
+  fetch('/api/auth/change-password-gerenciamento', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + gerenciamentoToken },
+    body: JSON.stringify({ current_password: oldPwd, new_password: newPwd })
+  })
+  .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error || 'Erro'); return d; }); })
+  .then(function() {
+    document.getElementById('gerente-old-pwd').value = '';
+    document.getElementById('gerente-new-pwd').value = '';
+    document.getElementById('gerente-confirm-pwd').value = '';
+    showToast('✅ Senha alterada com sucesso!');
+  })
+  .catch(function(e) {
+    showToast('❌ ' + (e.message || 'Erro ao alterar senha'));
+    document.getElementById('gerente-old-pwd').value = '';
+  });
 }
 
 function showPage(pg) {

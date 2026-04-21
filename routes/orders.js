@@ -77,7 +77,7 @@ router.post('/', async (req, res) => {
       await client.query(
         `INSERT INTO order_items (order_id, product_id, product_name, product_emoji, quantity, unit_price, subtotal)
          VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-        [order.id, item.id || null, item.name, item.emoji || '🍽',
+        [order.id, (item.id && !isNaN(parseInt(item.id))) ? parseInt(item.id) : null, item.name, item.emoji || '🍽',
          parseInt(item.quantity), parseFloat(item.unit_price), itemSubtotal]
       );
     }
