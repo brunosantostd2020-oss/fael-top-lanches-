@@ -36,9 +36,15 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .page.active{display:block}
 .sec-title{font-family:'Poppins',Impact,sans-serif;font-size:1.8rem;margin-bottom:1.2rem;color:var(--bk);font-weight:800}
 .sec-title span{color:var(--r)}
-.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem}
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem;align-items:flex-start}
 .ct{padding:7px 16px;border-radius:30px;border:2px solid #ddd;background:#fff;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;color:#666}
 .ct.active,.ct:hover{background:var(--r);border-color:var(--r);color:#fff}
+.pizza-dropdown{position:relative;display:inline-block}
+.pizza-submenu{display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:8px;z-index:999;min-width:190px;flex-direction:column;gap:4px}
+.pizza-submenu.open{display:flex}
+.ct-sub{padding:9px 16px;border-radius:10px;border:none;background:#fff;font-weight:800;font-size:12px;cursor:pointer;text-align:left;color:#444;transition:all .2s;white-space:nowrap}
+.ct-sub:hover,.ct-sub.active{background:var(--r);color:#fff}
+.pizza-dropdown .ct.pizza-active{background:var(--r);border-color:var(--r);color:#fff}
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.1rem}
 .pc{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden;transition:transform .2s}
 .pc:hover{transform:translateY(-3px)}
@@ -225,9 +231,14 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   <div class="cat-tabs" id="cat-tabs">
     <button class="ct active" onclick="filterCat('todos',this)">Todos</button>
     <button class="ct" onclick="filterCat('lanches',this)">&#127828; Lanches</button>
-    <button class="ct" onclick="filterCat('pizzas_tam',this)">&#127829; Pizzas</button>
-    <button class="ct" onclick="filterCat('moda_fael',this)">&#128081; Moda do Fael</button>
-    <button class="ct" onclick="abrirMetadeMetade();document.querySelectorAll('.ct').forEach(function(b){b.classList.remove('active')})">&#127829; Monte sua Pizza</button>
+    <div class="pizza-dropdown" id="pizza-dropdown">
+      <button class="ct" id="pizza-main-btn" onclick="togglePizzaMenu(event,this)">&#127829; Pizzas &#9660;</button>
+      <div class="pizza-submenu" id="pizza-submenu">
+        <button class="ct-sub" onclick="filterCatPizza('pizzas_tam',this)">&#127829; Pizzas</button>
+        <button class="ct-sub" onclick="filterCatPizza('moda_fael',this)">&#128081; Moda do Fael</button>
+        <button class="ct-sub" onclick="abrirMetadeMetadeMenu()">&#127829; Monte sua Pizza</button>
+      </div>
+    </div>
     <button class="ct" onclick="filterCat('omelete',this)">&#127859; Omelete</button>
     <button class="ct" onclick="filterCat('cachorro_quente',this)">&#127789; Cachorro Quente</button>
     <button class="ct" onclick="filterCat('bebidas',this)">&#129380; Bebidas</button>
@@ -693,7 +704,8 @@ function renderProducts(cat, subcat) {
     var pizzas = allProducts.filter(function(p) { 
       if (p.category !== 'pizzas' || !p.active) return false;
       var nome = p.name.toLowerCase();
-      return !nome.includes('moda do fael'); // Exclui Moda do Fael
+      var desc = (p.description||'').toLowerCase();
+      return !nome.includes('moda do fael') && !desc.includes('##moda_fael##'); // Exclui Moda do Fael
     });
     
     if (!pizzas.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma pizza cadastrada</p>'; return; }
@@ -715,7 +727,7 @@ function renderProducts(cat, subcat) {
         html += '<div style="border:2px solid #f0f0f0;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;transition:all .2s;cursor:pointer;background:#fff" onmouseover="this.style.borderColor=\'#2A9D8F\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.08)\'" onmouseout="this.style.borderColor=\'#f0f0f0\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">';
         html += '<span style="font-size:52px;margin-bottom:12px">' + (pizza.emoji||'&#127829;') + '</span>';
         html += '<div style="font-family:Poppins,sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:10px;color:#1a1a1a;letter-spacing:-0.3px">' + pizza.name + '</div>';
-        html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + (pizza.description||'') + '</div>';
+        html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + (pizza.description||'').replace(/##moda_fael##/gi,'').trim() + '</div>';
         html += '<button class="abtn" style="font-family:Inter,sans-serif;font-size:.8rem;padding:10px 24px;font-weight:700;width:100%;max-width:140px;background:#2A9D8F;border-color:#2A9D8F" onclick="addCartTam(' + pizza.id + ',\'' + tam.cod + '\',' + tam.preco + ')" ' + (op?'':'disabled') + '>' + (op?'Adicionar':'Fechado') + '</button>';
         html += '</div>';
       }
@@ -731,7 +743,8 @@ function renderProducts(cat, subcat) {
     var pizzasModa = allProducts.filter(function(p) { 
       if (p.category !== 'pizzas' || !p.active) return false;
       var nome = p.name.toLowerCase();
-      return nome.includes('moda do fael');
+      var desc = (p.description||'').toLowerCase();
+      return nome.includes('moda do fael') || desc.includes('##moda_fael##');
     });
     
     if (!pizzasModa.length) { 
@@ -757,7 +770,7 @@ function renderProducts(cat, subcat) {
         html += '<div style="border:2px solid #f0f0f0;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;transition:all .2s;cursor:pointer;background:#fff" onmouseover="this.style.borderColor=\'var(--y)\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.08)\'" onmouseout="this.style.borderColor=\'#f0f0f0\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">';
         html += '<span style="font-size:52px;margin-bottom:12px">' + (pizza.emoji||'👑') + '</span>';
         html += '<div style="font-family:Poppins,sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:10px;color:#1a1a1a;letter-spacing:-0.3px">' + pizza.name + '</div>';
-        html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + (pizza.description||'') + '</div>';
+        html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + (pizza.description||'').replace(/##moda_fael##/gi,'').trim() + '</div>';
         html += '<button class="abtn" style="font-family:Inter,sans-serif;font-size:.8rem;padding:10px 24px;font-weight:700;width:100%;max-width:140px;background:var(--y);border-color:var(--y)" onclick="addCartTam(' + pizza.id + ',\'' + tam.cod + '\',' + tam.preco + ')" ' + (op?'':'disabled') + '>' + (op?'Adicionar':'Fechado') + '</button>';
         html += '</div>';
       }
@@ -927,9 +940,56 @@ function filterBebidas(tipo) {
   container.innerHTML = html;
 }
 
+function togglePizzaMenu(e, btn) {
+  e.stopPropagation();
+  var menu = document.getElementById('pizza-submenu');
+  var isOpen = menu.classList.contains('open');
+  closePizzaMenu();
+  if (!isOpen) {
+    menu.classList.add('open');
+    btn.classList.add('pizza-active');
+  }
+}
+
+function closePizzaMenu() {
+  var menu = document.getElementById('pizza-submenu');
+  var btn = document.getElementById('pizza-main-btn');
+  if (menu) menu.classList.remove('open');
+  if (btn) btn.classList.remove('pizza-active');
+}
+
+document.addEventListener('click', function() { closePizzaMenu(); });
+
+function filterCatPizza(cat, el) {
+  closePizzaMenu();
+  // Remove active de todos os botões principais
+  var tabs = document.querySelectorAll('.ct');
+  for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
+  // Remove active dos sub-botões
+  var subs = document.querySelectorAll('.ct-sub');
+  for (var i=0; i<subs.length; i++) subs[i].classList.remove('active');
+  // Marca o botão pizza principal como ativo
+  var mainBtn = document.getElementById('pizza-main-btn');
+  if (mainBtn) mainBtn.classList.add('active');
+  // Marca o sub-botão clicado
+  el.classList.add('active');
+  renderProducts(cat);
+}
+
+function abrirMetadeMetadeMenu() {
+  closePizzaMenu();
+  var tabs = document.querySelectorAll('.ct');
+  for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
+  var subs = document.querySelectorAll('.ct-sub');
+  for (var i=0; i<subs.length; i++) subs[i].classList.remove('active');
+  abrirMetadeMetade();
+}
+
 function filterCat(cat, el) {
   var tabs = document.querySelectorAll('.ct');
   for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
+  var subs = document.querySelectorAll('.ct-sub');
+  for (var i=0; i<subs.length; i++) subs[i].classList.remove('active');
   el.classList.add('active');
   renderProducts(cat);
 }
@@ -1077,7 +1137,8 @@ function abrirMetadeMetade() {
   var pizzas = allProducts.filter(function(p) { 
     if (p.category !== 'pizzas' || !p.active) return false;
     var nome = p.name.toLowerCase();
-    return !nome.includes('moda do fael'); // Exclui Moda do Fael
+    var desc = (p.description||'').toLowerCase();
+    return !nome.includes('moda do fael') && !desc.includes('##moda_fael##'); // Exclui Moda do Fael
   });
   var html = '<option value="">Selecione...</option>';
   for (var i=0; i<pizzas.length; i++) {
@@ -1898,7 +1959,7 @@ function buildPM() {
       '<div id="prod-form-box" style="display:none" class="form-box">' +
       '<h3 id="pf-title">Novo Produto</h3>' +
       '<div class="frow"><div class="fg"><label>Emoji</label><input id="pf-emoji" placeholder="&#127828;" maxlength="4"></div><div class="fg"><label>Nome</label><input id="pf-name" placeholder="X-Burguer"></div></div>' +
-      '<div class="frow"><div class="fg"><label>Categoria</label><select id="pf-cat" onchange="togPizza();togBebida()"><option value="lanches">Lanches (Geral)</option><option value="frango_desfiado">🍗 Frango Desfiado</option><option value="hamburguer_boi">🥩 Hambúrguer Boi</option><option value="pizzas">Pizzas</option><option value="omelete">Omelete</option><option value="cachorro_quente">Cachorro Quente</option><option value="bebidas">Bebidas</option><option value="porcoes">Porcoes</option></select></div>' +
+      '<div class="frow"><div class="fg"><label>Categoria</label><select id="pf-cat" onchange="togPizza();togBebida()"><option value="lanches">Lanches (Geral)</option><option value="frango_desfiado">🍗 Frango Desfiado</option><option value="hamburguer_boi">🥩 Hambúrguer Boi</option><option value="pizzas">🍕 Pizzas</option><option value="pizzas_moda_fael">👑 Moda do Fael</option><option value="omelete">Omelete</option><option value="cachorro_quente">Cachorro Quente</option><option value="bebidas">Bebidas</option><option value="porcoes">Porcoes</option></select></div>' +
       '<div class="fg"><label>Preco (R$)</label><input id="pf-price" type="number" step="0.50" min="0" placeholder="0.00"></div></div>' +
       '<div id="bebida-subcat-box" style="display:none;background:#e3f2fd;border:2px solid #2196F3;border-radius:12px;padding:1rem;margin-bottom:12px">' +
       '<div style="font-weight:900;font-size:.9rem;color:#1976D2;margin-bottom:10px">📌 Subcategoria da Bebida</div>' +
@@ -1923,9 +1984,9 @@ function buildPM() {
   }).catch(function(e){ return '<p style="color:var(--r)">Erro: '+e.message+'</p>'; });
 }
 
-function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=c==='pizzas'?'block':'none'; }
+function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=(c==='pizzas'||c==='pizzas_moda_fael')?'block':'none'; }
 function togBebida(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('bebida-subcat-box'); if(b) b.style.display=c==='bebidas'?'block':'none'; }
-function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; var cleanDesc=(p.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim(); document.getElementById('pf-desc').value=cleanDesc; var subcatField=document.getElementById('pf-bebida-subcat'); if(subcatField&&p.description){var desc=p.description.toLowerCase();if(desc.includes('##refri##'))subcatField.value='refrigerante';else if(desc.includes('##suco-leite##'))subcatField.value='suco-leite';else if(desc.includes('##suco-agua##'))subcatField.value='suco-agua';else subcatField.value='';} togPizza();togBebida();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var sc=document.getElementById('pf-bebida-subcat');if(sc)sc.value='';var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();togBebida();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
+function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; var isModa=(p.description||'').toLowerCase().includes('##moda_fael##'); document.getElementById('pf-cat').value=isModa?'pizzas_moda_fael':p.category; document.getElementById('pf-price').value=p.price; var cleanDesc=(p.description||'').replace(/##refri##|##suco-leite##|##suco-agua##|##moda_fael##/gi,'').trim(); document.getElementById('pf-desc').value=cleanDesc; var subcatField=document.getElementById('pf-bebida-subcat'); if(subcatField&&p.description){var desc=p.description.toLowerCase();if(desc.includes('##refri##'))subcatField.value='refrigerante';else if(desc.includes('##suco-leite##'))subcatField.value='suco-leite';else if(desc.includes('##suco-agua##'))subcatField.value='suco-agua';else subcatField.value='';} togPizza();togBebida();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var sc=document.getElementById('pf-bebida-subcat');if(sc)sc.value='';var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();togBebida();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
 function editProd(id){ showPF(id); }
 function delProd(id){ if(!confirm('Confirmar?'))return; api('DELETE','/products/'+id,null,true).then(function(){showToast('Produto atualizado!');aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);}); }
 function closePF(){ var b=document.getElementById('prod-form-box'); if(b)b.style.display='none'; editProdId=null; }
@@ -1947,13 +2008,16 @@ function saveProd(){
   }
   
   if(!name){showToast('Informe o nome!');return;}
-  if(category==='pizzas'){
+  if(category==='pizzas'||category==='pizzas_moda_fael'){
     var pg=parseFloat(document.getElementById('pf-pg').value)||0;
     var pgg=parseFloat(document.getElementById('pf-pgg').value)||0;
     var pggg=parseFloat(document.getElementById('pf-pggg').value)||0;
     var price=pg||pgg||pggg;
     if(!price){showToast('Informe ao menos um preco!');return;}
-    var p = editProdId!=null ? api('PUT','/products/'+editProdId,{name,category,price,emoji,description},true) : api('POST','/products',{name,category,price,emoji,description},true);
+    // Moda do Fael salva como category='pizzas' com tag especial na descrição
+    var saveCat = category==='pizzas_moda_fael' ? 'pizzas' : category;
+    var saveDesc = category==='pizzas_moda_fael' ? (description ? description+' ##moda_fael##' : '##moda_fael##') : description;
+    var p = editProdId!=null ? api('PUT','/products/'+editProdId,{name,category:saveCat,price,emoji,description:saveDesc},true) : api('POST','/products',{name,category:saveCat,price,emoji,description:saveDesc},true);
     p.then(function(){showToast('Pizza salva!');closePF();loadProducts();aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);});
     return;
   }
