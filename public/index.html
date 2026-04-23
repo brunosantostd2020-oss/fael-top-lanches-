@@ -2213,11 +2213,14 @@ function printOrd(id) {
   html += sep;
   // Total
   html += '<div style="margin:3px 0;font-size:9.5pt">';
-  if (o.delivery_fee && parseFloat(o.delivery_fee) > 0) {
-    html += '<div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>R$ '+parseFloat(o.subtotal).toFixed(2).replace('.',',')+'</span></div>';
-    html += '<div style="display:flex;justify-content:space-between"><span>Entrega</span><span>R$ '+parseFloat(o.delivery_fee).toFixed(2).replace('.',',')+'</span></div>';
+  var subVal = parseFloat(o.subtotal) || 0;
+  var feeVal = parseFloat(o.delivery_fee) || 0;
+  var totalVal = subVal + feeVal;
+  if (feeVal > 0) {
+    html += '<div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>R$ '+subVal.toFixed(2).replace('.',',')+'</span></div>';
+    html += '<div style="display:flex;justify-content:space-between"><span>Entrega</span><span>R$ '+feeVal.toFixed(2).replace('.',',')+'</span></div>';
   }
-  html += '<div style="display:flex;justify-content:space-between;font-weight:900;font-size:11pt"><span>TOTAL</span><span>R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+'</span></div>';
+  html += '<div style="display:flex;justify-content:space-between;font-weight:900;font-size:11pt"><span>TOTAL</span><span>R$ '+totalVal.toFixed(2).replace('.',',')+'</span></div>';
   html += '<div><b>Pagamento:</b> '+(PM[o.payment]||o.payment)+'</div>';
   if (o.change_for) html += '<div><b>Troco p/:</b> R$ '+parseFloat(o.change_for).toFixed(2).replace('.',',')+'</div>';
   html += '</div>';
