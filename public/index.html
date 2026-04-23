@@ -170,7 +170,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 @keyframes spin{to{transform:rotate(360deg)}}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--bk);color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:.82rem;transform:translateY(70px);opacity:0;transition:all .3s;z-index:500;border-left:4px solid var(--y);max-width:280px}
 #toast.show{transform:translateY(0);opacity:1}
-@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body *{visibility:hidden}#print-area,#print-area *{visibility:visible}#print-area{position:fixed;left:0;top:0;width:58mm;min-height:100%;background:#fff;padding:2mm;margin:0;font-family:'Courier New',Courier,monospace;font-size:9pt;color:#000}@page{size:58mm auto;margin:0mm}}
+@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body *{visibility:hidden}#print-area,#print-area *{visibility:visible}#print-area{position:fixed;left:0;top:0;width:54mm;max-width:54mm;min-height:100%;background:#fff;padding:0;margin:0;font-family:'Courier New',Courier,monospace;font-size:9pt;color:#000;overflow:hidden;word-wrap:break-word;word-break:break-word}@page{size:58mm auto;margin:0mm 2mm 0mm 2mm}}
 @media(max-width:600px){
   header{height:auto;padding:0.8rem 1rem;flex-direction:column;gap:8px}
   nav{width:100%;justify-content:center;gap:4px}
@@ -596,7 +596,7 @@ var PIX_NOME = 'RAPHAEL GONZAGA CORDEIRO';
 var PIX_CIDADE = 'CATAGUASES';
 var OPEN_DAYS = [0,1,3,4,5,6];
 var BAIRROS_GRATIS = ['TAQUARA PRETA','SAO MARCOS','SAO CRISTOVAO'];
-var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','BEIRA RIO'];
+var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','BEIRA RIO','AVENIDA DAS INDUSTRIAS','AV DAS INDUSTRIAS','INDUSTRIAS'];
 var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE'];
 var adminToken = localStorage.getItem('fael_token') || null;
 var gerenciamentoToken = localStorage.getItem('fael_gerenciamento_token') || null;
@@ -1488,6 +1488,19 @@ function calcSum() {
   }
   document.getElementById('sub-val').textContent = 'R$ ' + sub.toFixed(2).replace('.',',');
   document.getElementById('tot-val').textContent = 'R$ ' + (sub + tx - desc).toFixed(2).replace('.',',');
+  // Correcao: sempre sincronizar taxa-display com o valor real do frete
+  var disp = document.getElementById('taxa-display');
+  var row = document.getElementById('taxa-row');
+  if (disp && row) {
+    if (curDel !== 'entrega') {
+      disp.textContent = '--'; row.style.color = '#999';
+    } else if (tx > 0) {
+      disp.textContent = 'R$ ' + tx.toFixed(2).replace('.',',');
+      row.style.color = (tx <= 5) ? '#15803d' : '#C47D00';
+    } else if (bairroOk) {
+      disp.textContent = 'GRATIS'; row.style.color = '#22c55e';
+    }
+  }
   if (curPay === 'pix') gerarPix(sub + tx - desc);
 }
 
@@ -2156,7 +2169,7 @@ function printOrd(id) {
     iHtml += '</div></div>';
   }
   var sep = '<div style="'+DIV+'"></div>';
-  var html = '<div style="width:52mm;font-family:Courier New,monospace;font-size:9pt;color:#000;margin:0;padding:2mm">';
+  var html = '<div style="width:54mm;max-width:54mm;font-family:Courier New,monospace;font-size:9pt;color:#000;margin:0;padding:0;word-wrap:break-word;word-break:break-word;overflow:hidden">';
   // Cabecalho
   html += '<div style="text-align:center;margin-bottom:4px">';
   html += '<div style="font-size:14pt;font-weight:900;letter-spacing:1px">FAEL TOP LANCHES</div>';
