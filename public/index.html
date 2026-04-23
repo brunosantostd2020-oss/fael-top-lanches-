@@ -3,6 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- QZ Tray: impressao automatica sem dialogo -->
+<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js"></script>
+<script>
+window.addEventListener("load", function() {
+  if (typeof qz === "undefined") return;
+  qz.security.setCertificatePromise(function(resolve) { resolve(""); });
+  qz.security.setSignatureAlgorithm("SHA512");
+  qz.security.setSignaturePromise(function(toSign) { return function(resolve) { resolve(""); }; });
+  qz.websocket.connect({ retries: 3, delay: 1 }).then(function() {
+    console.log("QZ Tray conectado!");
+  }).catch(function() {
+    console.log("QZ Tray nao encontrado. Usando impressao normal.");
+  });
+});
+</script>
 <title>Fael Top Lanches e Pizzaria</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2214,11 +2229,30 @@ function printOrd(id) {
   var pa = document.getElementById('print-area');
   pa.innerHTML = html;
   pa.style.display = 'block';
-  window.print();
-  setTimeout(function(){ pa.style.display = 'none'; }, 1000);
-}
 
-// PRODUTOS ADMIN
+  // Tentar imprimir via QZ Tray (impressao automatica sem dialogo)
+  if (window.qz && qz.websocket && qz.websocket.isActive && qz.websocket.isActive()) {
+    qz.printers.find('MTI').then(function(printer) {
+      var cfg = qz.configs.create(printer, { scaleContent: false });
+      var data = [{
+        type: 'pixel',
+        format: 'html',
+        flavor: 'plain',
+        data: '<html><head><style>*{margin:0;padding:0;font-family:Courier New,monospace}body{width:54mm}</style></head><body>' + html + '</body></html>',
+        options: { pageWidth: 54, pageHeight: 0 }
+      }];
+      return qz.print(cfg, data);
+    }).then(function() {
+      setTimeout(function(){ pa.style.display = 'none'; }, 1000);
+    }).catch(function() {
+      window.print();
+      setTimeout(function(){ pa.style.display = 'none'; }, 1000);
+    });
+  } else {
+    window.print();
+    setTimeout(function(){ pa.style.display = 'none'; }, 1000);
+  }
+}
 function buildPM() {
   return api('GET','/products/all',null,true).then(function(prods) {
     var CL = {lanches:'Lanches',pizzas:'Pizzas',omelete:'Omelete',cachorro_quente:'Cachorro Quente',bebidas:'Bebidas',porcoes:'Porcoes'};
