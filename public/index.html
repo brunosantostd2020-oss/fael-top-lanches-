@@ -623,12 +623,20 @@ function loadConfigs() {
   fetch('/api/auth/public-settings')
     .then(function(r) { return r.json(); })
     .then(function(s) {
-      if (s.whatsapp) { WA = s.whatsapp; }
+      if (s.whatsapp) { 
+        WA = s.whatsapp; 
+        // Atualizar badge do WhatsApp
+        var badge = document.getElementById('wa-badge');
+        if (badge) badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px">📱 ' + WA + '</span>';
+      }
       if (s.pix_chave) { PIX_CHAVE = s.pix_chave; }
       if (s.pix_nome) { PIX_NOME = s.pix_nome; }
       if (s.pix_cidade) { PIX_CIDADE = s.pix_cidade; }
     }).catch(function(e) {
       console.log('Erro ao carregar configurações:', e);
+      // Mostrar erro no badge
+      var badge = document.getElementById('wa-badge');
+      if (badge) badge.textContent = 'WhatsApp indisponível';
     });
   
   // Carregar configurações admin (se estiver logado)
@@ -636,7 +644,12 @@ function loadConfigs() {
     fetch('/api/auth/settings', {headers: {'Authorization': 'Bearer '+adminToken}})
       .then(function(r) { return r.json(); })
       .then(function(s) {
-        if (s.whatsapp) { WA = s.whatsapp; }
+        if (s.whatsapp) { 
+          WA = s.whatsapp; 
+          // Atualizar badge do WhatsApp
+          var badge = document.getElementById('wa-badge');
+          if (badge) badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px">📱 ' + WA + '</span>';
+        }
         if (s.pix_chave) { PIX_CHAVE = s.pix_chave; }
         if (s.pix_nome) { PIX_NOME = s.pix_nome; }
         if (s.pix_cidade) { PIX_CIDADE = s.pix_cidade; }
