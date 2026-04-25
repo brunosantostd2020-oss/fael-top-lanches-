@@ -3,21 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- QZ Tray: impressao automatica sem dialogo -->
-<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js"></script>
-<script>
-window.addEventListener("load", function() {
-  if (typeof qz === "undefined") return;
-  qz.security.setCertificatePromise(function(resolve) { resolve(""); });
-  qz.security.setSignatureAlgorithm("SHA512");
-  qz.security.setSignaturePromise(function(toSign) { return function(resolve) { resolve(""); }; });
-  qz.websocket.connect({ retries: 3, delay: 1 }).then(function() {
-    console.log("QZ Tray conectado!");
-  }).catch(function() {
-    console.log("QZ Tray nao encontrado. Usando impressao normal.");
-  });
-});
-</script>
 <title>Fael Top Lanches e Pizzaria</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,15 +36,9 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .page.active{display:block}
 .sec-title{font-family:'Poppins',Impact,sans-serif;font-size:1.8rem;margin-bottom:1.2rem;color:var(--bk);font-weight:800}
 .sec-title span{color:var(--r)}
-.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem;align-items:flex-start}
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem}
 .ct{padding:7px 16px;border-radius:30px;border:2px solid #ddd;background:#fff;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;color:#666}
 .ct.active,.ct:hover{background:var(--r);border-color:var(--r);color:#fff}
-.pizza-dropdown{position:relative;display:inline-block}
-.pizza-submenu{display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:8px;z-index:999;min-width:190px;flex-direction:column;gap:4px}
-.pizza-submenu.open{display:flex}
-.ct-sub{padding:9px 16px;border-radius:10px;border:none;background:#fff;font-weight:800;font-size:12px;cursor:pointer;text-align:left;color:#444;transition:all .2s;white-space:nowrap}
-.ct-sub:hover,.ct-sub.active{background:var(--r);color:#fff}
-.pizza-dropdown .ct.pizza-active{background:var(--r);border-color:var(--r);color:#fff}
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.1rem}
 .pc{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden;transition:transform .2s}
 .pc:hover{transform:translateY(-3px)}
@@ -185,7 +164,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 @keyframes spin{to{transform:rotate(360deg)}}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--bk);color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:.82rem;transform:translateY(70px);opacity:0;transition:all .3s;z-index:500;border-left:4px solid var(--y);max-width:280px}
 #toast.show{transform:translateY(0);opacity:1}
-@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body *{visibility:hidden}#print-area,#print-area *{visibility:visible}#print-area{position:fixed;left:0;top:0;width:54mm;max-width:54mm;min-height:100%;background:#fff;padding:0;margin:0;font-family:'Courier New',Courier,monospace;font-size:9pt;color:#000;overflow:hidden;word-wrap:break-word;word-break:break-word}@page{size:58mm auto;margin:0mm 2mm 0mm 2mm}}
+@media print{body *{visibility:hidden}#print-area,#print-area *{visibility:visible}#print-area{position:fixed;left:0;top:0;width:100%;background:white;padding:20px}}
 @media(max-width:600px){
   header{height:auto;padding:0.8rem 1rem;flex-direction:column;gap:8px}
   nav{width:100%;justify-content:center;gap:4px}
@@ -246,14 +225,9 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   <div class="cat-tabs" id="cat-tabs">
     <button class="ct active" onclick="filterCat('todos',this)">Todos</button>
     <button class="ct" onclick="filterCat('lanches',this)">&#127828; Lanches</button>
-    <div class="pizza-dropdown" id="pizza-dropdown">
-      <button class="ct" id="pizza-main-btn" onclick="togglePizzaMenu(event,this)">&#127829; Pizzas &#9660;</button>
-      <div class="pizza-submenu" id="pizza-submenu">
-        <button class="ct-sub" onclick="filterCatPizza('pizzas_tam',this)">&#127829; Pizzas</button>
-        <button class="ct-sub" onclick="filterCatPizza('moda_fael',this)">&#128081; Moda do Fael</button>
-        <button class="ct-sub" onclick="abrirMetadeMetadeMenu()">&#127829; Monte sua Pizza</button>
-      </div>
-    </div>
+    <button class="ct" onclick="filterCat('pizzas_tam',this)">&#127829; Pizzas</button>
+    <button class="ct" onclick="filterCat('moda_fael',this)">&#128081; Moda do Fael</button>
+    <button class="ct" onclick="abrirMetadeMetade();document.querySelectorAll('.ct').forEach(function(b){b.classList.remove('active')})">&#127829; Monte sua Pizza</button>
     <button class="ct" onclick="filterCat('omelete',this)">&#127859; Omelete</button>
     <button class="ct" onclick="filterCat('cachorro_quente',this)">&#127789; Cachorro Quente</button>
     <button class="ct" onclick="filterCat('bebidas',this)">&#129380; Bebidas</button>
@@ -283,7 +257,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
               <label>Telefone (WhatsApp)</label><input type="tel" id="c-phone" placeholder="(XX) XXXXX-XXXX">
               <label>Rua</label><input type="text" id="c-rua" placeholder="Ex: Rua das Flores">
               <label>Numero</label><input type="text" id="c-num" placeholder="Ex: 123">
-              <label>Bairro <span style="font-size:.75rem;color:#888;font-weight:500">(o frete é calculado automaticamente)</span></label><input type="text" id="c-bairro" placeholder="Digite seu bairro..." oninput="verificarTaxa()" autocomplete="off">
+              <label>Bairro</label><input type="text" id="c-bairro" placeholder="Ex: Centro" oninput="verificarTaxa()">
               <div id="taxa-bairro-info" style="display:none;margin-top:6px;padding:8px 12px;border-radius:8px;font-size:.82rem;font-weight:800"></div>
               <label>Complemento (opcional)</label><input type="text" id="c-comp" placeholder="Apto, bloco...">
             </div>
@@ -326,8 +300,8 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
                 </div>
               </div>
             </div>
-            <div id="troco-f" style="display:none;margin-top:12px;background:#fffbe6;border:2px solid #F7B731;border-radius:12px;padding:14px">
-              <label style="margin-bottom:10px;display:block;font-size:1rem;font-weight:900;color:#C47D00">💰 Precisa de troco?</label>
+            <div id="troco-f" style="display:none;margin-top:12px">
+              <label style="margin-bottom:8px;display:block">Precisa de troco?</label>
               <div style="display:flex;gap:8px;margin-bottom:12px">
                 <button type="button" id="troco-sim" onclick="toggleTroco(true)" style="flex:1;padding:12px;background:#fff;border:2px solid #ddd;border-radius:8px;font-weight:800;font-size:.9rem;cursor:pointer;transition:all .2s">
                   Sim
@@ -347,17 +321,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
           <div style="margin-top:.9rem">
             <div class="srow"><span>Subtotal</span><span id="sub-val">R$ 0,00</span></div>
             <div class="srow" id="taxa-row" style="color:#22c55e;font-weight:800"><span>Entrega</span><span id="taxa-display">GRATIS</span></div>
-            <div class="srow" id="desconto-row" style="display:none;color:#22c55e;font-weight:800"><span>Desconto cupom</span><span id="desconto-val">-R$ 0,00</span></div>
             <div class="stot"><span>TOTAL</span><span id="tot-val">R$ 0,00</span></div>
-          </div>
-          <!-- CUPOM DE DESCONTO -->
-          <div id="cupom-box" style="margin-bottom:12px;background:#fff8e1;border:2px solid #F7B731;border-radius:12px;padding:12px">
-            <div style="font-weight:900;font-size:.88rem;color:#C47D00;margin-bottom:8px">🎟️ Cupom de Desconto</div>
-            <div style="display:flex;gap:8px">
-              <input type="text" id="cupom-input" placeholder="Ex: FAEL-AB12CD" style="flex:1;padding:10px;border:2px solid #F7B731;border-radius:8px;font-size:.88rem;font-weight:700;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
-              <button onclick="aplicarCupom()" style="background:#F7B731;color:#7a5800;border:none;padding:10px 16px;border-radius:8px;font-weight:900;font-size:.82rem;cursor:pointer;white-space:nowrap">APLICAR</button>
-            </div>
-            <div id="cupom-status" style="display:none;margin-top:8px;font-size:.82rem;font-weight:700;padding:6px 10px;border-radius:6px"></div>
           </div>
           <button class="wabtn" id="wa-btn" onclick="sendWA()">ENVIAR VIA WHATSAPP</button>
         </div>
@@ -402,6 +366,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
           <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Meca</div>
           <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Santa Clara</div>
           <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Ibraim</div>
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Cidade Nova</div>
         </div>
       </div>
     </div>
@@ -437,6 +402,11 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
           <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Granjaria</div>
           <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Sol Nascente</div>
           <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Pousa Alegre</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Vila Domingos Lopes</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Vila Tereza</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Astolfo Dutra</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Guido Marliere</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Meia Pataca</div>
         </div>
       </div>
     </div>
@@ -472,7 +442,6 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button class="atab" onclick="aTab('acrescimos',this)">Acrescimos</button>
     <button class="atab" onclick="aTab('produtos',this)">Produtos</button>
     <button class="atab" onclick="aTab('config',this)">Config</button>
-    <button class="atab" onclick="aTab('cupons',this)">🎟️ Cupons</button>
   </div>
   <div id="admin-content"></div>
 </div>
@@ -490,31 +459,11 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   <div class="md">
     <div class="md-ic">&#127881;</div>
     <h2>Pedido Enviado!</h2>
-    <div class="md-onum" id="m-onum"></div>
+    <div class="md-onum" id="m-onum">#001</div>
     <p id="m-msg">Pedido registrado!</p>
     <button class="md-btn" onclick="closeModal()">Voltar ao Cardapio</button>
   </div>
 </div>
-<!-- MODAL LEMBRETE DE FINALIZAR PEDIDO -->
-<div class="mo" id="modal-lembrete">
-  <div class="md" style="max-width:420px;text-align:center;padding:2rem">
-    <div style="font-size:56px;margin-bottom:12px">🛒</div>
-    <h2 style="font-family:Poppins,sans-serif;font-size:1.3rem;font-weight:900;color:#1a1a1a;margin-bottom:10px;line-height:1.4">Seu pedido está aguardando!</h2>
-    <p style="font-size:.92rem;color:#555;line-height:1.7;margin-bottom:6px">
-      Notamos que você ainda não finalizou sua compra.
-    </p>
-    <p style="font-size:.88rem;color:#888;line-height:1.6;margin-bottom:20px">
-      Seus itens estão reservados no carrinho. Para garantir o recebimento do seu pedido, clique em <b style="color:var(--r)">Finalizar Pedido</b> e envie via WhatsApp.
-    </p>
-    <button onclick="fecharLembrete(true)" style="width:100%;background:var(--r);color:#fff;border:none;padding:14px;border-radius:12px;font-family:Impact,sans-serif;font-size:1.1rem;cursor:pointer;letter-spacing:.5px;margin-bottom:10px">
-      ✅ FINALIZAR PEDIDO AGORA
-    </button>
-    <button onclick="fecharLembrete(false)" style="width:100%;background:#fff;color:#888;border:2px solid #ddd;padding:11px;border-radius:12px;font-weight:700;font-size:.85rem;cursor:pointer">
-      Ainda estou escolhendo
-    </button>
-  </div>
-</div>
-
 <div class="mo" id="modal-acr">
   <div class="md" style="max-width:480px">
     <div style="font-size:48px;margin-bottom:8px">+</div>
@@ -611,19 +560,18 @@ var PIX_NOME = 'RAPHAEL GONZAGA CORDEIRO';
 var PIX_CIDADE = 'CATAGUASES';
 var OPEN_DAYS = [0,1,3,4,5,6];
 var BAIRROS_GRATIS = ['TAQUARA PRETA','SAO MARCOS','SAO CRISTOVAO'];
-var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','BEIRA RIO','AVENIDA DAS INDUSTRIAS','AV DAS INDUSTRIAS','INDUSTRIAS'];
-var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE'];
+var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','CIDADE NOVA'];
+var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE','VILA DOMINGOS LOPES','VILA TEREZA','AV ASTOLFO DUTRA','AV GUIDO MARLIERE','AV MEIA PATACA'];
 var adminToken = localStorage.getItem('fael_token') || null;
 var gerenciamentoToken = localStorage.getItem('fael_gerenciamento_token') || null;
 var allProducts = [], allAcrescimos = [], cart = [];
 var curDel = 'entrega', curPay = 'dinheiro', curATab = 'todos';
 var editProdId = null, editAcrId = null;
 var taxaAtual = 0, bairroOk = true;
-var cupomAtivo = null; // { codigo, desconto_percent }
 var produtoParaAdicionar = null, acrSelecionados = [];
 var lastOrderCheck = 0;
-var notificationEnabled = true; // carregado do banco
-var autoPrintEnabled = true;    // carregado do banco
+var notificationEnabled = localStorage.getItem('fael_notification') !== 'false';
+var autoPrintEnabled = localStorage.getItem('fael_autoprint') !== 'false';
 
 function api(method, path, body, auth) {
   var h = {'Content-Type': 'application/json'};
@@ -692,8 +640,6 @@ function loadConfigs() {
         if (s.pix_chave) { PIX_CHAVE = s.pix_chave; }
         if (s.pix_nome) { PIX_NOME = s.pix_nome; }
         if (s.pix_cidade) { PIX_CIDADE = s.pix_cidade; }
-        if (s.notification !== undefined) notificationEnabled = s.notification !== 'false';
-        if (s.autoprint !== undefined) autoPrintEnabled = s.autoprint !== 'false';
       }).catch(function(e) {
         console.log('Erro ao carregar settings admin:', e);
       });
@@ -753,8 +699,7 @@ function renderProducts(cat, subcat) {
     var pizzas = allProducts.filter(function(p) { 
       if (p.category !== 'pizzas' || !p.active) return false;
       var nome = p.name.toLowerCase();
-      var desc = (p.description||'').toLowerCase();
-      return !nome.includes('moda do fael') && !desc.includes('##moda_fael##'); // Exclui Moda do Fael
+      return !nome.includes('moda do fael'); // Exclui Moda do Fael
     });
     
     if (!pizzas.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma pizza cadastrada</p>'; return; }
@@ -776,7 +721,7 @@ function renderProducts(cat, subcat) {
         html += '<div style="border:2px solid #f0f0f0;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;transition:all .2s;cursor:pointer;background:#fff" onmouseover="this.style.borderColor=\'#2A9D8F\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.08)\'" onmouseout="this.style.borderColor=\'#f0f0f0\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">';
         html += '<span style="font-size:52px;margin-bottom:12px">' + (pizza.emoji||'&#127829;') + '</span>';
         html += '<div style="font-family:Poppins,sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:10px;color:#1a1a1a;letter-spacing:-0.3px">' + pizza.name + '</div>';
-        html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + (pizza.description||'').replace(/##moda_fael##/gi,'').trim() + '</div>';
+        html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + (pizza.description||'') + '</div>';
         html += '<button class="abtn" style="font-family:Inter,sans-serif;font-size:.8rem;padding:10px 24px;font-weight:700;width:100%;max-width:140px;background:#2A9D8F;border-color:#2A9D8F" onclick="addCartTam(' + pizza.id + ',\'' + tam.cod + '\',' + tam.preco + ')" ' + (op?'':'disabled') + '>' + (op?'Adicionar':'Fechado') + '</button>';
         html += '</div>';
       }
@@ -787,35 +732,43 @@ function renderProducts(cat, subcat) {
     return;
   }
   
-  // CATEGORIA MODA DO FAEL - pizza única, preço fixo R$ 95,00
+  // CATEGORIA MODA DO FAEL (separada, amarelo)
   if (cat === 'moda_fael') {
     var pizzasModa = allProducts.filter(function(p) { 
       if (p.category !== 'pizzas' || !p.active) return false;
       var nome = p.name.toLowerCase();
-      var desc = (p.description||'').toLowerCase();
-      return nome.includes('moda do fael') || desc.includes('##moda_fael##');
+      return nome.includes('moda do fael');
     });
     
     if (!pizzasModa.length) { 
       g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma pizza Moda do Fael cadastrada</p>'; 
       return; 
     }
-
-    var precoModa = 95;
-    html += '<div style="background:#fff;border-radius:14px;box-shadow:0 6px 30px rgba(247,183,49,0.3);overflow:hidden;margin-bottom:1.2rem;border:3px solid var(--y)">';
-    html += '<div style="background:linear-gradient(135deg,#F7B731,#E59E00);color:#fff;padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between">';
-    html += '<span style="font-family:Poppins,sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:-0.5px">👑 Moda do Fael</span>';
-    html += '<span style="background:#fff;color:#F7B731;padding:6px 16px;border-radius:25px;font-weight:800;font-size:1rem;font-family:Poppins,sans-serif">R$ 95,00</span>';
-    html += '</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;padding:1.2rem">';
-    var pizza = pizzasModa[0];
-    var descLimpa = (pizza.description||'').replace(/##moda_fael##/gi,'').trim();
-    html += '<div style="border:2px solid #F7B731;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;background:#fff">';
-    html += '<span style="font-size:64px;margin-bottom:12px">' + (pizza.emoji||'👑') + '</span>';
-    html += '<div style="font-family:Poppins,sans-serif;font-weight:900;font-size:1.3rem;margin-bottom:10px;color:#1a1a1a;letter-spacing:-0.3px">MODA DO FAEL</div>';
-    if(descLimpa) html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + descLimpa + '</div>';
-    html += '<button class="abtn" style="font-family:Inter,sans-serif;font-size:.9rem;padding:12px 32px;font-weight:800;background:var(--y);border-color:var(--y)" onclick="addCartModaFael()" ' + (op?'':'disabled') + '>' + (op?'Adicionar':'Fechado') + '</button>';
-    html += '</div>';
-    html += '</div></div>';
+    
+    var tams = [
+      {cod:'G',label:'G - Grande (6 pedaços)',preco:70},
+      {cod:'GG',label:'GG - Especial (8 pedaços)',preco:80},
+      {cod:'GGG',label:'Tamanho Família (12 pedaços)',preco:95}
+    ];
+    
+    for (var t=0; t<tams.length; t++) {
+      var tam = tams[t];
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:0 6px 30px rgba(247,183,49,0.3);overflow:hidden;margin-bottom:1.2rem;border:3px solid var(--y)">';
+      html += '<div style="background:linear-gradient(135deg,#F7B731,#E59E00);color:#fff;padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between">';
+      html += '<span style="font-family:Poppins,sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:-0.5px">👑 Moda do Fael ' + tam.label + '</span>';
+      html += '<span style="background:#fff;color:#F7B731;padding:6px 16px;border-radius:25px;font-weight:800;font-size:1rem;font-family:Poppins,sans-serif">R$ ' + tam.preco.toFixed(2).replace('.',',') + '</span>';
+      html += '</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;padding:1.2rem">';
+      for (var p=0; p<pizzasModa.length; p++) {
+        var pizza = pizzasModa[p];
+        html += '<div style="border:2px solid #f0f0f0;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;transition:all .2s;cursor:pointer;background:#fff" onmouseover="this.style.borderColor=\'var(--y)\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.08)\'" onmouseout="this.style.borderColor=\'#f0f0f0\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">';
+        html += '<span style="font-size:52px;margin-bottom:12px">' + (pizza.emoji||'👑') + '</span>';
+        html += '<div style="font-family:Poppins,sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:10px;color:#1a1a1a;letter-spacing:-0.3px">' + pizza.name + '</div>';
+        html += '<div style="font-family:Inter,sans-serif;font-size:.85rem;color:#666;line-height:1.6;font-weight:400;margin-bottom:16px">' + (pizza.description||'') + '</div>';
+        html += '<button class="abtn" style="font-family:Inter,sans-serif;font-size:.8rem;padding:10px 24px;font-weight:700;width:100%;max-width:140px;background:var(--y);border-color:var(--y)" onclick="addCartTam(' + pizza.id + ',\'' + tam.cod + '\',' + tam.preco + ')" ' + (op?'':'disabled') + '>' + (op?'Adicionar':'Fechado') + '</button>';
+        html += '</div>';
+      }
+      html += '</div></div>';
+    }
     
     g.innerHTML = html;
     return;
@@ -980,56 +933,9 @@ function filterBebidas(tipo) {
   container.innerHTML = html;
 }
 
-function togglePizzaMenu(e, btn) {
-  e.stopPropagation();
-  var menu = document.getElementById('pizza-submenu');
-  var isOpen = menu.classList.contains('open');
-  closePizzaMenu();
-  if (!isOpen) {
-    menu.classList.add('open');
-    btn.classList.add('pizza-active');
-  }
-}
-
-function closePizzaMenu() {
-  var menu = document.getElementById('pizza-submenu');
-  var btn = document.getElementById('pizza-main-btn');
-  if (menu) menu.classList.remove('open');
-  if (btn) btn.classList.remove('pizza-active');
-}
-
-document.addEventListener('click', function() { closePizzaMenu(); });
-
-function filterCatPizza(cat, el) {
-  closePizzaMenu();
-  // Remove active de todos os botões principais
-  var tabs = document.querySelectorAll('.ct');
-  for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
-  // Remove active dos sub-botões
-  var subs = document.querySelectorAll('.ct-sub');
-  for (var i=0; i<subs.length; i++) subs[i].classList.remove('active');
-  // Marca o botão pizza principal como ativo
-  var mainBtn = document.getElementById('pizza-main-btn');
-  if (mainBtn) mainBtn.classList.add('active');
-  // Marca o sub-botão clicado
-  el.classList.add('active');
-  renderProducts(cat);
-}
-
-function abrirMetadeMetadeMenu() {
-  closePizzaMenu();
-  var tabs = document.querySelectorAll('.ct');
-  for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
-  var subs = document.querySelectorAll('.ct-sub');
-  for (var i=0; i<subs.length; i++) subs[i].classList.remove('active');
-  abrirMetadeMetade();
-}
-
 function filterCat(cat, el) {
   var tabs = document.querySelectorAll('.ct');
   for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
-  var subs = document.querySelectorAll('.ct-sub');
-  for (var i=0; i<subs.length; i++) subs[i].classList.remove('active');
   el.classList.add('active');
   renderProducts(cat);
 }
@@ -1067,49 +973,27 @@ function addCartTam(id, tam, preco) {
   if (tam === 'G') tamNome = 'Grande';
   if (tam === 'GG') tamNome = 'Gigante';
   if (tam === 'GGG') tamNome = 'Tamanho Família';
-
-  var nomeProduto = p.name + ' (' + tamNome + ')';
-
-  // Abrir modal de acréscimos antes de adicionar ao carrinho
-  produtoParaAdicionar = {
-    id: p.id,
-    name: nomeProduto,
-    price: preco,
-    emoji: p.emoji || '🍕',
-    category: 'pizzas_tam'
-  };
-
-  acrSelecionados = [];
-  var lista = document.getElementById('acr-lista');
-  if (!lista) return;
-  var html = '';
-  for (var i=0; i<allAcrescimos.length; i++) {
-    var a = allAcrescimos[i];
-    html += '<div class="acr-item" id="acr-' + a.id + '" onclick="toggleAcr(' + a.id + ')">';
-    html += '<span class="acr-emoji">' + (a.emoji||'+') + '</span>';
-    html += '<span class="acr-nome">' + a.nome + '</span>';
-    html += '<span class="acr-val">+R$ ' + parseFloat(a.valor).toFixed(2).replace('.',',') + '</span></div>';
-  }
-  lista.innerHTML = html;
-  calcAcrTotal();
-  document.getElementById('modal-acr').classList.add('open');
+  
+  var cid = id + '_' + tam + '_' + Date.now();
+  var nomeProduto = p.name+' ('+tamNome+')';
+  cart.push({id:p.id, cartId:cid, name:nomeProduto, price:preco, qty:1, emoji:p.emoji, acrescimos:[]});
+  updateBadge();
+  
+  // Abrir modal "Produto Adicionado"
+  mostrarModalProdutoAdicionado((p.emoji||'') + ' ' + nomeProduto);
 }
 
 function addCartModaFael() {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
-  // Adicionar diretamente ao carrinho com preço fixo R$ 95,00
-  var cid = 'moda_fael_' + Date.now();
-  cart.push({
-    id: null,
-    cartId: cid,
-    name: 'Moda do Fael',
+  // Abrir modal de acréscimos para Pizza Moda do Fael
+  produtoParaAdicionar = {
+    id: 'moda_fael',
+    name: 'Pizza Moda do Fael',
     price: 95,
-    qty: 1,
     emoji: '👑',
-    acrescimos: []
-  });
-  updateBadge();
-  mostrarModalProdutoAdicionado('👑 Moda do Fael');
+    category: 'pizzas_tam'
+  };
+  abrirModalAcr('moda_fael');
 }
 
 function abrirModalAcr(prodId) {
@@ -1153,25 +1037,12 @@ function calcAcrTotal() {
 }
 
 function confirmarAcrescimos() {
-  // produtoParaAdicionar pode ser um ID (numero) ou um objeto (pizza com tamanho)
-  if (produtoParaAdicionar && typeof produtoParaAdicionar === 'object') {
-    var p = produtoParaAdicionar;
-    var extra = 0;
-    var nomes = acrSelecionados.map(function(a){return a.nome;}).join(', ');
-    for (var j=0; j<acrSelecionados.length; j++) extra += parseFloat(acrSelecionados[j].valor);
-    var nome = acrSelecionados.length > 0 ? p.name + ' (+' + nomes + ')' : p.name;
-    cart.push({id:p.id, cartId:p.id+'_'+Date.now(), name:nome, price:p.price+extra, qty:1, emoji:p.emoji, acrescimos:acrSelecionados});
-    updateBadge();
-    fecharModalAcr();
-    mostrarModalProdutoAdicionado((p.emoji||'') + ' ' + p.name);
-  } else {
-    addCartDireto(produtoParaAdicionar, acrSelecionados);
-    fecharModalAcr();
-    // Abrir modal de escolha após adicionar
-    setTimeout(function() {
-      document.getElementById('modal-escolha').classList.add('open');
-    }, 300);
-  }
+  addCartDireto(produtoParaAdicionar, acrSelecionados);
+  fecharModalAcr();
+  // Abrir modal de escolha após adicionar
+  setTimeout(function() {
+    document.getElementById('modal-escolha').classList.add('open');
+  }, 300);
 }
 
 function fecharModalAcr() {
@@ -1212,8 +1083,7 @@ function abrirMetadeMetade() {
   var pizzas = allProducts.filter(function(p) { 
     if (p.category !== 'pizzas' || !p.active) return false;
     var nome = p.name.toLowerCase();
-    var desc = (p.description||'').toLowerCase();
-    return !nome.includes('moda do fael') && !desc.includes('##moda_fael##'); // Exclui Moda do Fael
+    return !nome.includes('moda do fael'); // Exclui Moda do Fael
   });
   var html = '<option value="">Selecione...</option>';
   for (var i=0; i<pizzas.length; i++) {
@@ -1443,80 +1313,13 @@ function rmItem(cid) {
   updateBadge(); renderCart();
 }
 
-
-function aplicarCupom() {
-  var cod = document.getElementById('cupom-input').value.trim().toUpperCase();
-  var status = document.getElementById('cupom-status');
-  if (!cod) { showToast('Digite um cupom!'); return; }
-  if (cart.length === 0) { showToast('Adicione itens antes de usar o cupom!'); return; }
-  status.style.display = 'block';
-  status.style.background = '#f0f4ff';
-  status.style.color = '#555';
-  status.textContent = '⏳ Verificando...';
-  fetch('/api/cupons/validar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ codigo: cod })
-  })
-  .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error); return d; }); })
-  .then(function(d) {
-    cupomAtivo = { codigo: d.codigo, desconto_percent: d.desconto_percent };
-    status.style.background = '#f0fdf4';
-    status.style.color = '#15803d';
-    status.style.border = '1px solid #22c55e';
-    status.textContent = '✅ Cupom válido! ' + d.desconto_percent + '% de desconto aplicado. (' + d.usos_restantes + ' usos restantes)';
-    calcSum();
-  })
-  .catch(function(e) {
-    cupomAtivo = null;
-    status.style.background = '#fff5f5';
-    status.style.color = '#991B1B';
-    status.style.border = '1px solid #EF4444';
-    status.textContent = '❌ ' + e.message;
-    calcSum();
-  });
-}
-
-function limparCupom() {
-  cupomAtivo = null;
-  var inp = document.getElementById('cupom-input');
-  var status = document.getElementById('cupom-status');
-  if (inp) inp.value = '';
-  if (status) status.style.display = 'none';
-  calcSum();
-}
-
 function calcSum() {
   var sub = 0;
   for (var i=0; i<cart.length; i++) sub += cart[i].price * cart[i].qty;
   var tx = curDel === 'entrega' ? taxaAtual : 0;
-  var desc = 0;
-  if (cupomAtivo) {
-    desc = sub * (cupomAtivo.desconto_percent / 100);
-    var dRow = document.getElementById('desconto-row');
-    var dVal = document.getElementById('desconto-val');
-    if (dRow) dRow.style.display = 'flex';
-    if (dVal) dVal.textContent = '-R$ ' + desc.toFixed(2).replace('.',',');
-  } else {
-    var dRow = document.getElementById('desconto-row');
-    if (dRow) dRow.style.display = 'none';
-  }
   document.getElementById('sub-val').textContent = 'R$ ' + sub.toFixed(2).replace('.',',');
-  document.getElementById('tot-val').textContent = 'R$ ' + (sub + tx - desc).toFixed(2).replace('.',',');
-  // Correcao: sempre sincronizar taxa-display com o valor real do frete
-  var disp = document.getElementById('taxa-display');
-  var row = document.getElementById('taxa-row');
-  if (disp && row) {
-    if (curDel !== 'entrega') {
-      disp.textContent = '--'; row.style.color = '#999';
-    } else if (tx > 0) {
-      disp.textContent = 'R$ ' + tx.toFixed(2).replace('.',',');
-      row.style.color = (tx <= 5) ? '#15803d' : '#C47D00';
-    } else if (bairroOk) {
-      disp.textContent = 'GRATIS'; row.style.color = '#22c55e';
-    }
-  }
-  if (curPay === 'pix') gerarPix(sub + tx - desc);
+  document.getElementById('tot-val').textContent = 'R$ ' + (sub+tx).toFixed(2).replace('.',',');
+  if (curPay === 'pix') gerarPix(sub+tx);
 }
 
 function setDel(t) {
@@ -1536,18 +1339,10 @@ function setPay(t, el) {
   document.getElementById('pix-info').style.display = t==='pix'?'block':'none';
   document.getElementById('troco-f').style.display = t==='dinheiro'?'block':'none';
   
-  // Ao escolher dinheiro, resetar seleção do troco para o cliente decidir
+  // Resetar estado do troco quando escolhe dinheiro
   if (t === 'dinheiro') {
     setTimeout(function() {
-      // Limpar seleção dos botões, deixar cliente escolher
-      var simBtn = document.getElementById('troco-sim');
-      var naoBtn = document.getElementById('troco-nao');
-      var valorField = document.getElementById('troco-valor-field');
-      if (simBtn) { simBtn.style.background='#fff'; simBtn.style.borderColor='#ddd'; simBtn.style.color='#666'; }
-      if (naoBtn) { naoBtn.style.background='#fff'; naoBtn.style.borderColor='#ddd'; naoBtn.style.color='#666'; }
-      if (valorField) valorField.style.display='none';
-      if (document.getElementById('troco-v')) document.getElementById('troco-v').value='';
-      precisaTroco = false;
+      toggleTroco(false); // Padrão: Não precisa de troco
     }, 100);
   }
   
@@ -1674,20 +1469,6 @@ function getForm() {
 
 function valid() {
   if (!cart.length) { showToast('Carrinho vazio!'); return false; }
-
-  // Verificar se o carrinho tem apenas bebidas
-  var categoriasBebida = ['bebidas'];
-  var temSomenteBebidas = cart.every(function(item) {
-    // Buscar o produto pelo nome/id para checar categoria
-    var prod = allProducts.filter(function(p) { return p.id === item.id; })[0];
-    if (!prod) return false; // item especial (pizza metade, moda fael) não é bebida
-    return categoriasBebida.indexOf(prod.category) >= 0;
-  });
-  if (temSomenteBebidas) {
-    showToast('⚠️ Adicione pelo menos um lanche para finalizar o pedido! Não entregamos apenas bebidas.');
-    return false;
-  }
-
   var d = getForm();
   if (!d.name) { showToast('Informe seu nome!'); return false; }
   if (!d.phone) { showToast('Informe seu telefone!'); return false; }
@@ -1706,77 +1487,8 @@ function valid() {
 var originalShowPage = showPage;
 showPage = function(page) {
   originalShowPage(page);
-  // Iniciar timer de lembrete ao entrar no carrinho
-  if (page === 'carrinho') {
-    setTimeout(iniciarTimerLembrete, 500);
-  } else {
-    cancelarTimerLembrete();
-    // Fechar modal lembrete se estiver aberto
-    var ml = document.getElementById('modal-lembrete');
-    if (ml) ml.classList.remove('open');
-  }
+  // Removido carregamento automático de dados por privacidade
 };
-
-
-// =============================================
-// SISTEMA DE LEMBRETE DE FINALIZAR PEDIDO
-// =============================================
-var _lembreteTimer = null;
-var _lembreteJaMostrado = false;
-var _LEMBRETE_MS = 2 * 60 * 1000; // 2 minutos
-
-function iniciarTimerLembrete() {
-  cancelarTimerLembrete();
-  // Só ativa se o carrinho tiver itens e a página for o carrinho
-  if (!cart.length) return;
-  var paginaAtual = document.querySelector('.page.active');
-  if (!paginaAtual || paginaAtual.id !== 'page-carrinho') return;
-
-  _lembreteTimer = setTimeout(function() {
-    // Verifica novamente antes de mostrar
-    var pg = document.querySelector('.page.active');
-    if (!pg || pg.id !== 'page-carrinho') return;
-    if (!cart.length) return;
-    // Não mostra se já tem outro modal aberto
-    var modaisAbertos = document.querySelectorAll('.mo.open');
-    if (modaisAbertos.length > 0) return;
-    mostrarLembrete();
-  }, _LEMBRETE_MS);
-}
-
-function cancelarTimerLembrete() {
-  if (_lembreteTimer) { clearTimeout(_lembreteTimer); _lembreteTimer = null; }
-}
-
-function mostrarLembrete() {
-  document.getElementById('modal-lembrete').classList.add('open');
-}
-
-function fecharLembrete(irFinalizar) {
-  document.getElementById('modal-lembrete').classList.remove('open');
-  if (irFinalizar) {
-    // Rola até o botão de finalizar
-    var btn = document.getElementById('wa-btn');
-    if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  } else {
-    // Reinicia o timer pois o cliente ainda está escolhendo
-    iniciarTimerLembrete();
-  }
-}
-
-// Reiniciar timer quando o usuário interagir com a página do carrinho
-function _resetLembreteOnActivity() {
-  var pg = document.querySelector('.page.active');
-  if (pg && pg.id === 'page-carrinho' && cart.length) {
-    cancelarTimerLembrete();
-    iniciarTimerLembrete();
-  }
-}
-
-// Monitorar atividade do usuário
-['click', 'touchstart', 'keydown', 'scroll'].forEach(function(ev) {
-  document.addEventListener(ev, _resetLembreteOnActivity, { passive: true });
-});
 
 function sendWA() {
   var d = valid(); if (!d) return;
@@ -1788,8 +1500,7 @@ function sendWA() {
   var sub = 0;
   for (var i=0; i<cart.length; i++) sub += cart[i].price * cart[i].qty;
   var tx = curDel==='entrega' ? taxaAtual : 0;
-  var desc = cupomAtivo ? sub * (cupomAtivo.desconto_percent / 100) : 0;
-  var tot = sub + tx - desc;
+  var tot = sub + tx;
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Cartao de Credito',debito:'Cartao de Debito'};
   var trocov = document.getElementById('troco-v').value;
   var body = {
@@ -1805,17 +1516,7 @@ function sendWA() {
   };
   api('POST', '/orders', body)
     .then(function(order) {
-      // Consumir cupom se aplicado
-      var cupomUsado = cupomAtivo ? { codigo: cupomAtivo.codigo, desconto_percent: cupomAtivo.desconto_percent } : null;
-      if (cupomAtivo) {
-        fetch('/api/cupons/usar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ codigo: cupomAtivo.codigo })
-        }).catch(function(){});
-        limparCupom();
-      }
-      var msg = 'PEDIDO - FAEL TOP LANCHES\n';
+      var msg = 'PEDIDO #' + String(order.id).padStart(3,'0') + ' - FAEL TOP LANCHES\n';
       msg += '====================\n';
       msg += 'Cliente: ' + d.name + ' | Tel: ' + d.phone + '\n';
       if (curDel==='entrega') { msg += 'Entrega: Rua ' + d.rua + ', ' + d.num + ' - ' + d.bairro + (d.comp?' ('+d.comp+')':'') + '\n'; }
@@ -1825,15 +1526,14 @@ function sendWA() {
       for (var i=0; i<cart.length; i++) { msg += cart[i].qty + 'x ' + cart[i].name + ' - R$ ' + (cart[i].price*cart[i].qty).toFixed(2).replace('.',',') + '\n'; }
       msg += '====================\n';
       if (tx > 0) { msg += 'Taxa: R$ ' + tx.toFixed(2).replace('.',',') + '\n'; } else { msg += 'Entrega GRATIS\n'; }
-      if (desc > 0 && cupomUsado) { msg += 'Desconto (' + cupomUsado.desconto_percent + '%): -R$ ' + desc.toFixed(2).replace('.',',') + '\n'; }
       msg += 'TOTAL: R$ ' + tot.toFixed(2).replace('.',',') + '\n';
       msg += PM[curPay] + '\n';
       if (curPay==='dinheiro' && trocov) msg += 'Troco para: R$ ' + parseFloat(trocov).toFixed(2).replace('.',',') + '\n';
       if (curPay==='pix' && window._pixCod) { msg += '====================\nCODIGO PIX:\n' + window._pixCod + '\nApos pagar envie o comprovante!\n'; }
       if (d.obs) msg += 'Obs: ' + d.obs + '\n';
       msg += new Date().toLocaleString('pt-BR');
-      cart = []; updateBadge(); cancelarTimerLembrete();
-      document.getElementById('m-onum').textContent = '';
+      cart = []; updateBadge();
+      document.getElementById('m-onum').textContent = '#' + String(order.id).padStart(3,'0');
       document.getElementById('m-msg').textContent = 'Pedido registrado! WhatsApp abrindo...';
       document.getElementById('modal').classList.add('open');
       var mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -1975,7 +1675,6 @@ function loadAdmContent(f) {
   var el = document.getElementById('admin-content');
   if (f === 'produtos') { buildPM().then(function(h){el.innerHTML=h;}); return; }
   if (f === 'acrescimos') { buildAcrMgr().then(function(h){el.innerHTML=h;}); return; }
-  if (f === 'cupons') { buildCuponsMgr().then(function(h){el.innerHTML=h;}); return; }
   if (f === 'config') { buildCfg().then(function(h){el.innerHTML=h;}); return; }
   el.innerHTML = '<div class="loading"><span class="spin">&#9203;</span>Carregando...</div>';
   var url = '/orders' + (f!=='todos' ? '?status='+f : '');
@@ -2025,7 +1724,7 @@ function oCard(o, isAdm, mostrarCheckbox) {
     html += '<div style="position:absolute;top:12px;left:12px;z-index:10"><input type="checkbox" class="order-checkbox" data-order-id="'+o.id+'" data-total="'+o.total+'" style="width:20px;height:20px;cursor:pointer"></div>';
   }
   
-  html += '<div class="och" style="'+(mostrarCheckbox && (st === 'entregue' || st === 'cancelado') ? 'padding-left:40px' : '')+'"><div><div class="oid">'+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
+  html += '<div class="och" style="'+(mostrarCheckbox && (st === 'entregue' || st === 'cancelado') ? 'padding-left:40px' : '')+'"><div><div class="oid">#'+String(o.id).padStart(3,'0')+' - '+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
   html += '<div class="ocb">';
   html += '<div class="oib"><div class="oit">Itens</div><div class="oiv">'+iNames+'</div></div>';
   html += '<div class="oib"><div class="oit">Entrega</div><div class="oiv">'+(DM[o.delivery_type]||'--')+'</div><div style="font-size:.72rem;color:#888;margin-top:2px">'+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
@@ -2061,9 +1760,9 @@ function advSt(id) {
 function enviarNotificacaoStatus(order, status) {
   // Mensagens para cada status
   var mensagens = {
-    'preparo': '✅ Olá *' + order.client_name + '*!\n\nSeu pedido está sendo preparado com carinho! 👨\u200d🍳\n\nEm breve estará pronto!',
-    'entrega': '🚀 *' + order.client_name + '*, seu pedido saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
-    'entregue': '🎉 Pedido entregue com sucesso!\n\n*Obrigado pela preferência, ' + order.client_name + '!*\n\nVolte sempre! ❤️🍕'
+    'preparo': '✅ Olá *' + order.client_name + '*!\n\nSeu pedido *#' + String(order.id).padStart(3,'0') + '* está sendo preparado com carinho! 👨‍🍳\n\nEm breve estará pronto!',
+    'entrega': '🚀 *' + order.client_name + '*, seu pedido *#' + String(order.id).padStart(3,'0') + '* saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
+    'entregue': '🎉 Pedido *#' + String(order.id).padStart(3,'0') + '* entregue com sucesso!\n\n*Obrigado pela preferência, ' + order.client_name + '!*\n\nVolte sempre! ❤️🍕'
   };
   
   var msg = mensagens[status];
@@ -2158,7 +1857,7 @@ function waOrd(id) {
   var o = null; if (window._admOrd) for (var i=0; i<window._admOrd.length; i++) if (window._admOrd[i].id===id) { o=window._admOrd[i]; break; }
   if (!o) return;
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Credito',debito:'Debito'};
-  var msg = 'PEDIDO - FAEL TOP LANCHES\n====================\n';
+  var msg = 'PEDIDO #'+String(o.id).padStart(3,'0')+'\n====================\n';
   msg += o.client_name+' | '+o.client_phone+'\n';
   msg += (o.address||'')+(o.complement?' - '+o.complement:'')+'\n====================\n';
   var items = o.items || [];
@@ -2172,90 +1871,22 @@ function printOrd(id) {
   if (!o) return;
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Cartao de Credito',debito:'Cartao de Debito'};
   var items = o.items || [];
-  var DIV = 'border-top:1px dashed #000;margin:3px 0;';
   var iHtml = '';
-  for (var i=0; i<items.length; i++) {
-    var it = items[i];
-    var acr = it.acrescimos ? ' + ' + it.acrescimos : '';
-    iHtml += '<div style="margin-bottom:3px">';
-    iHtml += '<div style="display:flex;justify-content:space-between">';
-    iHtml += '<span style="font-weight:700">'+ it.quantity +'x '+ it.product_name +'</span>';
-    iHtml += '<span>R$ '+ parseFloat(it.subtotal).toFixed(2).replace('.',',') +'</span>';
-    iHtml += '</div></div>';
-  }
-  var sep = '<div style="'+DIV+'"></div>';
-  var html = '<div style="width:54mm;max-width:54mm;font-family:Courier New,monospace;font-size:9pt;color:#000;margin:0;padding:0;word-wrap:break-word;word-break:break-word;overflow:hidden">';
-  // Cabecalho
-  html += '<div style="text-align:center;margin-bottom:4px">';
-  html += '<div style="font-size:14pt;font-weight:900;letter-spacing:1px">FAEL TOP LANCHES</div>';
-  html += '<div style="font-size:8pt">& PIZZARIA</div>';
-  html += '</div>';
-  html += sep;
-  // Data
-  html += '<div style="font-size:7.5pt;text-align:center;margin:2px 0">'+o.created_at+'</div>';
-  html += sep;
-  // Cliente
-  html += '<div style="margin:3px 0;font-size:8.5pt">';
-  html += '<div><b>Cliente:</b> '+o.client_name+'</div>';
-  html += '<div><b>Tel:</b> '+o.client_phone+'</div>';
-  if (o.delivery_type === 'entrega') {
-    html += '<div><b>End:</b> '+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div>';
-  } else {
-    html += '<div><b>** RETIRADA NA LOJA **</b></div>';
-  }
-  html += '</div>';
-  html += sep;
-  // Itens
-  html += '<div style="margin:3px 0;font-size:8.5pt">';
-  html += '<div style="font-weight:900;margin-bottom:3px">ITENS:</div>';
-  html += iHtml;
-  html += '</div>';
-  html += sep;
-  // Total
-  html += '<div style="margin:3px 0;font-size:9.5pt">';
-  var subVal = parseFloat(o.subtotal) || 0;
-  var feeVal = parseFloat(o.delivery_fee) || 0;
-  var totalVal = subVal + feeVal;
-  if (feeVal > 0) {
-    html += '<div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>R$ '+subVal.toFixed(2).replace('.',',')+'</span></div>';
-    html += '<div style="display:flex;justify-content:space-between"><span>Entrega</span><span>R$ '+feeVal.toFixed(2).replace('.',',')+'</span></div>';
-  }
-  html += '<div style="display:flex;justify-content:space-between;font-weight:900;font-size:11pt"><span>TOTAL</span><span>R$ '+totalVal.toFixed(2).replace('.',',')+'</span></div>';
-  html += '<div><b>Pagamento:</b> '+(PM[o.payment]||o.payment)+'</div>';
+  for (var i=0; i<items.length; i++) iHtml += '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>'+items[i].quantity+'x '+items[i].product_name+'</span><span>R$ '+parseFloat(items[i].subtotal).toFixed(2).replace('.',',')+'</span></div>';
+  var html = '<div style="font-family:Courier New,monospace;max-width:360px;margin:0 auto;padding:20px;font-size:13px;color:#000;border:1px solid #ddd">';
+  html += '<div style="text-align:center;margin-bottom:14px"><div style="font-size:26px">&#127828;&#127829;</div><div style="font-size:17px;font-weight:900;letter-spacing:2px">FAEL TOP LANCHES</div><div style="font-size:11px">& PIZZARIA</div><div style="border-top:2px dashed #000;margin:10px 0"></div></div>';
+  html += '<div style="margin-bottom:8px"><div style="font-weight:900;font-size:14px">PEDIDO #'+String(o.id).padStart(3,'0')+'</div><div style="font-size:10px;color:#555">'+o.created_at+'</div></div>';
+  html += '<div style="margin-bottom:9px;font-size:12px"><div><b>Cliente:</b> '+o.client_name+'</div><div><b>Tel:</b> '+o.client_phone+'</div><div><b>Endereco:</b> '+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
+  html += '<div style="border-top:2px dashed #000;border-bottom:2px dashed #000;padding:9px 0;margin:9px 0"><div style="font-weight:900;margin-bottom:6px">ITENS:</div>'+iHtml+'</div>';
+  html += '<div style="margin-top:9px;font-size:12px"><div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;border-top:1px solid #000;padding-top:5px"><span>TOTAL</span><span>R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+'</span></div>';
+  html += '<div style="margin-top:5px"><b>Pagamento:</b> '+(PM[o.payment]||o.payment)+'</div>';
   if (o.change_for) html += '<div><b>Troco p/:</b> R$ '+parseFloat(o.change_for).toFixed(2).replace('.',',')+'</div>';
-  html += '</div>';
-  if (o.observations) { html += sep; html += '<div style="font-size:8pt;margin:3px 0"><b>Obs:</b> '+o.observations+'</div>'; }
-  html += sep;
-  html += '<div style="text-align:center;font-size:8pt;margin-top:4px">Obrigado! Volte sempre! ❤</div>';
-  html += '<div style="margin-top:8mm"></div>'; // Espaço para corte
-  html += '</div>';
-  var pa = document.getElementById('print-area');
-  pa.innerHTML = html;
-  pa.style.display = 'block';
-
-  // Tentar imprimir via QZ Tray (impressao automatica sem dialogo)
-  if (window.qz && qz.websocket && qz.websocket.isActive && qz.websocket.isActive()) {
-    qz.printers.find('MTI').then(function(printer) {
-      var cfg = qz.configs.create(printer, { scaleContent: false });
-      var data = [{
-        type: 'pixel',
-        format: 'html',
-        flavor: 'plain',
-        data: '<html><head><style>*{margin:0;padding:0;font-family:Courier New,monospace}body{width:54mm}</style></head><body>' + html + '</body></html>',
-        options: { pageWidth: 54, pageHeight: 0 }
-      }];
-      return qz.print(cfg, data);
-    }).then(function() {
-      setTimeout(function(){ pa.style.display = 'none'; }, 1000);
-    }).catch(function() {
-      window.print();
-      setTimeout(function(){ pa.style.display = 'none'; }, 1000);
-    });
-  } else {
-    window.print();
-    setTimeout(function(){ pa.style.display = 'none'; }, 1000);
-  }
+  if (o.observations) html += '<div style="margin-top:5px"><b>Obs:</b> '+o.observations+'</div>';
+  html += '</div><div style="text-align:center;margin-top:14px;border-top:2px dashed #000;padding-top:10px;font-size:10px;color:#555">Obrigado! Volte sempre!</div></div>';
+  var pa = document.getElementById('print-area'); pa.innerHTML=html; pa.style.display='block'; window.print(); setTimeout(function(){pa.style.display='none';},600);
 }
+
+// PRODUTOS ADMIN
 function buildPM() {
   return api('GET','/products/all',null,true).then(function(prods) {
     var CL = {lanches:'Lanches',pizzas:'Pizzas',omelete:'Omelete',cachorro_quente:'Cachorro Quente',bebidas:'Bebidas',porcoes:'Porcoes'};
@@ -2273,7 +1904,7 @@ function buildPM() {
       '<div id="prod-form-box" style="display:none" class="form-box">' +
       '<h3 id="pf-title">Novo Produto</h3>' +
       '<div class="frow"><div class="fg"><label>Emoji</label><input id="pf-emoji" placeholder="&#127828;" maxlength="4"></div><div class="fg"><label>Nome</label><input id="pf-name" placeholder="X-Burguer"></div></div>' +
-      '<div class="frow"><div class="fg"><label>Categoria</label><select id="pf-cat" onchange="togPizza();togBebida()"><option value="lanches">Lanches (Geral)</option><option value="frango_desfiado">🍗 Frango Desfiado</option><option value="hamburguer_boi">🥩 Hambúrguer Boi</option><option value="pizzas">🍕 Pizzas</option><option value="pizzas_moda_fael">👑 Moda do Fael</option><option value="omelete">Omelete</option><option value="cachorro_quente">Cachorro Quente</option><option value="bebidas">Bebidas</option><option value="porcoes">Porcoes</option></select></div>' +
+      '<div class="frow"><div class="fg"><label>Categoria</label><select id="pf-cat" onchange="togPizza();togBebida()"><option value="lanches">Lanches (Geral)</option><option value="frango_desfiado">🍗 Frango Desfiado</option><option value="hamburguer_boi">🥩 Hambúrguer Boi</option><option value="pizzas">Pizzas</option><option value="omelete">Omelete</option><option value="cachorro_quente">Cachorro Quente</option><option value="bebidas">Bebidas</option><option value="porcoes">Porcoes</option></select></div>' +
       '<div class="fg"><label>Preco (R$)</label><input id="pf-price" type="number" step="0.50" min="0" placeholder="0.00"></div></div>' +
       '<div id="bebida-subcat-box" style="display:none;background:#e3f2fd;border:2px solid #2196F3;border-radius:12px;padding:1rem;margin-bottom:12px">' +
       '<div style="font-weight:900;font-size:.9rem;color:#1976D2;margin-bottom:10px">📌 Subcategoria da Bebida</div>' +
@@ -2298,9 +1929,9 @@ function buildPM() {
   }).catch(function(e){ return '<p style="color:var(--r)">Erro: '+e.message+'</p>'; });
 }
 
-function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=(c==='pizzas'||c==='pizzas_moda_fael')?'block':'none'; }
+function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=c==='pizzas'?'block':'none'; }
 function togBebida(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('bebida-subcat-box'); if(b) b.style.display=c==='bebidas'?'block':'none'; }
-function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; var isModa=(p.description||'').toLowerCase().includes('##moda_fael##'); document.getElementById('pf-cat').value=isModa?'pizzas_moda_fael':p.category; document.getElementById('pf-price').value=p.price; var cleanDesc=(p.description||'').replace(/##refri##|##suco-leite##|##suco-agua##|##moda_fael##/gi,'').trim(); document.getElementById('pf-desc').value=cleanDesc; var subcatField=document.getElementById('pf-bebida-subcat'); if(subcatField&&p.description){var desc=p.description.toLowerCase();if(desc.includes('##refri##'))subcatField.value='refrigerante';else if(desc.includes('##suco-leite##'))subcatField.value='suco-leite';else if(desc.includes('##suco-agua##'))subcatField.value='suco-agua';else subcatField.value='';} togPizza();togBebida();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var sc=document.getElementById('pf-bebida-subcat');if(sc)sc.value='';var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();togBebida();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
+function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; var cleanDesc=(p.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim(); document.getElementById('pf-desc').value=cleanDesc; var subcatField=document.getElementById('pf-bebida-subcat'); if(subcatField&&p.description){var desc=p.description.toLowerCase();if(desc.includes('##refri##'))subcatField.value='refrigerante';else if(desc.includes('##suco-leite##'))subcatField.value='suco-leite';else if(desc.includes('##suco-agua##'))subcatField.value='suco-agua';else subcatField.value='';} togPizza();togBebida();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var sc=document.getElementById('pf-bebida-subcat');if(sc)sc.value='';var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();togBebida();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
 function editProd(id){ showPF(id); }
 function delProd(id){ if(!confirm('Confirmar?'))return; api('DELETE','/products/'+id,null,true).then(function(){showToast('Produto atualizado!');aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);}); }
 function closePF(){ var b=document.getElementById('prod-form-box'); if(b)b.style.display='none'; editProdId=null; }
@@ -2322,16 +1953,13 @@ function saveProd(){
   }
   
   if(!name){showToast('Informe o nome!');return;}
-  if(category==='pizzas'||category==='pizzas_moda_fael'){
+  if(category==='pizzas'){
     var pg=parseFloat(document.getElementById('pf-pg').value)||0;
     var pgg=parseFloat(document.getElementById('pf-pgg').value)||0;
     var pggg=parseFloat(document.getElementById('pf-pggg').value)||0;
     var price=pg||pgg||pggg;
     if(!price){showToast('Informe ao menos um preco!');return;}
-    // Moda do Fael salva como category='pizzas' com tag especial na descrição
-    var saveCat = category==='pizzas_moda_fael' ? 'pizzas' : category;
-    var saveDesc = category==='pizzas_moda_fael' ? (description ? description+' ##moda_fael##' : '##moda_fael##') : description;
-    var p = editProdId!=null ? api('PUT','/products/'+editProdId,{name,category:saveCat,price,emoji,description:saveDesc},true) : api('POST','/products',{name,category:saveCat,price,emoji,description:saveDesc},true);
+    var p = editProdId!=null ? api('PUT','/products/'+editProdId,{name,category,price,emoji,description},true) : api('POST','/products',{name,category,price,emoji,description},true);
     p.then(function(){showToast('Pizza salva!');closePF();loadProducts();aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);});
     return;
   }
@@ -2342,136 +1970,6 @@ function saveProd(){
 }
 
 // ACRESCIMOS ADMIN
-
-function buildCuponsMgr() {
-  return new Promise(function(resolve) {
-    var html = '<div style="max-width:700px">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">';
-    html += '<h3 style="font-family:Impact,sans-serif;font-size:1.5rem;margin:0">🎟️ Cupons de Desconto</h3>';
-    html += '<button onclick="resetTodosCupons()" style="background:#EF4444;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:900;font-size:.8rem;cursor:pointer">🗑️ RESETAR TUDO</button>';
-    html += '</div>';
-
-    // Formulário de geração
-    html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.5rem">';
-    html += '<h4 style="margin-bottom:1rem;font-size:1rem">Gerar novos cupons</h4>';
-    html += '<div class="frow">';
-    html += '<div class="fg"><label>Quantidade (máx 1000)</label><input type="number" id="cp-qtd" value="10" min="1" max="1000"></div>';
-    html += '<div class="fg"><label>Desconto (%)</label><input type="number" id="cp-desc" value="2" min="1" max="100" step="0.5"></div>';
-    html += '</div>';
-    html += '<div class="frow">';
-    html += '<div class="fg"><label>Usos por cupom</label><input type="number" id="cp-usos" value="5" min="1" max="100"></div>';
-    html += '<div class="fg"><label>Validade (horas)</label><input type="number" id="cp-horas" value="2" min="1" max="720"></div>';
-    html += '</div>';
-    html += '<button onclick="gerarCupons()" style="width:100%;background:var(--r);color:#fff;border:none;padding:12px;border-radius:10px;font-family:Impact,sans-serif;font-size:1.1rem;cursor:pointer;margin-top:8px">GERAR CUPONS</button>';
-    html += '</div>';
-
-    // Área de resultado
-    html += '<div id="cp-resultado" style="display:none;background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:1rem;margin-bottom:1.5rem">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-    html += '<b style="color:#15803d">✅ Cupons gerados!</b>';
-    html += '<button onclick="copiarCupons()" style="background:#22c55e;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:800;font-size:.8rem;cursor:pointer">📋 Copiar Todos</button>';
-    html += '</div>';
-    html += '<textarea id="cp-lista" style="width:100%;height:200px;font-family:Courier New,monospace;font-size:.78rem;border:1px solid #ccc;border-radius:6px;padding:8px;resize:vertical" readonly></textarea>';
-    html += '</div>';
-
-    // Lista de cupons ativos
-    html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem">';
-    html += '<h4 style="margin-bottom:1rem;font-size:1rem">Cupons cadastrados</h4>';
-    html += '<div id="cp-tabela">Carregando...</div>';
-    html += '<div style="margin-top:10px;background:#fff8e1;border:2px solid #F7B731;border-radius:8px;padding:8px 12px;font-size:.75rem;color:#7a5800">';
-    html += '⏰ <b>Reset automático:</b> Toda quinta-feira às 18:00 todos os cupons são apagados automaticamente.';
-    html += '</div>';
-    html += '</div>';
-    html += '</div>';
-
-    resolve(html);
-
-    // Load existing cupons after render
-    setTimeout(function() { loadCuponsTabela(); }, 100);
-  });
-}
-
-function gerarCupons() {
-  var qtd = parseInt(document.getElementById('cp-qtd').value) || 10;
-  var desc = parseFloat(document.getElementById('cp-desc').value) || 2;
-  var usos = parseInt(document.getElementById('cp-usos').value) || 5;
-  var horas = parseInt(document.getElementById('cp-horas').value) || 2;
-  if (qtd < 1 || qtd > 1000) { showToast('Quantidade entre 1 e 1000!'); return; }
-  api('POST', '/cupons/gerar', { quantidade: qtd, desconto_percent: desc, usos_maximos: usos, horas_validade: horas }, true)
-  .then(function(d) {
-    var res = document.getElementById('cp-resultado');
-    var lista = document.getElementById('cp-lista');
-    if (res) res.style.display = 'block';
-    if (lista) lista.value = d.gerados.join('\n');
-    showToast('✅ ' + d.total + ' cupons gerados!');
-    loadCuponsTabela();
-  })
-  .catch(function(e) { showToast('Erro: ' + e.message); });
-}
-
-function copiarCupons() {
-  var lista = document.getElementById('cp-lista');
-  if (!lista) return;
-  lista.select();
-  document.execCommand('copy');
-  showToast('✅ Cupons copiados!');
-}
-
-function loadCuponsTabela() {
-  var el = document.getElementById('cp-tabela');
-  if (!el) return;
-  api('GET', '/cupons', null, true)
-  .then(function(cupons) {
-    if (!cupons.length) { el.innerHTML = '<p style="color:#aaa">Nenhum cupom cadastrado</p>'; return; }
-    var now = new Date();
-    var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.82rem">';
-    html += '<tr style="background:#f8f8f8"><th style="padding:8px;text-align:left">Código</th><th>Desconto</th><th>Usos</th><th>Validade</th><th>Status</th><th></th></tr>';
-    for (var i=0; i<cupons.length; i++) {
-      var c = cupons[i];
-      var exp = new Date(c.expira_em);
-      var expirado = now > exp;
-      var esgotado = c.usos_atuais >= c.usos_maximos;
-      var inativo = !c.ativo;
-      var statusTxt = inativo ? '🚫 Desativado' : expirado ? '⏰ Expirado' : esgotado ? '✅ Esgotado' : '🟢 Ativo';
-      var statusCor = inativo||expirado||esgotado ? '#aaa' : '#15803d';
-      html += '<tr style="border-bottom:1px solid #f0f0f0">';
-      html += '<td style="padding:8px;font-family:monospace;font-weight:700">' + c.codigo + '</td>';
-      html += '<td style="text-align:center">' + c.desconto_percent + '%</td>';
-      html += '<td style="text-align:center">' + c.usos_atuais + '/' + c.usos_maximos + '</td>';
-      html += '<td style="text-align:center;font-size:.75rem">' + exp.toLocaleString('pt-BR') + '</td>';
-      html += '<td style="text-align:center;color:' + statusCor + ';font-weight:700">' + statusTxt + '</td>';
-      html += '<td style="text-align:center">';
-      html += '<button onclick="apagarCupom(' + c.id + ')" style="background:#EF4444;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:.75rem;cursor:pointer">🗑️</button>';
-      html += '</td></tr>';
-    }
-    html += '</table></div>';
-    el.innerHTML = html;
-  })
-  .catch(function() { el.innerHTML = '<p style="color:#aaa">Erro ao carregar</p>'; });
-}
-
-function apagarCupom(id) {
-  if (!confirm('Apagar este cupom permanentemente?')) return;
-  api('DELETE', '/cupons/' + id, null, true)
-  .then(function() { showToast('✅ Cupom apagado!'); loadCuponsTabela(); })
-  .catch(function(e) { showToast('Erro: ' + e.message); });
-}
-
-function resetTodosCupons() {
-  if (!confirm('⚠️ Apagar TODOS os cupons? Isso não pode ser desfeito!')) return;
-  api('DELETE', '/cupons', null, true)
-  .then(function(r) {
-    showToast('🗑️ Todos os cupons foram apagados!');
-    // Limpar lista gerada
-    var res = document.getElementById('cp-resultado');
-    var lista = document.getElementById('cp-lista');
-    if (res) res.style.display = 'none';
-    if (lista) lista.value = '';
-    loadCuponsTabela();
-  })
-  .catch(function(e) { showToast('Erro: ' + e.message); });
-}
-
 function buildAcrMgr() {
   return api('GET','/acrescimos/all',null,true).then(function(acrs) {
     var lista = '';
@@ -2644,14 +2142,6 @@ function buildCfg() {
       html += '</div>';
       html += '</div>';
       html += '<div style="margin-top:12px;font-size:.75rem;color:#888;text-align:center">O som toca e/ou a impressão acontece automaticamente quando um novo pedido é recebido</div>';
-      html += '<div style="margin-top:10px;background:#fff8e1;border:2px solid #F7B731;border-radius:10px;padding:10px;font-size:.73rem;color:#7a5800;line-height:1.7">';
-      html += '<b>⚙️ Como configurar a impressora MTI-773 (58mm):</b><br>';
-      html += '1. Abra o <b>Painel de Controle → Dispositivos e Impressoras</b><br>';
-      html += '2. Clique com botão direito na MTI-773 → <b>Preferências de impressão</b><br>';
-      html += '3. Em tamanho do papel selecione <b>58mm x Auto</b> (ou crie papel personalizado: largura 58mm)<br>';
-      html += '4. Defina a MTI-773 como <b>impressora padrão</b><br>';
-      html += '5. No navegador: ao imprimir, desative <b>Cabeçalhos e rodapés</b> e defina margem como <b>Nenhuma</b>';
-      html += '</div>';
       html += '</div>';
       // Reset de Pedidos
       html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.2rem">';
@@ -2697,7 +2187,7 @@ function changePwd(){
 
 function toggleNotification(enabled) {
   notificationEnabled = enabled;
-  api('PUT', '/auth/settings/notification', { value: enabled ? 'true' : 'false' }, true).catch(function(){});
+  localStorage.setItem('fael_notification', enabled ? 'true' : 'false');
   showToast(enabled ? 'Som de notificação ATIVADO! 🔊' : 'Som de notificação DESATIVADO');
   var label = document.querySelector('#cfg-notification + span');
   if (label) label.textContent = enabled ? 'Ativado' : 'Desativado';
@@ -2705,7 +2195,7 @@ function toggleNotification(enabled) {
 
 function toggleAutoPrint(enabled) {
   autoPrintEnabled = enabled;
-  api('PUT', '/auth/settings/autoprint', { value: enabled ? 'true' : 'false' }, true).catch(function(){});
+  localStorage.setItem('fael_autoprint', enabled ? 'true' : 'false');
   showToast(enabled ? 'Impressão automática ATIVADA! 🖨️' : 'Impressão automática DESATIVADA');
   var label = document.querySelector('#cfg-autoprint + span');
   if (label) label.textContent = enabled ? 'Ativado' : 'Desativado';
@@ -2881,8 +2371,17 @@ function changeGerenteSenha() {
     return;
   }
   
-  if (newPwd.length < 4) {
-    showToast('⚠️ Nova senha deve ter no mínimo 4 caracteres!');
+  // Verificar senha atual
+  var senhaAtual = localStorage.getItem('fael_gerente_senha') || 'gerente123';
+  if (oldPwd !== senhaAtual) {
+    showToast('❌ Senha atual incorreta!');
+    document.getElementById('gerente-old-pwd').value = '';
+    return;
+  }
+  
+  // Validar nova senha
+  if (newPwd.length < 6) {
+    showToast('⚠️ Nova senha deve ter no mínimo 6 caracteres!');
     return;
   }
   
@@ -2892,23 +2391,15 @@ function changeGerenteSenha() {
     return;
   }
   
-  // Chamar API do servidor (salva no banco de dados)
-  fetch('/api/auth/change-password-gerenciamento', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + gerenciamentoToken },
-    body: JSON.stringify({ current_password: oldPwd, new_password: newPwd })
-  })
-  .then(function(r) { return r.json().then(function(d) { if (!r.ok) throw new Error(d.error || 'Erro'); return d; }); })
-  .then(function() {
-    document.getElementById('gerente-old-pwd').value = '';
-    document.getElementById('gerente-new-pwd').value = '';
-    document.getElementById('gerente-confirm-pwd').value = '';
-    showToast('✅ Senha alterada com sucesso!');
-  })
-  .catch(function(e) {
-    showToast('❌ ' + (e.message || 'Erro ao alterar senha'));
-    document.getElementById('gerente-old-pwd').value = '';
-  });
+  // Salvar nova senha
+  localStorage.setItem('fael_gerente_senha', newPwd);
+  
+  // Limpar campos
+  document.getElementById('gerente-old-pwd').value = '';
+  document.getElementById('gerente-new-pwd').value = '';
+  document.getElementById('gerente-confirm-pwd').value = '';
+  
+  showToast('✅ Senha alterada com sucesso!');
 }
 
 function showPage(pg) {
