@@ -455,11 +455,11 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   </div>
   <div id="gerenciamento-content"></div>
 </div>
-<div class="mo" id="modal">
+  <div class="mo" id="modal">
   <div class="md">
     <div class="md-ic">&#127881;</div>
     <h2>Pedido Enviado!</h2>
-    <div class="md-onum" id="m-onum">#001</div>
+    <div class="md-onum" id="m-onum" style="display:none"></div>
     <p id="m-msg">Pedido registrado!</p>
     <button class="md-btn" onclick="closeModal()">Voltar ao Cardapio</button>
   </div>
@@ -1559,7 +1559,7 @@ function sendWA() {
   api('POST', '/orders', body)
     .then(function(order) {
       console.log('Pedido criado:', order);  // Debug
-      var msg = 'PEDIDO ' + order.id + ' - FAEL TOP LANCHES\n';
+      var msg = 'PEDIDO FAEL TOP LANCHES\n';
       msg += '====================\n';
       msg += 'Cliente: ' + d.name + ' | Tel: ' + d.phone + '\n';
       if (curDel==='entrega') { msg += 'Entrega: Rua ' + d.rua + ', ' + d.num + ' - ' + d.bairro + (d.comp?' ('+d.comp+')':'') + '\n'; }
@@ -1770,7 +1770,7 @@ function oCard(o, isAdm, mostrarCheckbox) {
     html += '<div style="position:absolute;top:12px;left:12px;z-index:10"><input type="checkbox" class="order-checkbox" data-order-id="'+o.id+'" data-total="'+o.total+'" style="width:20px;height:20px;cursor:pointer"></div>';
   }
   
-  html += '<div class="och" style="'+(mostrarCheckbox && (st === 'entregue' || st === 'cancelado') ? 'padding-left:40px' : '')+'"><div><div class="oid">'+o.id+' - '+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
+  html += '<div class="och" style="'+(mostrarCheckbox && (st === 'entregue' || st === 'cancelado') ? 'padding-left:40px' : '')+'"><div><div class="oid">'+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
   html += '<div class="ocb">';
   html += '<div class="oib"><div class="oit">Itens</div><div class="oiv">'+iNames+'</div></div>';
   html += '<div class="oib"><div class="oit">Entrega</div><div class="oiv">'+(DM[o.delivery_type]||'--')+'</div><div style="font-size:.72rem;color:#888;margin-top:2px">'+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
@@ -1806,9 +1806,9 @@ function advSt(id) {
 function enviarNotificacaoStatus(order, status) {
   // Mensagens para cada status
   var mensagens = {
-    'preparo': '✅ Olá *' + order.client_name + '*!\n\nSeu pedido *' + order.id + '* está sendo preparado com carinho! 👨‍🍳\n\nEm breve estará pronto!',
-    'entrega': '🚀 *' + order.client_name + '*, seu pedido *' + order.id + '* saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
-    'entregue': '🎉 Pedido *' + order.id + '* entregue com sucesso!\n\n*Obrigado pela preferência, ' + order.client_name + '!*\n\nVolte sempre! ❤️🍕'
+    'preparo': '✅ Olá *' + order.client_name + '*!\n\nSeu pedido está sendo preparado com carinho! 👨‍🍳\n\nEm breve estará pronto!',
+    'entrega': '🚀 *' + order.client_name + '*, seu pedido saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
+    'entregue': '🎉 Pedido entregue com sucesso!\n\n*Obrigado pela preferência, ' + order.client_name + '!*\n\nVolte sempre! ❤️🍕'
   };
   
   var msg = mensagens[status];
@@ -1903,7 +1903,7 @@ function waOrd(id) {
   var o = null; if (window._admOrd) for (var i=0; i<window._admOrd.length; i++) if (window._admOrd[i].id===id) { o=window._admOrd[i]; break; }
   if (!o) return;
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Credito',debito:'Debito'};
-  var msg = 'PEDIDO '+o.id+'\n====================\n';
+  var msg = 'PEDIDO FAEL LANCHES\n====================\n';
   msg += o.client_name+' | '+o.client_phone+'\n';
   msg += (o.address||'')+(o.complement?' - '+o.complement:'')+'\n====================\n';
   var items = o.items || [];
@@ -1921,7 +1921,7 @@ function printOrd(id) {
   for (var i=0; i<items.length; i++) iHtml += '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>'+items[i].quantity+'x '+items[i].product_name+'</span><span>R$ '+parseFloat(items[i].subtotal).toFixed(2).replace('.',',')+'</span></div>';
   var html = '<div style="font-family:Courier New,monospace;max-width:360px;margin:0 auto;padding:20px;font-size:13px;color:#000;border:1px solid #ddd">';
   html += '<div style="text-align:center;margin-bottom:14px"><div style="font-size:26px">&#127828;&#127829;</div><div style="font-size:17px;font-weight:900;letter-spacing:2px">FAEL TOP LANCHES</div><div style="font-size:11px">& PIZZARIA</div><div style="border-top:2px dashed #000;margin:10px 0"></div></div>';
-  html += '<div style="margin-bottom:8px"><div style="font-weight:900;font-size:14px">PEDIDO '+o.id+'</div><div style="font-size:10px;color:#555">'+o.created_at+'</div></div>';
+  html += '<div style="margin-bottom:8px"><div style="font-weight:900;font-size:14px">PEDIDO FAEL LANCHES</div><div style="font-size:10px;color:#555">'+o.created_at+'</div></div>';
   html += '<div style="margin-bottom:9px;font-size:12px"><div><b>Cliente:</b> '+o.client_name+'</div><div><b>Tel:</b> '+o.client_phone+'</div><div><b>Endereco:</b> '+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
   html += '<div style="border-top:2px dashed #000;border-bottom:2px dashed #000;padding:9px 0;margin:9px 0"><div style="font-weight:900;margin-bottom:6px">ITENS:</div>'+iHtml+'</div>';
   html += '<div style="margin-top:9px;font-size:12px"><div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;border-top:1px solid #000;padding-top:5px"><span>TOTAL</span><span>R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+'</span></div>';
