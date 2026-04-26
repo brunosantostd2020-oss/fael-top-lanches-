@@ -868,8 +868,22 @@ function renderProducts(cat, subcat) {
   for (var i=0; i<items.length; i++) {
     var pr = items[i];
     var cleanDesc = (pr.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim();
+    
+    // Extrair URL de imagem se existir
+    var imageUrl = null;
+    var imgMatch = cleanDesc.match(/##IMG:([^#]+)##/);
+    if (imgMatch && imgMatch[1]) {
+      imageUrl = imgMatch[1].trim();
+      cleanDesc = cleanDesc.replace(/##IMG:[^#]+##/gi, '').trim();
+    }
+    
     html += '<div class="pc">';
-    html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
+    // Se tem imagem, usa imagem; senão usa emoji
+    if (imageUrl) {
+      html += '<div class="pi" style="background:#f5f5f5;padding:0;overflow:hidden"><img src="' + imageUrl + '" alt="' + pr.name + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
+    } else {
+      html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
+    }
     html += '<div class="pinfo">';
     html += '<div class="pname">' + pr.name + '</div>';
     html += '<div class="pdesc">' + cleanDesc + '</div>';
@@ -931,8 +945,22 @@ function filterBebidas(tipo) {
     for (var i=0; i<filtered.length; i++) {
       var pr = filtered[i];
       var cleanDesc = (pr.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim();
+      
+      // Extrair URL de imagem se existir (formato: ##IMG:url##)
+      var imageUrl = null;
+      var imgMatch = cleanDesc.match(/##IMG:([^#]+)##/);
+      if (imgMatch && imgMatch[1]) {
+        imageUrl = imgMatch[1].trim();
+        cleanDesc = cleanDesc.replace(/##IMG:[^#]+##/gi, '').trim();
+      }
+      
       html += '<div class="pc">';
-      html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
+      // Se tem imagem, usa imagem; senão usa emoji
+      if (imageUrl) {
+        html += '<div class="pi" style="background:#f5f5f5;padding:0;overflow:hidden"><img src="' + imageUrl + '" alt="' + pr.name + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
+      } else {
+        html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
+      }
       html += '<div class="pinfo">';
       html += '<div class="pname">' + pr.name + '</div>';
       html += '<div class="pdesc">' + cleanDesc + '</div>';
@@ -1180,7 +1208,7 @@ function confirmarMetadeMetade() {
   
   var cid = 'metade_' + Date.now();
   cart.push({
-    id: 'pizza_metade',
+    id: -1,  // ID especial para pizza metade/metade (negativo para diferenciar)
     cartId: cid,
     name: nomeCompleto,
     price: metadePreco,
@@ -1527,9 +1555,11 @@ function sendWA() {
       return {id:item.id, name:item.name, emoji:item.emoji||'', quantity:item.qty, unit_price:item.price};
     })
   };
+  console.log('Enviando pedido:', body);  // Debug
   api('POST', '/orders', body)
     .then(function(order) {
-      var msg = 'PEDIDO #' + String(order.id).padStart(3,'0') + ' - FAEL TOP LANCHES\n';
+      console.log('Pedido criado:', order);  // Debug
+      var msg = 'PEDIDO ' + order.id + ' - FAEL TOP LANCHES\n';
       msg += '====================\n';
       msg += 'Cliente: ' + d.name + ' | Tel: ' + d.phone + '\n';
       if (curDel==='entrega') { msg += 'Entrega: Rua ' + d.rua + ', ' + d.num + ' - ' + d.bairro + (d.comp?' ('+d.comp+')':'') + '\n'; }
@@ -1546,14 +1576,17 @@ function sendWA() {
       if (d.obs) msg += 'Obs: ' + d.obs + '\n';
       msg += new Date().toLocaleString('pt-BR');
       cart = []; updateBadge();
-      document.getElementById('m-onum').textContent = '#' + String(order.id).padStart(3,'0');
+      document.getElementById('m-onum').textContent = order.id;
       document.getElementById('m-msg').textContent = 'Pedido registrado! WhatsApp abrindo...';
       document.getElementById('modal').classList.add('open');
       var mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       var url = mob ? 'whatsapp://send?phone='+WA+'&text='+encodeURIComponent(msg) : 'https://api.whatsapp.com/send?phone='+WA+'&text='+encodeURIComponent(msg);
       setTimeout(function(){ window.location.href = url; }, 500);
     })
-    .catch(function(e) { showToast('Erro: ' + e.message); })
+    .catch(function(e) { 
+      console.error('Erro ao criar pedido:', e);  // Debug
+      showToast('❌ Erro ao enviar pedido: ' + e.message); 
+    })
     .then(function() { btn.disabled=false; btn.textContent='ENVIAR VIA WHATSAPP'; });
 }
 
@@ -1737,7 +1770,7 @@ function oCard(o, isAdm, mostrarCheckbox) {
     html += '<div style="position:absolute;top:12px;left:12px;z-index:10"><input type="checkbox" class="order-checkbox" data-order-id="'+o.id+'" data-total="'+o.total+'" style="width:20px;height:20px;cursor:pointer"></div>';
   }
   
-  html += '<div class="och" style="'+(mostrarCheckbox && (st === 'entregue' || st === 'cancelado') ? 'padding-left:40px' : '')+'"><div><div class="oid">#'+String(o.id).padStart(3,'0')+' - '+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
+  html += '<div class="och" style="'+(mostrarCheckbox && (st === 'entregue' || st === 'cancelado') ? 'padding-left:40px' : '')+'"><div><div class="oid">'+o.id+' - '+o.client_name+'</div><div class="omt">'+o.created_at+' | '+o.client_phone+'</div></div><span class="ost '+st+'">'+SL[st]+'</span></div>';
   html += '<div class="ocb">';
   html += '<div class="oib"><div class="oit">Itens</div><div class="oiv">'+iNames+'</div></div>';
   html += '<div class="oib"><div class="oit">Entrega</div><div class="oiv">'+(DM[o.delivery_type]||'--')+'</div><div style="font-size:.72rem;color:#888;margin-top:2px">'+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
@@ -1773,9 +1806,9 @@ function advSt(id) {
 function enviarNotificacaoStatus(order, status) {
   // Mensagens para cada status
   var mensagens = {
-    'preparo': '✅ Olá *' + order.client_name + '*!\n\nSeu pedido *#' + String(order.id).padStart(3,'0') + '* está sendo preparado com carinho! 👨‍🍳\n\nEm breve estará pronto!',
-    'entrega': '🚀 *' + order.client_name + '*, seu pedido *#' + String(order.id).padStart(3,'0') + '* saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
-    'entregue': '🎉 Pedido *#' + String(order.id).padStart(3,'0') + '* entregue com sucesso!\n\n*Obrigado pela preferência, ' + order.client_name + '!*\n\nVolte sempre! ❤️🍕'
+    'preparo': '✅ Olá *' + order.client_name + '*!\n\nSeu pedido *' + order.id + '* está sendo preparado com carinho! 👨‍🍳\n\nEm breve estará pronto!',
+    'entrega': '🚀 *' + order.client_name + '*, seu pedido *' + order.id + '* saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
+    'entregue': '🎉 Pedido *' + order.id + '* entregue com sucesso!\n\n*Obrigado pela preferência, ' + order.client_name + '!*\n\nVolte sempre! ❤️🍕'
   };
   
   var msg = mensagens[status];
@@ -1870,7 +1903,7 @@ function waOrd(id) {
   var o = null; if (window._admOrd) for (var i=0; i<window._admOrd.length; i++) if (window._admOrd[i].id===id) { o=window._admOrd[i]; break; }
   if (!o) return;
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Credito',debito:'Debito'};
-  var msg = 'PEDIDO #'+String(o.id).padStart(3,'0')+'\n====================\n';
+  var msg = 'PEDIDO '+o.id+'\n====================\n';
   msg += o.client_name+' | '+o.client_phone+'\n';
   msg += (o.address||'')+(o.complement?' - '+o.complement:'')+'\n====================\n';
   var items = o.items || [];
@@ -1888,7 +1921,7 @@ function printOrd(id) {
   for (var i=0; i<items.length; i++) iHtml += '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>'+items[i].quantity+'x '+items[i].product_name+'</span><span>R$ '+parseFloat(items[i].subtotal).toFixed(2).replace('.',',')+'</span></div>';
   var html = '<div style="font-family:Courier New,monospace;max-width:360px;margin:0 auto;padding:20px;font-size:13px;color:#000;border:1px solid #ddd">';
   html += '<div style="text-align:center;margin-bottom:14px"><div style="font-size:26px">&#127828;&#127829;</div><div style="font-size:17px;font-weight:900;letter-spacing:2px">FAEL TOP LANCHES</div><div style="font-size:11px">& PIZZARIA</div><div style="border-top:2px dashed #000;margin:10px 0"></div></div>';
-  html += '<div style="margin-bottom:8px"><div style="font-weight:900;font-size:14px">PEDIDO #'+String(o.id).padStart(3,'0')+'</div><div style="font-size:10px;color:#555">'+o.created_at+'</div></div>';
+  html += '<div style="margin-bottom:8px"><div style="font-weight:900;font-size:14px">PEDIDO '+o.id+'</div><div style="font-size:10px;color:#555">'+o.created_at+'</div></div>';
   html += '<div style="margin-bottom:9px;font-size:12px"><div><b>Cliente:</b> '+o.client_name+'</div><div><b>Tel:</b> '+o.client_phone+'</div><div><b>Endereco:</b> '+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
   html += '<div style="border-top:2px dashed #000;border-bottom:2px dashed #000;padding:9px 0;margin:9px 0"><div style="font-weight:900;margin-bottom:6px">ITENS:</div>'+iHtml+'</div>';
   html += '<div style="margin-top:9px;font-size:12px"><div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;border-top:1px solid #000;padding-top:5px"><span>TOTAL</span><span>R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+'</span></div>';
