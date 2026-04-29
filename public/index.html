@@ -249,7 +249,25 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   .ct{flex-shrink:0;font-size:11px;padding:6px 12px;white-space:nowrap}
 }
 #print-area{display:none}
-.scard{background:#fff;border-radius:10px;box-shadow:var(--sh);padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+/* Subcategorias de lanches */
+.lanche-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;max-width:800px;margin:0 auto}
+@media(max-width:600px){
+  .lanche-cats{grid-template-columns:1fr;gap:.75rem;max-width:100%}
+  .lanche-cats button{padding:1.2rem 1rem!important;font-size:.95rem!important}
+  .lanche-cats button div{font-size:2.2rem!important;margin-bottom:6px!important}
+}
+/* Subcategorias - scroll horizontal no mobile */
+.sub-tabs-wrap{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center}
+.bebida-tab{background:#fff;color:var(--bk);border:2px solid #ddd;padding:9px 18px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.bebida-tab.btab-active,.bebida-tab:hover{background:var(--r);color:#fff;border-color:var(--r)}
+/* Grid de pizzas responsivo */
+.pizza-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;padding:1.2rem}
+@media(max-width:600px){
+  .sub-tabs-wrap{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .sub-tabs-wrap::-webkit-scrollbar{display:none}
+  .bebida-tab{font-size:.78rem;padding:7px 14px}
+  .pizza-grid{grid-template-columns:1fr;gap:.75rem;padding:.75rem}
+}
 .sc-l{font-weight:700;font-size:.85rem;color:#666}
 .sc-v{font-weight:900;font-size:1.1rem;color:var(--r)}
 .order-checkbox{accent-color:var(--r)}
@@ -892,7 +910,7 @@ function renderProducts(cat, subcat) {
   if (cat === 'lanches' && !subcat) {
     html += '<div style="text-align:center;margin-bottom:2rem">';
     html += '<h3 style="font-family:Poppins,sans-serif;font-size:1.5rem;margin-bottom:1.5rem;color:var(--bk)">Escolha uma categoria:</h3>';
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;max-width:800px;margin:0 auto">';
+    html += '<div class="lanche-cats">';
     html += '<button onclick="renderProducts(\'lanches\',\'frango_desfiado\')" style="background:linear-gradient(135deg,#FF6B35,#F7931E);color:#fff;border:none;padding:2rem 1.5rem;border-radius:14px;cursor:pointer;font-family:Poppins,sans-serif;font-weight:800;font-size:1.1rem;box-shadow:0 4px 15px rgba(255,107,53,0.3);transition:all .2s">';
     html += '<div style="font-size:3rem;margin-bottom:8px">🍗</div>';
     html += 'FRANGO DESFIADO';
@@ -931,7 +949,7 @@ function renderProducts(cat, subcat) {
       html += '<div style="background:#2A9D8F;color:#fff;padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between">';
       html += '<span style="font-family:Poppins,sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:-0.5px">🍕 Pizza ' + tam.label + '</span>';
       html += '<span style="background:#fff;color:#2A9D8F;padding:6px 16px;border-radius:25px;font-weight:800;font-size:1rem;font-family:Poppins,sans-serif">R$ ' + tam.preco.toFixed(2).replace('.',',') + '</span>';
-      html += '</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;padding:1.2rem">';
+      html += '</div><div class="pizza-grid">';
       for (var p=0; p<pizzas.length; p++) {
         var pizza = pizzas[p];
         html += '<div style="border:2px solid #f0f0f0;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;transition:all .2s;cursor:pointer;background:#fff" onmouseover="this.style.borderColor=\'#2A9D8F\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.08)\'" onmouseout="this.style.borderColor=\'#f0f0f0\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">';
@@ -973,7 +991,7 @@ function renderProducts(cat, subcat) {
       html += '<div style="background:linear-gradient(135deg,#F7B731,#E59E00);color:#fff;padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between">';
       html += '<span style="font-family:Poppins,sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:-0.5px">👑 Moda do Fael ' + tam.label + '</span>';
       html += '<span style="background:#fff;color:#F7B731;padding:6px 16px;border-radius:25px;font-weight:800;font-size:1rem;font-family:Poppins,sans-serif">R$ ' + tam.preco.toFixed(2).replace('.',',') + '</span>';
-      html += '</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;padding:1.2rem">';
+      html += '</div><div class="pizza-grid">';
       for (var p=0; p<pizzasModa.length; p++) {
         var pizza = pizzasModa[p];
         html += '<div style="border:2px solid #f0f0f0;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;transition:all .2s;cursor:pointer;background:#fff" onmouseover="this.style.borderColor=\'var(--y)\';this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.08)\'" onmouseout="this.style.borderColor=\'#f0f0f0\';this.style.transform=\'translateY(0)\';this.style.boxShadow=\'none\'">';
@@ -997,15 +1015,15 @@ function renderProducts(cat, subcat) {
     if (!bebidas.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma bebida cadastrada</p>'; return; }
     
     // Abas de subcategorias
-    html += '<div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center">';
-    html += '<button id="bebida-todas" class="bebida-tab" onclick="filterBebidas(\'todas\')" style="background:var(--r);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s">Todas</button>';
-    html += '<button id="bebida-refrigerante" class="bebida-tab" onclick="filterBebidas(\'refrigerante\')" style="background:#fff;color:var(--bk);border:2px solid #ddd;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s">🥤 Refrigerante</button>';
-    html += '<button id="bebida-suco-leite" class="bebida-tab" onclick="filterBebidas(\'suco-leite\')" style="background:#fff;color:var(--bk);border:2px solid #ddd;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s">🥛 Suco ao Leite</button>';
-    html += '<button id="bebida-suco-agua" class="bebida-tab" onclick="filterBebidas(\'suco-agua\')" style="background:#fff;color:var(--bk);border:2px solid #ddd;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer;font-family:Inter,sans-serif;transition:all .2s">🧃 Suco à Água</button>';
+    html += '<div class="sub-tabs-wrap">';
+    html += '<button id="bebida-todas" class="bebida-tab btab-active" onclick="filterBebidas(\'todas\')">Todas</button>';
+    html += '<button id="bebida-refrigerante" class="bebida-tab" onclick="filterBebidas(\'refrigerante\')">🥤 Refrigerante</button>';
+    html += '<button id="bebida-suco-leite" class="bebida-tab" onclick="filterBebidas(\'suco-leite\')">🥛 Suco ao Leite</button>';
+    html += '<button id="bebida-suco-agua" class="bebida-tab" onclick="filterBebidas(\'suco-agua\')">🧃 Suco à Água</button>';
     html += '</div>';
     
     // Container das bebidas
-    html += '<div id="bebidas-container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.2rem"></div>';
+    html += '<div id="bebidas-container" class="pg"></div>';
     
     g.innerHTML = html;
     window.currentBebidasFilter = 'todas';
@@ -1113,15 +1131,11 @@ function filterBebidas(tipo) {
   // Atualizar abas ativas
   var tabs = document.querySelectorAll('.bebida-tab');
   for (var i=0; i<tabs.length; i++) {
-    tabs[i].style.background = '#fff';
-    tabs[i].style.color = 'var(--bk)';
-    tabs[i].style.border = '2px solid #ddd';
+    tabs[i].classList.remove('btab-active');
   }
   var activeTab = document.getElementById('bebida-' + tipo);
   if (activeTab) {
-    activeTab.style.background = 'var(--r)';
-    activeTab.style.color = '#fff';
-    activeTab.style.border = '2px solid var(--r)';
+    activeTab.classList.add('btab-active');
   }
   
   window.currentBebidasFilter = tipo;
