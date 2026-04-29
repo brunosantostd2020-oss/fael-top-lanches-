@@ -392,6 +392,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button class="ct active" onclick="filterCat('todos',this)">Todos</button>
     <button class="ct" onclick="filterCat('lanches',this)">&#127828; Lanches</button>
     <button class="ct" onclick="filterCat('pizzas_tam',this)">&#127829; Pizzas</button>
+    <button class="ct" onclick="filterCat('moda_fael',this)">&#128081; Moda do Fael</button>
     <button class="ct" onclick="abrirMetadeMetade();document.querySelectorAll('.ct').forEach(function(b){b.classList.remove('active')})">&#127829; Monte sua Pizza</button>
     <button class="ct" onclick="filterCat('omelete',this)">&#127859; Omelete</button>
     <button class="ct" onclick="filterCat('cachorro_quente',this)">&#127789; Cachorro Quente</button>
@@ -945,8 +946,8 @@ function renderProducts(cat, subcat) {
     });
     if (!pizzas.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma pizza cadastrada</p>'; return; }
     var tams = [
-      {cod:'G', label:'Grande', sub:'6 pedaços', preco:65},
-      {cod:'GG', label:'Especial', sub:'8 pedaços', preco:75},
+      {cod:'G', label:'G', sub:'6 pedaços', preco:65},
+      {cod:'GG', label:'GG', sub:'8 pedaços', preco:75},
       {cod:'GGG', label:'Família', sub:'12 pedaços', preco:90}
     ];
     for (var t=0; t<tams.length; t++) {
@@ -984,14 +985,17 @@ function renderProducts(cat, subcat) {
 
   // CATEGORIA MODA DO FAEL - estilo iFood
   if (cat === 'moda_fael') {
+    // Busca por categoria própria OU por nome contendo "moda do fael"
     var pizzasModa = allProducts.filter(function(p) {
-      if (p.category !== 'pizzas' || !p.active) return false;
-      return p.name.toLowerCase().includes('moda do fael');
+      if (!p.active) return false;
+      if (p.category === 'moda_fael') return true;
+      if (p.category === 'pizzas' && p.name.toLowerCase().includes('moda do fael')) return true;
+      return false;
     });
     if (!pizzasModa.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma pizza Moda do Fael cadastrada</p>'; return; }
     var tamsModa = [
-      {cod:'G', label:'Grande', sub:'6 pedaços', preco:70},
-      {cod:'GG', label:'Especial', sub:'8 pedaços', preco:80},
+      {cod:'G', label:'G', sub:'6 pedaços', preco:70},
+      {cod:'GG', label:'GG', sub:'8 pedaços', preco:80},
       {cod:'GGG', label:'Família', sub:'12 pedaços', preco:95}
     ];
     for (var t=0; t<tamsModa.length; t++) {
@@ -2228,18 +2232,24 @@ function buildPM() {
     var pm = '';
     for (var i=0; i<prods.length; i++) {
       var p = prods[i];
-      pm += '<div class="pmc"><div class="pmc-em">'+(p.emoji||'&#127869;')+'</div><div class="pmc-info">';
+      var catLabels = {lanches:'Lanches',frango_desfiado:'🍗 Frango Desfiado',hamburguer_boi:'🥩 Hambúrguer Boi',pizzas:'🍕 Pizzas',moda_fael:'👑 Moda do Fael',omelete:'Omelete',cachorro_quente:'Cachorro Quente',bebidas:'Bebidas',porcoes:'Porções'};
+      pm += '<div class="pmc" style="position:relative;opacity:'+(p.active?'1':'0.55')+'">';
+      pm += '<button onclick="excluirProdutoPermanente('+p.id+',\''+p.name.replace(/\'/g,"\\\'")+'\')\" title="Excluir permanentemente" style="position:absolute;top:6px;right:6px;width:22px;height:22px;background:#EF4444;color:#fff;border:none;border-radius:50%;font-size:.75rem;font-weight:900;cursor:pointer;line-height:1;padding:0;z-index:2">✕</button>';
+      pm += '<div class="pmc-em">'+(p.emoji||'🍽')+'</div>';
+      pm += '<div class="pmc-info">';
       pm += '<div class="pmc-nm">'+p.name+(p.active?'':' <span style="color:#EF4444;font-size:.7rem">(inativo)</span>')+'</div>';
-      pm += '<div class="pmc-ct">'+(CL[p.category]||p.category)+'</div>';
+      pm += '<div class="pmc-ct">'+(catLabels[p.category]||p.category)+'</div>';
       pm += '<div class="pmc-pr">R$ '+parseFloat(p.price).toFixed(2).replace('.',',')+'</div>';
-      pm += '<div class="pmc-ac"><button class="pmc-btn edit" onclick="editProd('+p.id+')">Editar</button><button class="pmc-btn del" onclick="delProd('+p.id+')">'+(p.active?'Remover':'Reativar')+'</button></div>';
-      pm += '</div></div>';
+      pm += '<div class="pmc-ac">';
+      pm += '<button class="pmc-btn edit" onclick="editProd('+p.id+')">✏️ Editar</button>';
+      pm += '<button class="pmc-btn del" onclick="delProd('+p.id+')">'+(p.active?'⏸ Desativar':'▶️ Reativar')+'</button>';
+      pm += '</div></div></div>';
     }
     return '<button class="add-prod-btn" onclick="showPF(null)">+ Novo Produto</button>' +
       '<div id="prod-form-box" style="display:none" class="form-box">' +
       '<h3 id="pf-title">Novo Produto</h3>' +
       '<div class="frow"><div class="fg"><label>Emoji</label><input id="pf-emoji" placeholder="&#127828;" maxlength="4"></div><div class="fg"><label>Nome</label><input id="pf-name" placeholder="X-Burguer"></div></div>' +
-      '<div class="frow"><div class="fg"><label>Categoria</label><select id="pf-cat" onchange="togPizza();togBebida()"><option value="lanches">Lanches (Geral)</option><option value="frango_desfiado">🍗 Frango Desfiado</option><option value="hamburguer_boi">🥩 Hambúrguer Boi</option><option value="pizzas">Pizzas</option><option value="omelete">Omelete</option><option value="cachorro_quente">Cachorro Quente</option><option value="bebidas">Bebidas</option><option value="porcoes">Porcoes</option></select></div>' +
+      '<div class="frow"><div class="fg"><label>Categoria</label><select id="pf-cat" onchange="togPizza();togBebida()"><option value="lanches">Lanches (Geral)</option><option value="frango_desfiado">🍗 Frango Desfiado</option><option value="hamburguer_boi">🥩 Hambúrguer Boi</option><option value="pizzas">Pizzas</option><option value="moda_fael">👑 Moda do Fael</option><option value="omelete">Omelete</option><option value="cachorro_quente">Cachorro Quente</option><option value="bebidas">Bebidas</option><option value="porcoes">Porcoes</option></select></div>' +
       '<div class="fg"><label>Preco (R$)</label><input id="pf-price" type="number" step="0.50" min="0" placeholder="0.00"></div></div>' +
       '<div id="bebida-subcat-box" style="display:none;background:#e3f2fd;border:2px solid #2196F3;border-radius:12px;padding:1rem;margin-bottom:12px">' +
       '<div style="font-weight:900;font-size:.9rem;color:#1976D2;margin-bottom:10px">📌 Subcategoria da Bebida</div>' +
@@ -2254,9 +2264,9 @@ function buildPM() {
       '<div id="pizza-tam-box" style="display:none;background:#fff8f0;border:2px solid var(--y);border-radius:12px;padding:1rem;margin-bottom:12px">' +
       '<div style="font-weight:900;font-size:.9rem;color:var(--yd);margin-bottom:10px">Precos por Tamanho de Pizza</div>' +
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">' +
-      '<div class="fg"><label style="background:var(--r);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">G - Grande</label><input id="pf-pg" type="number" step="0.50" min="0" placeholder="65.00"></div>' +
-      '<div class="fg"><label style="background:#7C3AED;color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">GG - Especial</label><input id="pf-pgg" type="number" step="0.50" min="0" placeholder="75.00"></div>' +
-      '<div class="fg"><label style="background:var(--bk);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">Tamanho Família</label><input id="pf-pggg" type="number" step="0.50" min="0" placeholder="90.00"></div>' +
+      '<div class="fg"><label style="background:var(--r);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">G</label><input id="pf-pg" type="number" step="0.50" min="0" placeholder="65.00"></div>' +
+      '<div class="fg"><label style="background:#7C3AED;color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">GG</label><input id="pf-pgg" type="number" step="0.50" min="0" placeholder="75.00"></div>' +
+      '<div class="fg"><label style="background:var(--bk);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">Família</label><input id="pf-pggg" type="number" step="0.50" min="0" placeholder="90.00"></div>' +
       '</div></div>' +
       '<div class="fg" style="margin-bottom:12px"><label>Descricao</label><input id="pf-desc" placeholder="Ingredientes..."></div>' +
       '<!-- UPLOAD DE FOTO -->' +
@@ -2356,11 +2366,21 @@ function resetFotoForm() {
 }
 // ===== FIM UPLOAD =====
 
-function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=c==='pizzas'?'block':'none'; }
+function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=(c==='pizzas'||c==='moda_fael')?'block':'none'; }
 function togBebida(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('bebida-subcat-box'); if(b) b.style.display=c==='bebidas'?'block':'none'; }
 function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; resetFotoForm(); if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; var cleanDesc=(p.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim(); var imgMatch=cleanDesc.match(/##IMG:([^#]+)##/); if(imgMatch){carregarPreviewEdicao(imgMatch[1].trim());cleanDesc=cleanDesc.replace(/##IMG:[^#]+##/gi,'').trim();} document.getElementById('pf-desc').value=cleanDesc; var subcatField=document.getElementById('pf-bebida-subcat'); if(subcatField&&p.description){var desc=p.description.toLowerCase();if(desc.includes('##refri##'))subcatField.value='refrigerante';else if(desc.includes('##suco-leite##'))subcatField.value='suco-leite';else if(desc.includes('##suco-agua##'))subcatField.value='suco-agua';else subcatField.value='';} togPizza();togBebida();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var sc=document.getElementById('pf-bebida-subcat');if(sc)sc.value='';var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();togBebida();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
 function editProd(id){ showPF(id); }
-function delProd(id){ if(!confirm('Confirmar?'))return; api('DELETE','/products/'+id,null,true).then(function(){showToast('Produto atualizado!');aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);}); }
+function delProd(id){ if(!confirm('Desativar/Reativar produto?'))return; api('DELETE','/products/'+id,null,true).then(function(){showToast('Produto atualizado!');aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);}); }
+
+function excluirProdutoPermanente(id, nome) {
+  if (!confirm('\u26a0\ufe0f EXCLUIR PERMANENTE\n\n"' + nome + '"\n\nEssa acao NAO pode ser desfeita!\nTem certeza?')) return;
+  api('DELETE', '/products/' + id + '/permanent', null, true)
+    .then(function() {
+      showToast('\u2705 Produto excluido permanentemente!');
+      aTab('produtos', document.querySelector('.atab[onclick*="produtos"]'));
+    })
+    .catch(function(e) { showToast('Erro: ' + e.message); });
+}
 function closePF(){ var b=document.getElementById('prod-form-box'); if(b)b.style.display='none'; editProdId=null; resetFotoForm(); }
 function saveProd(){
   var emoji=document.getElementById('pf-emoji').value.trim()||'&#127869;';

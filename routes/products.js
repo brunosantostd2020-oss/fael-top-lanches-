@@ -76,4 +76,15 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// DELETE permanent - excluir produto definitivamente
+router.delete('/:id/permanent', requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const cur = await pool.query("SELECT id FROM products WHERE id = $1", [id]);
+    if (!cur.rows.length) return res.status(404).json({ error: 'Produto não encontrado' });
+    await pool.query("DELETE FROM products WHERE id = $1", [id]);
+    res.json({ success: true, deleted: id });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;
