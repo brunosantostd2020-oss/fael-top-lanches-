@@ -24,7 +24,8 @@ nav button{background:transparent;border:none;color:#ccc;font-size:12px;font-wei
 nav button:hover,nav button.active{background:var(--r);color:#fff}
 .cbtn{background:var(--y)!important;color:var(--bk)!important;position:relative}
 .cbadge{background:var(--r);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-4px;right:-4px}
-.hero{background:linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.6)),url('/logo-fael.webp') center/contain no-repeat,#000;padding:3rem 1.5rem;text-align:center;position:relative;min-height:300px;display:flex;flex-direction:column;justify-content:center}
+.hero{background:#000;padding:0;text-align:center;position:relative;overflow:hidden}
+.hero-banner{width:100%;display:block;max-height:420px;object-fit:cover;object-position:center top}
 .hero h1{font-family:'Poppins',Impact,sans-serif;font-size:clamp(2rem,6vw,3.5rem);color:#fff;line-height:1;text-shadow:2px 2px 8px rgba(0,0,0,0.8);font-weight:900}
 .hero h1 span{color:var(--y)}
 .hero p{color:#e0e0e0;margin:10px 0 20px;font-size:1rem;text-shadow:1px 1px 4px rgba(0,0,0,0.8)}
@@ -77,10 +78,11 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .do{border:2px solid #e8e8e8;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-weight:800;font-size:12px}
 .do.active{border-color:var(--r);background:#fff5f5;color:var(--r)}
 .do .oi{font-size:20px;display:block;margin-bottom:3px}
-.pays{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
-.po{border:2px solid #e8e8e8;border-radius:10px;padding:9px;cursor:pointer;text-align:center;font-weight:800;font-size:11px}
-.po.active{border-color:var(--y);background:#fffbe6;color:var(--yd)}
-.po .pyi{font-size:20px;display:block;margin-bottom:3px}
+.pays{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.po{border:2px solid #e8e8e8;border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;font-weight:800;font-size:11.5px;background:#fafafa;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:4px;color:#555}
+.po:hover{border-color:#bbb;background:#f0f0f0}
+.po.active{border-color:var(--r);background:linear-gradient(135deg,#fff5f5,#ffe0e0);color:var(--r);box-shadow:0 2px 8px rgba(214,40,40,0.13)}
+.po .pyi{font-size:24px;display:block}
 .srow{display:flex;justify-content:space-between;margin-bottom:7px;font-size:.88rem}
 .stot{display:flex;justify-content:space-between;padding-top:9px;border-top:2px solid #f0f0f0;font-weight:900;font-size:1.1rem;margin-top:3px}
 .stot span:last-child{color:var(--r)}
@@ -173,6 +175,10 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   .logo-ic{width:36px;height:36px;font-size:18px}
 }
 #print-area{display:none}
+.scard{background:#fff;border-radius:10px;box-shadow:var(--sh);padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sc-l{font-weight:700;font-size:.85rem;color:#666}
+.sc-v{font-weight:900;font-size:1.1rem;color:var(--r)}
+.order-checkbox{accent-color:var(--r)}
 </style>
 </head>
 <body>
@@ -211,9 +217,8 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   </nav>
 </header>
 <div class="hero">
-  <h1>FAEL TOP <span>LANCHES</span> &amp; PIZZARIA</h1>
-  <p>Feito com amor, entregue com sabor!</p>
-  <div class="badges">
+  <img src="/banner-fael.png" alt="Fael Top Lanches" class="hero-banner">
+  <div style="background:#111;padding:10px 1rem;display:flex;flex-wrap:wrap;justify-content:center;gap:6px">
     <span class="badge" id="status-badge"><span id="status-txt">Verificando...</span></span>
     <span class="badge">30-45 min entrega</span>
     <span class="badge">Entrega GRÁTIS em alguns bairros</span>
@@ -267,10 +272,10 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
             </div>
             <label>Pagamento</label>
             <div class="pays">
-              <div class="po active" onclick="setPay('dinheiro',this)"><span class="pyi">&#128181;</span>Dinheiro</div>
-              <div class="po" onclick="setPay('pix',this)"><span class="pyi">&#9889;</span>PIX</div>
-              <div class="po" onclick="setPay('credito',this)"><span class="pyi">&#128179;</span>Credito</div>
-              <div class="po" onclick="setPay('debito',this)"><span class="pyi">&#127974;</span>Debito</div>
+              <div class="po" onclick="setPay('dinheiro',this)"><span class="pyi">💵</span>Dinheiro</div>
+              <div class="po" onclick="setPay('pix',this)"><span class="pyi">⚡</span>PIX</div>
+              <div class="po" onclick="setPay('credito',this)"><span class="pyi">💳</span>Crédito</div>
+              <div class="po" onclick="setPay('debito',this)"><span class="pyi">🏧</span>Débito</div>
             </div>
             <div id="pix-info" style="display:none;margin-top:12px">
               <div style="background:linear-gradient(135deg,#00B09B,#96C93D);border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(0,176,155,0.2)">
@@ -569,7 +574,7 @@ var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE'
 var adminToken = localStorage.getItem('fael_token') || null;
 var gerenciamentoToken = localStorage.getItem('fael_gerenciamento_token') || null;
 var allProducts = [], allAcrescimos = [], cart = [];
-var curDel = 'entrega', curPay = 'dinheiro', curATab = 'todos';
+var curDel = 'entrega', curPay = '', curATab = 'todos';
 var editProdId = null, editAcrId = null;
 var taxaAtual = 0, bairroOk = true;
 var produtoParaAdicionar = null, acrSelecionados = [];
@@ -1392,9 +1397,15 @@ function setPay(t, el) {
   
   // Resetar estado do troco quando escolhe dinheiro
   if (t === 'dinheiro') {
-    setTimeout(function() {
-      toggleTroco(false); // Padrão: Não precisa de troco
-    }, 100);
+    // Resetar para estado neutro (nenhum selecionado)
+    var simBtn = document.getElementById('troco-sim');
+    var naoBtn = document.getElementById('troco-nao');
+    var valorField = document.getElementById('troco-valor-field');
+    precisaTroco = false;
+    simBtn.style.background = '#fff'; simBtn.style.borderColor = '#ddd'; simBtn.style.color = '#666';
+    naoBtn.style.background = '#fff'; naoBtn.style.borderColor = '#ddd'; naoBtn.style.color = '#666';
+    valorField.style.display = 'none';
+    document.getElementById('troco-v').value = '';
   }
   
   if (t === 'pix') calcSum();
@@ -1529,10 +1540,9 @@ function valid() {
     if (!d.bairro) { showToast('Informe o bairro!'); return false; }
     if (!bairroOk) { showToast('Nao entregamos neste bairro!'); return false; }
   }
+  if (!curPay) { showToast('Selecione a forma de pagamento!'); return false; }
   return d;
 }
-
-// Funções do modal de escolha removidas - salvamento local removido por privacidade
 
 // Carregar dados quando abrir a página do carrinho
 var originalShowPage = showPage;
