@@ -235,7 +235,20 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 @keyframes spin{to{transform:rotate(360deg)}}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--bk);color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:.82rem;transform:translateY(70px);opacity:0;transition:all .3s;z-index:500;border-left:4px solid var(--y);max-width:280px}
 #toast.show{transform:translateY(0);opacity:1}
-@media print{body *{visibility:hidden}#print-area,#print-area *{visibility:visible}#print-area{position:fixed;left:0;top:0;width:100%;background:white;padding:20px}}
+@media print{
+  body *{visibility:hidden}
+  #print-area,#print-area *{visibility:visible}
+  #print-area{
+    position:fixed;left:0;top:0;
+    width:58mm;
+    margin:0;padding:0;
+    background:white;
+  }
+  @page{
+    margin:0;
+    size:58mm auto;
+  }
+}
 @media(max-width:600px){
   header{height:auto;padding:0.8rem 1rem;flex-direction:column;gap:8px}
   nav{width:100%;justify-content:center;gap:4px}
@@ -2342,18 +2355,69 @@ function printOrd(id) {
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Cartao de Credito',debito:'Cartao de Debito'};
   var items = o.items || [];
   var iHtml = '';
-  for (var i=0; i<items.length; i++) iHtml += '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>'+items[i].quantity+'x '+items[i].product_name+'</span><span>R$ '+parseFloat(items[i].subtotal).toFixed(2).replace('.',',')+'</span></div>';
-  var html = '<div style="font-family:Courier New,monospace;max-width:360px;margin:0 auto;padding:20px;font-size:13px;color:#000;border:1px solid #ddd">';
-  html += '<div style="text-align:center;margin-bottom:14px"><div style="font-size:26px">&#127828;&#127829;</div><div style="font-size:17px;font-weight:900;letter-spacing:2px">FAEL TOP LANCHES</div><div style="font-size:11px">& PIZZARIA</div><div style="border-top:2px dashed #000;margin:10px 0"></div></div>';
-  html += '<div style="margin-bottom:8px"><div style="font-weight:900;font-size:14px">PEDIDO FAEL LANCHES</div><div style="font-size:10px;color:#555">'+o.created_at+'</div></div>';
-  html += '<div style="margin-bottom:9px;font-size:12px"><div><b>Cliente:</b> '+o.client_name+'</div><div><b>Tel:</b> '+o.client_phone+'</div><div><b>Endereco:</b> '+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
-  html += '<div style="border-top:2px dashed #000;border-bottom:2px dashed #000;padding:9px 0;margin:9px 0"><div style="font-weight:900;margin-bottom:6px">ITENS:</div>'+iHtml+'</div>';
-  html += '<div style="margin-top:9px;font-size:12px"><div style="display:flex;justify-content:space-between;font-weight:900;font-size:14px;border-top:1px solid #000;padding-top:5px"><span>TOTAL</span><span>R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+'</span></div>';
-  html += '<div style="margin-top:5px"><b>Pagamento:</b> '+(PM[o.payment]||o.payment)+'</div>';
-  if (o.change_for) html += '<div><b>Troco p/:</b> R$ '+parseFloat(o.change_for).toFixed(2).replace('.',',')+'</div>';
-  if (o.observations) html += '<div style="margin-top:5px"><b>Obs:</b> '+o.observations+'</div>';
-  html += '</div><div style="text-align:center;margin-top:14px;border-top:2px dashed #000;padding-top:10px;font-size:10px;color:#555">Obrigado! Volte sempre!</div></div>';
-  var pa = document.getElementById('print-area'); pa.innerHTML=html; pa.style.display='block'; window.print(); setTimeout(function(){pa.style.display='none';},600);
+  for (var i=0; i<items.length; i++) {
+    iHtml += '<div style="display:flex;justify-content:space-between;margin-bottom:3px;gap:4px">';
+    iHtml += '<span style="flex:1">'+items[i].quantity+'x '+items[i].product_name+'</span>';
+    iHtml += '<span style="white-space:nowrap">R$'+parseFloat(items[i].subtotal).toFixed(2).replace('.',',')+'</span>';
+    iHtml += '</div>';
+  }
+  var D = '--------------------------------';
+  var html = '<div style="font-family:\'Courier New\',Courier,monospace;width:54mm;font-size:9pt;color:#000;padding:2mm 2mm;box-sizing:border-box;line-height:1.4">';
+  // Cabeçalho
+  html += '<div style="text-align:center;margin-bottom:4px">';
+  html += '<div style="font-size:11pt;font-weight:900;letter-spacing:1px">FAEL TOP LANCHES</div>';
+  html += '<div style="font-size:8pt">& Pizzaria - Cataguases MG</div>';
+  html += '<div style="font-size:8pt">Tel: (32) 99820-4435</div>';
+  html += '</div>';
+  html += '<div style="border-top:1px dashed #000;margin:4px 0"></div>';
+  // Pedido
+  html += '<div style="font-size:8pt;margin-bottom:3px">';
+  html += '<b>Pedido #'+o.id+'</b><br>';
+  html += o.created_at;
+  html += '</div>';
+  html += '<div style="border-top:1px dashed #000;margin:4px 0"></div>';
+  // Cliente
+  html += '<div style="font-size:8pt;margin-bottom:3px">';
+  html += '<b>Cliente:</b> '+o.client_name+'<br>';
+  html += '<b>Tel:</b> '+o.client_phone+'<br>';
+  if (o.delivery_type === 'entrega' && o.address) {
+    html += '<b>End:</b> '+o.address;
+    if (o.complement) html += ' - '+o.complement;
+    html += '<br>';
+  } else {
+    html += '<b>Tipo:</b> Retirada no local<br>';
+  }
+  html += '</div>';
+  html += '<div style="border-top:1px dashed #000;margin:4px 0"></div>';
+  // Itens
+  html += '<div style="font-size:8.5pt;margin-bottom:3px">';
+  html += '<b>ITENS:</b><br>';
+  html += iHtml;
+  html += '</div>';
+  html += '<div style="border-top:1px dashed #000;margin:4px 0"></div>';
+  // Total
+  html += '<div style="font-size:9pt">';
+  if (o.delivery_fee && parseFloat(o.delivery_fee) > 0) {
+    html += '<div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>R$'+parseFloat(o.total - o.delivery_fee).toFixed(2).replace('.',',')+'</span></div>';
+    html += '<div style="display:flex;justify-content:space-between"><span>Entrega</span><span>R$'+parseFloat(o.delivery_fee).toFixed(2).replace('.',',')+'</span></div>';
+  }
+  html += '<div style="display:flex;justify-content:space-between;font-weight:900;font-size:10pt;border-top:1px solid #000;padding-top:3px;margin-top:2px">';
+  html += '<span>TOTAL</span><span>R$'+parseFloat(o.total).toFixed(2).replace('.',',')+'</span></div>';
+  html += '<div style="margin-top:3px;font-size:8pt"><b>Pgto:</b> '+(PM[o.payment]||o.payment)+'</div>';
+  if (o.change_for) html += '<div style="font-size:8pt"><b>Troco p/:</b> R$'+parseFloat(o.change_for).toFixed(2).replace('.',',')+'</div>';
+  if (o.observations) html += '<div style="font-size:8pt;margin-top:3px"><b>Obs:</b> '+o.observations+'</div>';
+  html += '</div>';
+  // Rodapé
+  html += '<div style="border-top:1px dashed #000;margin:5px 0"></div>';
+  html += '<div style="text-align:center;font-size:7.5pt;color:#333">';
+  html += 'Obrigado pela preferencia!<br>Volte sempre :)';
+  html += '</div>';
+  html += '</div>';
+  var pa = document.getElementById('print-area');
+  pa.innerHTML = html;
+  pa.style.display = 'block';
+  window.print();
+  setTimeout(function(){pa.style.display='none';}, 1000);
 }
 
 // PRODUTOS ADMIN
