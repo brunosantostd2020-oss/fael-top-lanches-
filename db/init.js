@@ -104,6 +104,20 @@ async function initDB() {
     }
 
     // Migrations seguras — ADD COLUMN IF NOT EXISTS
+    // Tabela de combos
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS combos (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        emoji TEXT DEFAULT '🍔',
+        price NUMERIC(10,2) NOT NULL,
+        items TEXT DEFAULT '',
+        active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC(10,2) DEFAULT NULL`);
     await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee_override NUMERIC(10,2) DEFAULT NULL`);
 
@@ -191,3 +205,4 @@ async function initDB() {
 }
 
 module.exports = { pool, initDB };
+// (combos table added below in the exports)

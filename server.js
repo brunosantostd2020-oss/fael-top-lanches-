@@ -13,6 +13,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth',     require('./routes/auth').router);
 app.use('/api/acrescimos', require('./routes/acrescimos'));
+app.use('/api/combos',    require('./routes/combos'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders',   require('./routes/orders'));
 app.use('/api/gerenciamento', require('./routes/gerenciamento'));
