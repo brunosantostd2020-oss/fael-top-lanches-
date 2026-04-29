@@ -10,6 +10,7 @@
 <style>
 :root{--r:#D62828;--rd:#9B1B1B;--y:#F7B731;--yd:#C47D00;--bk:#1A1A1A;--gr:#f5f5f5;--sh:0 4px 20px rgba(0,0,0,.12);--rad:14px}
 *{margin:0;padding:0;box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;overflow-x:hidden}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--gr);color:var(--bk);min-height:100vh;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 #closed-banner{display:none;background:#111;color:#fff;text-align:center;padding:12px;font-weight:800;font-size:.95rem;border-bottom:3px solid var(--r)}
 #closed-banner span{color:var(--y)}
@@ -24,9 +25,9 @@ nav button{background:transparent;border:none;color:#ccc;font-size:12px;font-wei
 nav button:hover,nav button.active{background:var(--r);color:#fff}
 .cbtn{background:var(--y)!important;color:var(--bk)!important;position:relative}
 .cbadge{background:var(--r);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-4px;right:-4px}
-.hero{background:#000;padding:0;text-align:center;position:relative}
-.hero-banner{width:100%;display:block;height:auto;max-height:380px;object-fit:cover;object-position:center top}
-@media(max-width:600px){.hero-banner{max-height:220px}}
+.hero{background:#000;padding:0;margin:0;text-align:center;position:relative;width:100%;overflow:hidden}
+.hero-banner{width:100%;height:auto;display:block;max-height:320px;object-fit:cover;object-position:center center}
+@media(max-width:600px){.hero-banner{max-height:180px;object-position:center center}}
 .hero h1{font-family:'Poppins',Impact,sans-serif;font-size:clamp(2rem,6vw,3.5rem);color:#fff;line-height:1;text-shadow:2px 2px 8px rgba(0,0,0,0.8);font-weight:900}
 .hero h1 span{color:var(--y)}
 .hero p{color:#e0e0e0;margin:10px 0 20px;font-size:1rem;text-shadow:1px 1px 4px rgba(0,0,0,0.8)}
@@ -42,14 +43,14 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .ct{padding:7px 16px;border-radius:30px;border:2px solid #ddd;background:#fff;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;color:#666}
 .ct.active,.ct:hover{background:var(--r);border-color:var(--r);color:#fff}
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.1rem}
-.pc{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden;transition:transform .2s}
+.pc{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden;transition:transform .2s;display:flex;flex-direction:column}
 .pc:hover{transform:translateY(-3px)}
-.pi{height:160px;display:flex;align-items:center;justify-content:center;font-size:65px;background:var(--gr);overflow:hidden;position:relative}
-.pi img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;transition:transform .3s}
-.pc:hover .pi img{transform:scale(1.04)}
+.pi{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:65px;background:var(--gr);overflow:hidden;position:relative;flex-shrink:0}
+.pi img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;transition:transform .3s}
+.pc:hover .pi img{transform:scale(1.05)}
 @media(max-width:600px){
   .pg{grid-template-columns:repeat(2,1fr);gap:.7rem}
-  .pi{height:120px;font-size:48px}
+  .pi{font-size:48px}
 }
 .pinfo{padding:.9rem}
 .pname{font-weight:900;font-size:.92rem;margin-bottom:3px}
@@ -620,8 +621,11 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button class="md-btn" onclick="irParaCarrinho()" style="width:100%;padding:15px;font-size:1.05rem;margin-bottom:10px;background:var(--r)">
       🛒 IR PARA O CARRINHO
     </button>
-    <button onclick="continuarComprando()" style="width:100%;background:#fff;color:var(--r);border:2px solid var(--r);padding:13px;border-radius:10px;font-weight:800;font-size:.95rem;cursor:pointer;transition:all .2s">
-      🍕 CONTINUAR COMPRANDO
+    <button onclick="continuarComprando()" style="width:100%;background:#fff;color:var(--r);border:2px solid var(--r);padding:13px;border-radius:10px;font-weight:800;font-size:.95rem;cursor:pointer;transition:all .2s;margin-bottom:8px">
+      🍔 CONTINUAR COMPRANDO
+    </button>
+    <button onclick="cancelarUltimoProduto()" style="width:100%;background:#fff5f5;color:#dc2626;border:2px solid #fca5a5;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">
+      ❌ Cancelar
     </button>
   </div>
 </div>
@@ -923,8 +927,15 @@ function renderProducts(cat, subcat) {
     for (var i=0; i<items.length; i++) {
       var pr = items[i];
       var cleanDesc = (pr.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim();
+      var imgMatch = cleanDesc.match(/##IMG:([^#]+)##/);
+      var imageUrl = imgMatch ? imgMatch[1].trim() : null;
+      if (imageUrl) cleanDesc = cleanDesc.replace(/##IMG:[^#]+##/gi,'').trim();
       html += '<div class="pc">';
-      html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
+      if (imageUrl) {
+        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.style.fontSize=\'65px\';this.parentElement.textContent=\'' + (pr.emoji||'🍽') + '\'"></div>';
+      } else {
+        html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
+      }
       html += '<div class="pinfo">';
       html += '<div class="pname">' + pr.name + '</div>';
       html += '<div class="pdesc">' + cleanDesc + '</div>';
@@ -954,7 +965,7 @@ function renderProducts(cat, subcat) {
     html += '<div class="pc">';
     // Se tem imagem, usa imagem; senão usa emoji
     if (imageUrl) {
-      html += '<div class="pi" style="background:#f5f5f5;padding:0;overflow:hidden"><img src="' + imageUrl + '" alt="' + pr.name + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
+      html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
     } else {
       html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
     }
@@ -1031,7 +1042,7 @@ function filterBebidas(tipo) {
       html += '<div class="pc">';
       // Se tem imagem, usa imagem; senão usa emoji
       if (imageUrl) {
-        html += '<div class="pi" style="background:#f5f5f5;padding:0;overflow:hidden"><img src="' + imageUrl + '" alt="' + pr.name + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
+        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
       } else {
         html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
       }
@@ -1322,6 +1333,16 @@ function irParaCarrinho() {
 }
 
 function continuarComprando() {
+  document.getElementById('modal-produto-adicionado').classList.remove('open');
+}
+
+function cancelarUltimoProduto() {
+  // Remove o último item adicionado ao carrinho
+  if (cart.length > 0) {
+    cart.pop();
+    updateBadge();
+    showToast('Produto removido do carrinho');
+  }
   document.getElementById('modal-produto-adicionado').classList.remove('open');
 }
 
@@ -2078,9 +2099,12 @@ function buildPM() {
       '<!-- UPLOAD DE FOTO -->' +
       '<div class="fg" style="margin-bottom:16px">' +
       '<label style="display:flex;align-items:center;gap:6px">📷 Foto do Produto <span style="font-size:.72rem;color:#888;font-weight:500">(opcional)</span></label>' +
-      '<div id="pf-img-preview-wrap" style="display:none;margin-bottom:10px;position:relative;border-radius:12px;overflow:hidden;background:#f0f0f0;height:160px">' +
+      '<div id="pf-img-preview-wrap" style="display:none;margin-bottom:10px;border-radius:12px;overflow:hidden;background:#f0f0f0;position:relative">' +
       '<img id="pf-img-preview" src="" style="width:100%;height:160px;object-fit:cover;display:block">' +
-      '<button type="button" onclick="removerFotoProd()" style="position:absolute;top:8px;right:8px;background:rgba(220,38,38,0.9);color:#fff;border:none;border-radius:50%;width:30px;height:30px;font-size:1rem;cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center">✕</button>' +
+      '<div style="display:flex;gap:8px;padding:8px;background:rgba(0,0,0,0.55);position:absolute;bottom:0;left:0;right:0">' +
+      '<button type="button" onclick="document.getElementById(\'pf-img-input\').click()" style="flex:1;padding:7px;background:#fff;color:#333;border:none;border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><span>📷</span>Trocar foto</button>' +
+      '<button type="button" onclick="removerFotoProd()" style="flex:1;padding:7px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><span>🗑️</span>Remover foto</button>' +
+      '</div>' +
       '</div>' +
       '<input type="file" id="pf-img-input" accept="image/*" style="display:none" onchange="carregarFotoProd(this)">' +
       '<button type="button" onclick="document.getElementById(\'pf-img-input\').click()" id="pf-img-btn" style="width:100%;padding:14px;border:2px dashed #ccc;border-radius:12px;background:#fafafa;color:#666;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px">' +
@@ -2132,6 +2156,7 @@ function carregarFotoProd(input) {
 }
 
 function removerFotoProd() {
+  if (!confirm('Remover a foto deste produto?')) return;
   pfImgBase64 = null;
   var preview = document.getElementById('pf-img-preview');
   var wrap = document.getElementById('pf-img-preview-wrap');
@@ -2141,7 +2166,7 @@ function removerFotoProd() {
   if (wrap) wrap.style.display = 'none';
   if (btn) btn.style.display = 'flex';
   if (input) input.value = '';
-  showToast('Foto removida');
+  showToast('✅ Foto removida! Salve o produto para confirmar.');
 }
 
 function carregarPreviewEdicao(imgBase64) {
