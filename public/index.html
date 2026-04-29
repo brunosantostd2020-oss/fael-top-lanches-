@@ -281,26 +281,59 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .sc-l{font-weight:700;font-size:.85rem;color:#666}
 .sc-v{font-weight:900;font-size:1.1rem;color:var(--r)}
 .order-checkbox{accent-color:var(--r)}
-/* ===== COMBOS ===== */
-.combo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.2rem}
-.combo-card{background:#fff;border-radius:16px;box-shadow:var(--sh);overflow:hidden;position:relative;border:2px solid #fff;transition:all .2s}
-.combo-card:hover{border-color:var(--r);transform:translateY(-2px);box-shadow:0 8px 28px rgba(214,40,40,.12)}
-.combo-badge{position:absolute;top:12px;left:12px;background:linear-gradient(135deg,var(--r),#a00);color:#fff;font-size:.65rem;font-weight:900;padding:3px 10px;border-radius:20px;letter-spacing:.5px;z-index:2}
-.combo-emoji{background:linear-gradient(135deg,#1a0800,#2d0f00);height:130px;display:flex;align-items:center;justify-content:center;font-size:4.5rem}
-.combo-info{padding:1rem}
-.combo-name{font-family:'Poppins',Impact,sans-serif;font-weight:900;font-size:1.05rem;color:#1a1a1a;margin-bottom:4px}
-.combo-desc{font-size:.78rem;color:#888;margin-bottom:10px;line-height:1.5}
-.combo-items{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;background:#fff8f8;border-radius:10px;padding:10px 12px;border-left:3px solid var(--r)}
-.combo-item{font-size:.75rem;font-weight:700;color:#444;display:flex;align-items:center;gap:6px}
-.combo-item::first-letter{color:var(--r)}
-.combo-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #f0f0f0}
-.combo-price{font-family:'Poppins',Impact,sans-serif;font-weight:900;font-size:1.3rem;color:var(--r)}
-.combo-btn{background:linear-gradient(135deg,var(--r),#a00);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-weight:800;font-size:.82rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
-.combo-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(214,40,40,.35)}
-.combo-btn:disabled{background:#bbb;cursor:not-allowed;transform:none;box-shadow:none}
-@media(max-width:600px){
-  .combo-grid{grid-template-columns:1fr}
-  .combo-emoji{height:100px;font-size:3.5rem}
+/* ===== COMBOS ANIMADOS ===== */
+@keyframes combo-fire{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.15) rotate(3deg)}}
+@keyframes combo-shine{0%{left:-100%}100%{left:200%}}
+@keyframes combo-pulse{0%,100%{box-shadow:0 0 0 0 rgba(214,40,40,.4)}50%{box-shadow:0 0 0 8px rgba(214,40,40,0)}}
+@keyframes combo-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes combo-badge-pop{0%{transform:scale(0.8)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* Grid: scroll horizontal no mobile estilo carrossel */
+.combo-grid{display:flex;gap:1rem;overflow-x:auto;padding:0 1rem 1rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.combo-grid::-webkit-scrollbar{display:none}
+
+/* Card fixo — tamanho ideal mobile */
+.combo-card{flex:0 0 280px;width:280px;background:#fff;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,.1);overflow:hidden;position:relative;scroll-snap-align:start;transition:transform .25s,box-shadow .25s;border:2px solid #f0f0f0}
+.combo-card:active{transform:scale(.97)}
+
+/* Brilho animado no card */
+.combo-card::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);animation:combo-shine 3s ease-in-out infinite;z-index:3;pointer-events:none}
+
+/* Header do card com gradiente e emoji animado */
+.combo-header{background:linear-gradient(135deg,#1a0000 0%,#8b0000 50%,#1a0000 100%);padding:1.2rem 1rem 1rem;text-align:center;position:relative;overflow:hidden}
+.combo-header::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(255,100,0,.15),transparent 70%)}
+.combo-emoji{font-size:3.8rem;display:block;animation:combo-float 2.5s ease-in-out infinite;position:relative;z-index:2;line-height:1.2}
+.combo-fire-icon{position:absolute;top:8px;right:10px;font-size:1.4rem;animation:combo-fire 1s ease-in-out infinite;z-index:2}
+
+/* Badge pulsante */
+.combo-badge{position:absolute;top:10px;left:10px;background:linear-gradient(135deg,#ff4500,#cc2200);color:#fff;font-size:.62rem;font-weight:900;padding:4px 10px;border-radius:20px;letter-spacing:.8px;z-index:4;animation:combo-badge-pop .4s ease,combo-pulse 2s ease-in-out 1s infinite;text-transform:uppercase}
+
+/* Conteúdo */
+.combo-info{padding:.85rem .9rem .9rem}
+.combo-name{font-family:'Poppins',Impact,sans-serif;font-weight:900;font-size:.98rem;color:#1a1a1a;margin-bottom:3px;line-height:1.2}
+.combo-desc{font-size:.73rem;color:#999;margin-bottom:8px;line-height:1.4}
+.combo-items{display:flex;flex-direction:column;gap:3px;margin-bottom:10px;background:linear-gradient(135deg,#fff5f5,#fff0f0);border-radius:10px;padding:8px 10px;border-left:3px solid var(--r)}
+.combo-item{font-size:.72rem;font-weight:700;color:#444;display:flex;align-items:center;gap:5px}
+.combo-item::before{content:'✓';color:var(--r);font-weight:900;font-size:.75rem}
+.combo-footer{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid #f5f5f5}
+.combo-price{font-family:'Poppins',Impact,sans-serif;font-weight:900;font-size:1.25rem;color:var(--r)}
+.combo-price-label{font-size:.62rem;color:#bbb;font-weight:600;display:block;line-height:1}
+.combo-btn{background:linear-gradient(135deg,var(--r),#a00);color:#fff;border:none;padding:9px 14px;border-radius:10px;font-weight:900;font-size:.78rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.combo-btn:active{transform:scale(.95)}
+.combo-btn:disabled{background:#ccc;cursor:not-allowed}
+
+/* Hint de scroll */
+.combo-scroll-hint{text-align:center;font-size:.72rem;color:#aaa;font-weight:600;margin-bottom:.5rem;display:flex;align-items:center;justify-content:center;gap:6px}
+.combo-scroll-hint span{animation:combo-float 1.5s ease-in-out infinite}
+
+/* Desktop: grid normal */
+@media(min-width:601px){
+  .combo-grid{flex-wrap:wrap;overflow-x:visible;padding:0;scroll-snap-type:none}
+  .combo-card{flex:0 0 calc(50% - .5rem);width:calc(50% - .5rem)}
+  .combo-card::before{animation:none}
+}
+@media(min-width:900px){
+  .combo-card{flex:0 0 300px;width:300px}
 }
 /* ===== FIM COMBOS ===== */
 .site-footer{background:linear-gradient(180deg,#111 0%,#0a0a0a 100%);color:#aaa;margin-top:4rem;border-top:3px solid var(--r)}
@@ -991,26 +1024,37 @@ function renderProducts(cat, subcat) {
   if (cat === 'combos') {
     api('GET', '/combos').then(function(combos) {
       if (!combos.length) { g.innerHTML = '<div style="text-align:center;padding:3rem;color:#aaa"><div style="font-size:3rem;margin-bottom:12px">🔥</div><div style="font-weight:700">Nenhum combo disponível no momento</div></div>'; return; }
-      var ch = '<div class="combo-grid">';
+      var ch = '<div class="combo-scroll-hint"><span>👈</span> Deslize para ver mais combos <span>👉</span></div>';
+      ch += '<div class="combo-grid">';
       for (var i=0; i<combos.length; i++) {
         var cb = combos[i];
         var itens = cb.items ? cb.items.split('|').filter(function(x){return x.trim();}) : [];
+        var imgMatchC = (cb.description||'').match(/##IMG:([^#]+)##/);
+        var imgUrlC = imgMatchC ? imgMatchC[1].trim() : null;
+        var cleanCDesc = (cb.description||'').replace(/##IMG:[^#]+##/gi,'').trim();
         ch += '<div class="combo-card">';
         ch += '<div class="combo-badge">🔥 COMBO</div>';
-        ch += '<div class="combo-emoji">'+(cb.emoji||'🍔')+'</div>';
+        ch += '<div class="combo-header">';
+        ch += '<div class="combo-fire-icon">🔥</div>';
+        if (imgUrlC) {
+          ch += '<img src="'+imgUrlC+'" alt="'+cb.name+'" style="width:100%;height:150px;object-fit:cover;display:block;position:relative;z-index:1">';
+        } else {
+          ch += '<span class="combo-emoji">'+(cb.emoji||'🍔')+'</span>';
+        }
+        ch += '</div>';
         ch += '<div class="combo-info">';
         ch += '<div class="combo-name">'+cb.name+'</div>';
-        if (cb.description) ch += '<div class="combo-desc">'+cb.description+'</div>';
+        if (cleanCDesc) ch += '<div class="combo-desc">'+cleanCDesc+'</div>';
         if (itens.length) {
           ch += '<div class="combo-items">';
           for (var j=0; j<itens.length; j++) {
-            ch += '<span class="combo-item">✓ '+itens[j].trim()+'</span>';
+            ch += '<span class="combo-item">'+itens[j].trim()+'</span>';
           }
           ch += '</div>';
         }
         ch += '<div class="combo-footer">';
-        ch += '<div class="combo-price">R$ '+parseFloat(cb.price).toFixed(2).replace('.',',')+'</div>';
-        ch += '<button class="combo-btn" onclick="addComboToCart('+cb.id+',\''+cb.name.replace(/'/g,"\\'")+'\','+cb.price+')" '+(op?'':'disabled')+'>'+(op?'🛒 Adicionar':'Fechado')+'</button>';
+        ch += '<div><span class="combo-price-label">por apenas</span><div class="combo-price">R$ '+parseFloat(cb.price).toFixed(2).replace('.',',')+'</div></div>';
+        ch += '<button class="combo-btn" onclick="addComboToCart('+cb.id+',\''+cb.name.replace(/'/g,"\\'")+'\','+cb.price+')" '+(op?'':'disabled')+'>'+(op?'🛒 Pedir':'Fechado')+'</button>';
         ch += '</div></div></div>';
       }
       ch += '</div>';
@@ -2489,6 +2533,19 @@ function buildCombosMgr() {
     html += '<textarea id="cf-items" rows="5" style="width:100%;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:.88rem;resize:vertical;font-family:Inter,sans-serif;outline:none" placeholder="1x Hamburguer Artesanal&#10;1x Batata Palha (200g)&#10;1x Refrigerante Lata (350ml)&#10;1x Molho Especial"></textarea>';
     html += '<div style="font-size:.72rem;color:#999;margin-top:5px">💡 Digite cada item em uma linha separada</div>';
     html += '</div>';
+    html += '<div class="fg" style="margin-bottom:16px">';
+    html += '<label style="display:flex;align-items:center;gap:6px">📷 Foto do Combo <span style="font-size:.72rem;color:#888;font-weight:500">(opcional)</span></label>';
+    html += '<div id="cf-img-preview-wrap" style="display:none;margin-bottom:10px;border-radius:12px;overflow:hidden;background:#f0f0f0;position:relative">';
+    html += '<img id="cf-img-preview" src="" style="width:100%;height:160px;object-fit:cover;display:block">';
+    html += '<div style="display:flex;gap:8px;padding:8px;background:rgba(0,0,0,.55);position:absolute;bottom:0;left:0;right:0">';
+    html += '<button type="button" onclick="document.getElementById(\'cf-img-input\').click()" style="flex:1;padding:7px;background:#fff;color:#333;border:none;border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer">📷 Trocar foto</button>';
+    html += '<button type="button" onclick="removerFotoCombo()" style="flex:1;padding:7px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer">🗑️ Remover foto</button>';
+    html += '</div></div>';
+    html += '<input type="file" id="cf-img-input" accept="image/*" style="display:none" onchange="carregarFotoCombo(this)">';
+    html += '<button type="button" onclick="document.getElementById(\'cf-img-input\').click()" id="cf-img-btn" style="width:100%;padding:14px;border:2px dashed #ccc;border-radius:12px;background:#fafafa;color:#666;font-weight:700;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">';
+    html += '<span style="font-size:1.3rem">📱</span> Tirar foto ou escolher da galeria</button>';
+    html += '<div style="font-size:.72rem;color:#999;margin-top:5px;text-align:center">A foto será redimensionada automaticamente • Funciona no celular e computador</div>';
+    html += '</div>';
     html += '<button class="fsub" onclick="saveCombo()">💾 Salvar Combo</button>';
     html += '<button class="fcancel" onclick="closeComboForm()">Cancelar</button>';
     html += '</div>';
@@ -2503,8 +2560,14 @@ function buildCombosMgr() {
       var itens = cb.items ? cb.items.split('|').filter(function(x){return x.trim();}) : [];
       html += '<div class="pmc" style="position:relative;opacity:'+(cb.active?'1':'0.55')+'">';
       var cbNameSafe = cb.name.replace(/'/g,'');
+      var cbImgMatch = (cb.description||'').match(/##IMG:([^#]+)##/);
+      var cbImgUrl = cbImgMatch ? cbImgMatch[1].trim() : null;
       html += '<button onclick="excluirComboPermanente(' + cb.id + ',\''+cbNameSafe+'\')" title="Excluir" style="position:absolute;top:6px;right:6px;width:22px;height:22px;background:#EF4444;color:#fff;border:none;border-radius:50%;font-size:.75rem;font-weight:900;cursor:pointer;padding:0;z-index:2">✕</button>';
-      html += '<div class="pmc-em">'+(cb.emoji||'🍔')+'</div>';
+      if (cbImgUrl) {
+        html += '<div class="pmc-em" style="overflow:hidden;border-radius:8px;width:50px;height:50px;flex-shrink:0"><img src="'+cbImgUrl+'" style="width:100%;height:100%;object-fit:cover"></div>';
+      } else {
+        html += '<div class="pmc-em">'+(cb.emoji||'🍔')+'</div>';
+      }
       html += '<div class="pmc-info">';
       html += '<div class="pmc-nm">🔥 '+cb.name+(cb.active?'':' <span style="color:#EF4444;font-size:.7rem">(inativo)</span>')+'</div>';
       html += '<div class="pmc-ct">COMBO</div>';
@@ -2524,12 +2587,83 @@ function buildCombosMgr() {
   });
 }
 
+// ===== FOTO DO COMBO =====
+var cfImgBase64 = null;
+
+function carregarFotoCombo(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Selecione uma imagem!'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var maxW = 800, maxH = 600;
+      var w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      cfImgBase64 = canvas.toDataURL('image/jpeg', 0.82);
+      var preview = document.getElementById('cf-img-preview');
+      var wrap = document.getElementById('cf-img-preview-wrap');
+      var btn = document.getElementById('cf-img-btn');
+      if (preview) preview.src = cfImgBase64;
+      if (wrap) wrap.style.display = 'block';
+      if (btn) btn.style.display = 'none';
+      showToast('Foto do combo carregada!');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removerFotoCombo() {
+  if (!confirm('Remover a foto deste combo?')) return;
+  cfImgBase64 = null;
+  var preview = document.getElementById('cf-img-preview');
+  var wrap = document.getElementById('cf-img-preview-wrap');
+  var btn = document.getElementById('cf-img-btn');
+  var input = document.getElementById('cf-img-input');
+  if (preview) preview.src = '';
+  if (wrap) wrap.style.display = 'none';
+  if (btn) btn.style.display = 'flex';
+  if (input) input.value = '';
+  showToast('Foto removida! Salve para confirmar.');
+}
+
+function resetFotoCombo() {
+  cfImgBase64 = null;
+  var preview = document.getElementById('cf-img-preview');
+  var wrap = document.getElementById('cf-img-preview-wrap');
+  var btn = document.getElementById('cf-img-btn');
+  var input = document.getElementById('cf-img-input');
+  if (preview) preview.src = '';
+  if (wrap) wrap.style.display = 'none';
+  if (btn) btn.style.display = 'flex';
+  if (input) input.value = '';
+}
+
+function carregarPreviewCombo(imgBase64) {
+  if (!imgBase64) return;
+  cfImgBase64 = imgBase64;
+  var preview = document.getElementById('cf-img-preview');
+  var wrap = document.getElementById('cf-img-preview-wrap');
+  var btn = document.getElementById('cf-img-btn');
+  if (preview) preview.src = imgBase64;
+  if (wrap) wrap.style.display = 'block';
+  if (btn) btn.style.display = 'none';
+}
+// ===== FIM FOTO COMBO =====
+
 function showComboForm(id) {
   editComboId = id;
   var b = document.getElementById('combo-form-box');
   if (!b) return;
   b.style.display = 'block';
   document.getElementById('cf-title').textContent = id ? 'Editar Combo' : 'Novo Combo';
+  resetFotoCombo();
   if (id) {
     api('GET', '/combos/all', null, true).then(function(combos) {
       var cb = null;
@@ -2539,7 +2673,13 @@ function showComboForm(id) {
       document.getElementById('cf-name').value = cb.name;
       document.getElementById('cf-price').value = cb.price;
       document.getElementById('cf-desc').value = cb.description || '';
+      // Separar foto da descrição
+      var cleanDesc = (cb.description||'').replace(/##IMG:[^#]+##/gi,'').trim();
+      document.getElementById('cf-desc').value = cleanDesc;
       document.getElementById('cf-items').value = cb.items ? cb.items.split('|').join('\n') : '';
+      // Carregar foto se existir
+      var imgMatch = (cb.description||'').match(/##IMG:([^#]+)##/);
+      if (imgMatch) carregarPreviewCombo(imgMatch[1].trim());
     });
   } else {
     ['cf-emoji','cf-name','cf-price','cf-desc','cf-items'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});
@@ -2551,6 +2691,7 @@ function closeComboForm() {
   var b = document.getElementById('combo-form-box');
   if (b) b.style.display = 'none';
   editComboId = null;
+  resetFotoCombo();
 }
 
 function saveCombo() {
@@ -2562,6 +2703,9 @@ function saveCombo() {
   var items = itemsRaw.split('\n').map(function(x){return x.trim();}).filter(function(x){return x;}).join('|');
   if (!name) { showToast('Informe o nome do combo!'); return; }
   if (!price) { showToast('Informe o preço do combo!'); return; }
+  // Incluir foto na descrição se houver
+  desc = desc.replace(/##IMG:[^#]+##/gi,'').trim();
+  if (cfImgBase64) desc += ' ##IMG:' + cfImgBase64 + '##';
   var payload = {name:name, price:price, emoji:emoji, description:desc, items:items};
   var req = editComboId ? api('PUT','/combos/'+editComboId,payload,true) : api('POST','/combos',payload,true);
   req.then(function(){
