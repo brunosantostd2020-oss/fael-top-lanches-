@@ -25,7 +25,8 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .cbtn{background:var(--y)!important;color:var(--bk)!important;position:relative}
 .cbadge{background:var(--r);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-4px;right:-4px}
 .hero{background:#000;padding:0;text-align:center;position:relative}
-.hero-banner{width:100%;display:block;height:auto;object-fit:contain;object-position:center center}
+.hero-banner{width:100%;display:block;height:auto;max-height:380px;object-fit:cover;object-position:center top}
+@media(max-width:600px){.hero-banner{max-height:220px}}
 .hero h1{font-family:'Poppins',Impact,sans-serif;font-size:clamp(2rem,6vw,3.5rem);color:#fff;line-height:1;text-shadow:2px 2px 8px rgba(0,0,0,0.8);font-weight:900}
 .hero h1 span{color:var(--y)}
 .hero p{color:#e0e0e0;margin:10px 0 20px;font-size:1rem;text-shadow:1px 1px 4px rgba(0,0,0,0.8)}
@@ -43,7 +44,13 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.1rem}
 .pc{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden;transition:transform .2s}
 .pc:hover{transform:translateY(-3px)}
-.pi{height:145px;display:flex;align-items:center;justify-content:center;font-size:65px;background:var(--gr)}
+.pi{height:160px;display:flex;align-items:center;justify-content:center;font-size:65px;background:var(--gr);overflow:hidden;position:relative}
+.pi img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;transition:transform .3s}
+.pc:hover .pi img{transform:scale(1.04)}
+@media(max-width:600px){
+  .pg{grid-template-columns:repeat(2,1fr);gap:.7rem}
+  .pi{height:120px;font-size:48px}
+}
 .pinfo{padding:.9rem}
 .pname{font-weight:900;font-size:.92rem;margin-bottom:3px}
 .pdesc{font-size:11.5px;color:#888;margin-bottom:10px;line-height:1.4}
@@ -277,31 +284,89 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
               <div class="po" onclick="setPay('credito',this)"><span class="pyi">💳</span>Crédito</div>
               <div class="po" onclick="setPay('debito',this)"><span class="pyi">🏧</span>Débito</div>
             </div>
-            <div id="pix-info" style="display:none;margin-top:12px">
-              <div style="background:linear-gradient(135deg,#00B09B,#96C93D);border-radius:16px;padding:20px;box-shadow:0 8px 24px rgba(0,176,155,0.2)">
-                <div style="text-align:center;margin-bottom:16px">
-                  <div style="font-size:2.5rem;margin-bottom:8px">💳</div>
-                  <div style="font-size:1.1rem;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,0.2)">Pagamento via PIX</div>
-                  <div style="font-size:.78rem;color:#e0f7ed;margin-top:4px">Rápido, seguro e sem taxas</div>
+            <div id="pix-info" style="display:none;margin-top:14px">
+              <!-- Card principal PIX -->
+              <div style="border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,180,155,0.18);border:1.5px solid #e0f7f4">
+
+                <!-- Header PIX -->
+                <div style="background:linear-gradient(135deg,#00c6a2 0%,#00957a 100%);padding:18px 20px 14px;text-align:center;position:relative">
+                  <div style="position:absolute;top:10px;right:14px;background:rgba(255,255,255,0.18);border-radius:20px;padding:3px 10px;font-size:.68rem;font-weight:800;color:#fff;letter-spacing:.5px">INSTANTÂNEO</div>
+                  <!-- Logo PIX SVG -->
+                  <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 8px">
+                    <circle cx="27" cy="27" r="27" fill="rgba(255,255,255,0.15)"/>
+                    <path d="M19.5 27l5.5-5.5 2.5 2.5-5.5 5.5 5.5 5.5-2.5 2.5L19.5 27z" fill="white"/>
+                    <path d="M34.5 27l-5.5 5.5-2.5-2.5 5.5-5.5-5.5-5.5 2.5-2.5L34.5 27z" fill="white"/>
+                  </svg>
+                  <div style="font-size:1.15rem;font-weight:900;color:#fff;letter-spacing:1.5px;text-shadow:0 1px 4px rgba(0,0,0,0.15)">PAGAR COM PIX</div>
+                  <div style="font-size:.75rem;color:rgba(255,255,255,0.85);margin-top:3px">Aprovação em segundos • Sem taxas</div>
                 </div>
-                <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.1)">
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-                    <div style="width:32px;height:32px;background:linear-gradient(135deg,#00B09B,#96C93D);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px">📋</div>
-                    <div style="font-size:.85rem;font-weight:800;color:#333">Chave PIX (Copia e Cola)</div>
+
+                <!-- Corpo -->
+                <div style="background:#fff;padding:18px 16px 16px">
+
+                  <!-- Badges de segurança -->
+                  <div style="display:flex;gap:6px;margin-bottom:14px;justify-content:center;flex-wrap:wrap">
+                    <span style="background:#f0fdf9;border:1.5px solid #6ee7d4;color:#00957a;border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:800">🔒 100% Seguro</span>
+                    <span style="background:#f0fdf9;border:1.5px solid #6ee7d4;color:#00957a;border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:800">⚡ Aprovação Imediata</span>
+                    <span style="background:#f0fdf9;border:1.5px solid #6ee7d4;color:#00957a;border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:800">🏦 Banco Central</span>
                   </div>
-                  <div id="pix-codigo" style="background:#f8f9fa;border:2px solid #e9ecef;border-radius:10px;padding:14px;font-family:'Courier New',monospace;font-size:.68rem;word-break:break-all;color:#495057;line-height:1.6;max-height:120px;overflow-y:auto"></div>
-                  <button onclick="copiarPix()" style="margin-top:12px;background:linear-gradient(135deg,#00B09B,#96C93D);color:#fff;border:none;padding:14px 20px;border-radius:10px;font-weight:900;font-size:.88rem;cursor:pointer;width:100%;box-shadow:0 4px 12px rgba(0,176,155,0.3);transition:transform .2s,box-shadow .2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(0,176,155,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(0,176,155,0.3)'">
-                    <span style="margin-right:8px">📋</span>COPIAR CÓDIGO PIX
+
+                  <!-- Valor total a pagar -->
+                  <div style="background:linear-gradient(135deg,#f0fdf9,#e6faf5);border:2px solid #b2f0e3;border-radius:12px;padding:12px 16px;margin-bottom:14px;text-align:center">
+                    <div style="font-size:.72rem;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Total a pagar</div>
+                    <div id="pix-valor-display" style="font-size:1.6rem;font-weight:900;color:#00957a;font-family:'Poppins',Impact,sans-serif">R$ --,--</div>
+                  </div>
+
+                  <!-- Chave PIX label -->
+                  <div style="font-size:.78rem;font-weight:800;color:#444;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+                    <span style="display:inline-block;width:18px;height:18px;background:#00c6a2;border-radius:50%;color:#fff;font-size:.6rem;text-align:center;line-height:18px;font-weight:900">✓</span>
+                    Chave PIX (Copia e Cola)
+                  </div>
+
+                  <!-- Campo da chave -->
+                  <div style="position:relative;margin-bottom:12px">
+                    <div id="pix-codigo" style="background:#f7f8fa;border:2px solid #d0f0ea;border-radius:10px;padding:11px 14px;font-family:'Courier New',monospace;font-size:.75rem;word-break:break-all;color:#333;line-height:1.6;min-height:42px;padding-right:40px"></div>
+                    <div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#00c6a2;font-size:1.1rem;cursor:pointer" onclick="copiarPix()" title="Copiar">📋</div>
+                  </div>
+
+                  <!-- Botão copiar -->
+                  <button id="btn-copiar-pix" onclick="copiarPixBtn(this)" style="width:100%;padding:14px;background:linear-gradient(135deg,#00c6a2,#00957a);color:#fff;border:none;border-radius:12px;font-weight:900;font-size:.95rem;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 14px rgba(0,180,155,0.3);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px">
+                    <span style="font-size:1.1rem">📋</span> COPIAR CHAVE PIX
                   </button>
-                </div>
-                <div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:12px;margin-top:12px;backdrop-filter:blur(10px)">
-                  <div style="display:flex;align-items:start;gap:10px">
-                    <div style="font-size:1.3rem;flex-shrink:0">💬</div>
-                    <div>
-                      <div style="font-size:.82rem;font-weight:800;color:#fff;margin-bottom:4px">Importante:</div>
-                      <div style="font-size:.76rem;color:#e0f7ed;line-height:1.5">Após efetuar o pagamento, envie o comprovante pelo WhatsApp para confirmar seu pedido!</div>
+
+                  <!-- Divider -->
+                  <div style="display:flex;align-items:center;gap:10px;margin:14px 0 10px">
+                    <div style="flex:1;height:1px;background:#e8e8e8"></div>
+                    <div style="font-size:.72rem;color:#999;font-weight:700">COMO PAGAR</div>
+                    <div style="flex:1;height:1px;background:#e8e8e8"></div>
+                  </div>
+
+                  <!-- Passo a passo -->
+                  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:24px;height:24px;background:#00c6a2;border-radius:50%;color:#fff;font-size:.72rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div>
+                      <div style="font-size:.78rem;color:#444;font-weight:600">Abra o app do seu banco</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:24px;height:24px;background:#00c6a2;border-radius:50%;color:#fff;font-size:.72rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div>
+                      <div style="font-size:.78rem;color:#444;font-weight:600">Escolha <strong>Pagar com PIX</strong> → Copia e Cola</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:24px;height:24px;background:#00c6a2;border-radius:50%;color:#fff;font-size:.72rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div>
+                      <div style="font-size:.78rem;color:#444;font-weight:600">Cole a chave e confirme o valor</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="width:24px;height:24px;background:#00c6a2;border-radius:50%;color:#fff;font-size:.72rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div>
+                      <div style="font-size:.78rem;color:#444;font-weight:600">Envie o comprovante pelo WhatsApp 📲</div>
                     </div>
                   </div>
+
+                  <!-- Aviso WhatsApp -->
+                  <div style="background:#fff8e1;border:1.5px solid #ffe082;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+                    <span style="font-size:1.4rem;flex-shrink:0">📲</span>
+                    <div style="font-size:.74rem;color:#7a5800;font-weight:700;line-height:1.5">Após pagar, <u>envie o comprovante pelo WhatsApp</u> para confirmarmos seu pedido!</div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -1408,7 +1473,7 @@ function setPay(t, el) {
     document.getElementById('troco-v').value = '';
   }
   
-  if (t === 'pix') calcSum();
+  if (t === 'pix') { calcSum(); atualizarValorPix(); }
 }
 
 // CONTROLE DO TROCO
@@ -1509,6 +1574,26 @@ function gerarPix(valor) {
   var el = document.getElementById('pix-codigo');
   if (el) el.textContent = PIX_CHAVE;
 }
+function copiarPixBtn(btn) {
+  copiarPix();
+  var orig = btn.innerHTML;
+  btn.innerHTML = '<span style="font-size:1.1rem">✅</span> CHAVE COPIADA!';
+  btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+  setTimeout(function() {
+    btn.innerHTML = orig;
+    btn.style.background = 'linear-gradient(135deg,#00c6a2,#00957a)';
+  }, 2500);
+}
+
+function atualizarValorPix() {
+  var sub = 0;
+  for (var i=0; i<cart.length; i++) sub += cart[i].price * cart[i].qty;
+  var tx = curDel==='entrega' ? taxaAtual : 0;
+  var total = sub + tx;
+  var el = document.getElementById('pix-valor-display');
+  if (el) el.textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+}
+
 function copiarPix() {
   if (!window._pixCod) { showToast('Selecione itens primeiro!'); return; }
   if (navigator.clipboard) { navigator.clipboard.writeText(window._pixCod).then(function(){showToast('Codigo PIX copiado!');}).catch(function(){fbCopy(window._pixCod);}); }
@@ -1990,17 +2075,105 @@ function buildPM() {
       '<div class="fg"><label style="background:var(--bk);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">Tamanho Família</label><input id="pf-pggg" type="number" step="0.50" min="0" placeholder="90.00"></div>' +
       '</div></div>' +
       '<div class="fg" style="margin-bottom:12px"><label>Descricao</label><input id="pf-desc" placeholder="Ingredientes..."></div>' +
+      '<!-- UPLOAD DE FOTO -->' +
+      '<div class="fg" style="margin-bottom:16px">' +
+      '<label style="display:flex;align-items:center;gap:6px">📷 Foto do Produto <span style="font-size:.72rem;color:#888;font-weight:500">(opcional)</span></label>' +
+      '<div id="pf-img-preview-wrap" style="display:none;margin-bottom:10px;position:relative;border-radius:12px;overflow:hidden;background:#f0f0f0;height:160px">' +
+      '<img id="pf-img-preview" src="" style="width:100%;height:160px;object-fit:cover;display:block">' +
+      '<button type="button" onclick="removerFotoProd()" style="position:absolute;top:8px;right:8px;background:rgba(220,38,38,0.9);color:#fff;border:none;border-radius:50%;width:30px;height:30px;font-size:1rem;cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center">✕</button>' +
+      '</div>' +
+      '<input type="file" id="pf-img-input" accept="image/*" style="display:none" onchange="carregarFotoProd(this)">' +
+      '<button type="button" onclick="document.getElementById(\'pf-img-input\').click()" id="pf-img-btn" style="width:100%;padding:14px;border:2px dashed #ccc;border-radius:12px;background:#fafafa;color:#666;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px">' +
+      '<span style="font-size:1.3rem">📱</span> Tirar foto ou escolher da galeria' +
+      '</button>' +
+      '<div style="font-size:.72rem;color:#999;margin-top:5px;text-align:center">A foto será redimensionada automaticamente • Funciona no celular e computador</div>' +
+      '</div>' +
       '<button class="fsub" onclick="saveProd()">Salvar</button><button class="fcancel" onclick="closePF()">Cancelar</button>' +
       '</div><div class="pm-grid">' + pm + '</div>';
   }).catch(function(e){ return '<p style="color:var(--r)">Erro: '+e.message+'</p>'; });
 }
 
+// ===== UPLOAD DE FOTO DE PRODUTO =====
+var pfImgBase64 = null;
+
+function carregarFotoProd(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Selecione uma imagem!'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    // Comprimir a imagem usando canvas
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var maxW = 800, maxH = 600;
+      var w = img.width, h = img.height;
+      // Manter proporção
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      var compressed = canvas.toDataURL('image/jpeg', 0.82);
+      pfImgBase64 = compressed;
+      // Mostrar preview
+      var preview = document.getElementById('pf-img-preview');
+      var wrap = document.getElementById('pf-img-preview-wrap');
+      var btn = document.getElementById('pf-img-btn');
+      if (preview) preview.src = compressed;
+      if (wrap) wrap.style.display = 'block';
+      if (btn) btn.style.display = 'none';
+      showToast('Foto carregada!');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removerFotoProd() {
+  pfImgBase64 = null;
+  var preview = document.getElementById('pf-img-preview');
+  var wrap = document.getElementById('pf-img-preview-wrap');
+  var btn = document.getElementById('pf-img-btn');
+  var input = document.getElementById('pf-img-input');
+  if (preview) preview.src = '';
+  if (wrap) wrap.style.display = 'none';
+  if (btn) btn.style.display = 'flex';
+  if (input) input.value = '';
+  showToast('Foto removida');
+}
+
+function carregarPreviewEdicao(imgBase64) {
+  if (!imgBase64) return;
+  pfImgBase64 = imgBase64;
+  var preview = document.getElementById('pf-img-preview');
+  var wrap = document.getElementById('pf-img-preview-wrap');
+  var btn = document.getElementById('pf-img-btn');
+  if (preview) preview.src = imgBase64;
+  if (wrap) wrap.style.display = 'block';
+  if (btn) btn.style.display = 'none';
+}
+
+function resetFotoForm() {
+  pfImgBase64 = null;
+  var preview = document.getElementById('pf-img-preview');
+  var wrap = document.getElementById('pf-img-preview-wrap');
+  var btn = document.getElementById('pf-img-btn');
+  var input = document.getElementById('pf-img-input');
+  if (preview) preview.src = '';
+  if (wrap) wrap.style.display = 'none';
+  if (btn) { btn.style.display = 'flex'; }
+  if (input) input.value = '';
+}
+// ===== FIM UPLOAD =====
+
 function togPizza(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('pizza-tam-box'); if(b) b.style.display=c==='pizzas'?'block':'none'; }
 function togBebida(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('bebida-subcat-box'); if(b) b.style.display=c==='bebidas'?'block':'none'; }
-function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; var cleanDesc=(p.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim(); document.getElementById('pf-desc').value=cleanDesc; var subcatField=document.getElementById('pf-bebida-subcat'); if(subcatField&&p.description){var desc=p.description.toLowerCase();if(desc.includes('##refri##'))subcatField.value='refrigerante';else if(desc.includes('##suco-leite##'))subcatField.value='suco-leite';else if(desc.includes('##suco-agua##'))subcatField.value='suco-agua';else subcatField.value='';} togPizza();togBebida();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var sc=document.getElementById('pf-bebida-subcat');if(sc)sc.value='';var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();togBebida();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
+function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; resetFotoForm(); if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; var cleanDesc=(p.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim(); var imgMatch=cleanDesc.match(/##IMG:([^#]+)##/); if(imgMatch){carregarPreviewEdicao(imgMatch[1].trim());cleanDesc=cleanDesc.replace(/##IMG:[^#]+##/gi,'').trim();} document.getElementById('pf-desc').value=cleanDesc; var subcatField=document.getElementById('pf-bebida-subcat'); if(subcatField&&p.description){var desc=p.description.toLowerCase();if(desc.includes('##refri##'))subcatField.value='refrigerante';else if(desc.includes('##suco-leite##'))subcatField.value='suco-leite';else if(desc.includes('##suco-agua##'))subcatField.value='suco-agua';else subcatField.value='';} togPizza();togBebida();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var sc=document.getElementById('pf-bebida-subcat');if(sc)sc.value='';var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();togBebida();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
 function editProd(id){ showPF(id); }
 function delProd(id){ if(!confirm('Confirmar?'))return; api('DELETE','/products/'+id,null,true).then(function(){showToast('Produto atualizado!');aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);}); }
-function closePF(){ var b=document.getElementById('prod-form-box'); if(b)b.style.display='none'; editProdId=null; }
+function closePF(){ var b=document.getElementById('prod-form-box'); if(b)b.style.display='none'; editProdId=null; resetFotoForm(); }
 function saveProd(){
   var emoji=document.getElementById('pf-emoji').value.trim()||'&#127869;';
   var name=document.getElementById('pf-name').value.trim();
@@ -2017,7 +2190,11 @@ function saveProd(){
     else if(subcat==='suco-leite') description+=' ##suco-leite##';
     else if(subcat==='suco-agua') description+=' ##suco-agua##';
   }
-  
+
+  // Remover imagem antiga e adicionar nova se existir
+  description = description.replace(/##IMG:[^#]+##/gi,'').trim();
+  if(pfImgBase64) description += ' ##IMG:' + pfImgBase64 + '##';
+
   if(!name){showToast('Informe o nome!');return;}
   if(category==='pizzas'){
     var pg=parseFloat(document.getElementById('pf-pg').value)||0;
