@@ -26,23 +26,48 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .cbtn{background:var(--y)!important;color:var(--bk)!important;position:relative}
 .cbadge{background:var(--r);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-4px;right:-4px}
 .hero{background:#000;padding:0;margin:0;position:relative;width:100%;overflow:hidden}
-.hero-banner{width:100%;height:auto;display:block;max-height:320px;object-fit:cover;object-position:center center}
+.hero-banner{display:none}
+
+/* ===== HERO DESKTOP ===== */
+.hero-desktop{display:block;background:linear-gradient(135deg,#0d0d0d 0%,#1a0800 40%,#0d0d0d 100%);position:relative;overflow:hidden;min-height:360px}
+.hero-desktop::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(214,40,40,.12) 0%,transparent 65%)}
+.hd-particles{position:absolute;inset:0;pointer-events:none}
+.hd-p{position:absolute;background:var(--y);border-radius:50%;opacity:.5;animation:hdfloat 4s ease-in-out infinite alternate}
+@keyframes hdfloat{0%{transform:translateY(0) scale(1);opacity:.3}100%{transform:translateY(-18px) scale(1.3);opacity:.7}}
+.hd-inner{max-width:1100px;margin:0 auto;padding:40px 3rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;position:relative;z-index:2}
+.hd-left{flex:1;max-width:520px}
+.hd-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(214,40,40,.2);border:1px solid rgba(214,40,40,.4);color:var(--y);font-size:.75rem;font-weight:800;padding:5px 14px;border-radius:20px;letter-spacing:1px;margin-bottom:16px}
+.hd-title{font-family:'Poppins',Impact,sans-serif;font-size:clamp(2.8rem,5vw,4.5rem);font-weight:900;color:#fff;line-height:.95;margin:0 0 6px;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+.hd-title span{color:var(--y);display:block;-webkit-text-stroke:1px rgba(255,200,0,.3)}
+.hd-sub{font-size:.85rem;color:#888;font-weight:600;letter-spacing:1px;margin-bottom:10px}
+.hd-stars{color:var(--y);font-size:1.1rem;letter-spacing:4px;margin-bottom:14px}
+.hd-slogan{color:#ccc;font-size:1rem;line-height:1.6;margin:0 0 20px}
+.hd-slogan strong{color:#fff;font-size:1.1rem}
+.hd-badges-row{display:flex;gap:16px;margin-bottom:24px}
+.hd-badge-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px 12px;font-size:.7rem;color:#bbb;font-weight:700;line-height:1.3}
+.hd-badge-item span{display:block}
+.hd-cta{background:linear-gradient(135deg,var(--r),#a00);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-weight:900;font-size:1rem;cursor:pointer;font-family:'Poppins',Impact,sans-serif;letter-spacing:.5px;box-shadow:0 6px 24px rgba(214,40,40,.4);transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.hd-cta:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(214,40,40,.5)}
+.hd-right{width:420px;flex-shrink:0;position:relative}
+.hd-img-wrap{position:relative;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.hd-img{width:100%;height:280px;object-fit:cover;object-position:right center;display:block}
+.hd-img-glow{position:absolute;inset:0;background:linear-gradient(to right,rgba(13,13,13,.6) 0%,transparent 40%);pointer-events:none}
+
+/* ===== HERO MOBILE ===== */
 .hero-mobile{display:none;background:linear-gradient(135deg,#0a0a0a 0%,#1a0a00 50%,#0a0a0a 100%);padding:0;position:relative;overflow:hidden;min-height:200px}
 .hero-mobile-inner{display:flex;align-items:center;justify-content:space-between;padding:18px 16px;position:relative;z-index:2}
 .hero-mobile-left{flex:1;padding-right:10px}
 .hero-mobile-logo{font-family:'Poppins',Impact,sans-serif;font-size:1.45rem;font-weight:900;color:var(--y);line-height:1.1;text-shadow:0 2px 8px rgba(0,0,0,.6);letter-spacing:.5px}
-.hero-mobile-logo span{color:#fff;display:block;font-size:.85rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;color:#e0e0e0}
+.hero-mobile-logo span{color:#e0e0e0;display:block;font-size:.85rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
 .hero-mobile-sub{font-size:.7rem;color:#aaa;font-weight:600;margin-top:6px;line-height:1.5}
 .hero-mobile-stars{color:var(--y);font-size:.85rem;margin-top:4px;letter-spacing:2px}
 .hero-mobile-right{width:140px;flex-shrink:0;position:relative}
-.hero-mobile-right img{width:100%;border-radius:12px;display:block;object-fit:cover;box-shadow:0 8px 24px rgba(0,0,0,.6)}
 .hero-mobile-glow{position:absolute;width:160px;height:160px;background:radial-gradient(circle,rgba(214,40,40,.25),transparent 70%);top:50%;right:-20px;transform:translateY(-50%);pointer-events:none;z-index:1}
 .hero-mobile-strip{background:linear-gradient(90deg,var(--r),#a00);padding:6px 16px;display:flex;align-items:center;gap:8px}
 .hero-mobile-strip span{color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.5px}
 @media(max-width:600px){
-  .hero-banner{display:none}
+  .hero-desktop{display:none}
   .hero-mobile{display:block}
-  .hero-mobile-badges{background:#111;padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 }
 .hero h1{font-family:'Poppins',Impact,sans-serif;font-size:clamp(2rem,6vw,3.5rem);color:#fff;line-height:1;text-shadow:2px 2px 8px rgba(0,0,0,0.8);font-weight:900}
 .hero h1 span{color:var(--y)}
@@ -63,18 +88,30 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.1rem}
 .pc{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden;transition:transform .2s;display:flex;flex-direction:column}
 .pc:hover{transform:translateY(-3px)}
-.pi{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:65px;background:var(--gr);overflow:hidden;position:relative;flex-shrink:0}
+.pi{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:65px;background:var(--gr);overflow:hidden;position:relative;flex-shrink:0;border-radius:0}
 .pi img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;transition:transform .3s}
 .pc:hover .pi img{transform:scale(1.05)}
 @media(max-width:600px){
-  .pg{grid-template-columns:repeat(2,1fr);gap:.55rem}
-  .pi{aspect-ratio:3/2;font-size:40px}
-  .pinfo{padding:.6rem}
-  .pname{font-size:.78rem;margin-bottom:2px;line-height:1.3}
-  .pdesc{font-size:.65rem;margin-bottom:6px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .pfooter{flex-direction:column;align-items:flex-start;gap:5px}
-  .pprice{font-size:.92rem}
-  .abtn{width:100%;padding:7px;font-size:.72rem;text-align:center;border-radius:7px}
+  /* Grid: 1 coluna estilo iFood no mobile */
+  .pg{grid-template-columns:1fr;gap:.75rem}
+
+  /* Card horizontal no mobile */
+  .pc{flex-direction:row;align-items:stretch;min-height:100px;border-radius:14px}
+  .pc:hover{transform:none}
+
+  /* Foto quadrada à esquerda */
+  .pi{width:110px;min-width:110px;aspect-ratio:1/1;border-radius:0;font-size:38px;flex-shrink:0}
+
+  /* Info à direita */
+  .pinfo{padding:.7rem .8rem;flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+
+  .pname{font-size:.88rem;margin-bottom:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pdesc{font-size:.7rem;margin-bottom:6px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* Rodapé: preço e botão lado a lado */
+  .pfooter{flex-direction:row;align-items:center;justify-content:space-between;gap:6px}
+  .pprice{font-size:.95rem;white-space:nowrap}
+  .abtn{width:auto;padding:7px 14px;font-size:.75rem;border-radius:8px;white-space:nowrap}
 }
 .pinfo{padding:.9rem}
 .pname{font-weight:900;font-size:.92rem;margin-bottom:3px}
@@ -205,8 +242,11 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   nav button{font-size:10px;padding:6px 8px}
   .logo-tx{font-size:0.95rem}
   .logo-ic{width:36px;height:36px;font-size:18px}
-  .page{padding:1rem .75rem}
-  .sec-title{font-size:1.3rem}
+  .page{padding:.85rem .65rem}
+  .sec-title{font-size:1.2rem;margin-bottom:.8rem}
+  .cat-tabs{gap:5px;margin-bottom:.9rem;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;scrollbar-width:none}
+  .cat-tabs::-webkit-scrollbar{display:none}
+  .ct{flex-shrink:0;font-size:11px;padding:6px 12px;white-space:nowrap}
 }
 #print-area{display:none}
 .scard{background:#fff;border-radius:10px;box-shadow:var(--sh);padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
@@ -251,8 +291,42 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   </nav>
 </header>
 <div class="hero">
-  <!-- Desktop: imagem banner -->
-  <img src="/banner-fael.png" alt="Fael Top Lanches" class="hero-banner">
+  <!-- Desktop: hero profissional CSS -->
+  <div class="hero-desktop">
+    <!-- Partículas decorativas -->
+    <div class="hd-particles">
+      <div class="hd-p" style="top:15%;left:8%;width:6px;height:6px;animation-delay:0s"></div>
+      <div class="hd-p" style="top:60%;left:5%;width:4px;height:4px;animation-delay:.8s"></div>
+      <div class="hd-p" style="top:30%;left:18%;width:3px;height:3px;animation-delay:1.4s"></div>
+      <div class="hd-p" style="top:75%;left:22%;width:5px;height:5px;animation-delay:.3s"></div>
+      <div class="hd-p" style="top:20%;right:15%;width:4px;height:4px;animation-delay:1s"></div>
+      <div class="hd-p" style="top:70%;right:10%;width:6px;height:6px;animation-delay:.5s"></div>
+    </div>
+    <!-- Conteúdo central -->
+    <div class="hd-inner">
+      <!-- Lado esquerdo -->
+      <div class="hd-left">
+        <div class="hd-tag">👑 O MELHOR DA CIDADE</div>
+        <h1 class="hd-title">FAEL TOP<br><span>LANCHES</span></h1>
+        <div class="hd-sub">& Pizzaria • Cataguases</div>
+        <div class="hd-stars">★ ★ ★ ★ ★</div>
+        <p class="hd-slogan">Sabor de verdade,<br><strong>do jeito que você gosta!</strong></p>
+        <div class="hd-badges-row">
+          <div class="hd-badge-item">🏅<span>Ingredientes<br>de Qualidade</span></div>
+          <div class="hd-badge-item">🔥<span>Feito na<br>Hora</span></div>
+          <div class="hd-badge-item">🛵<span>Entrega<br>Rápida</span></div>
+        </div>
+        <button onclick="showPage('cardapio')" class="hd-cta">🍔 VER CARDÁPIO</button>
+      </div>
+      <!-- Lado direito: imagem -->
+      <div class="hd-right">
+        <div class="hd-img-wrap">
+          <img src="/banner-fael.png" alt="Fael Top Lanches" class="hd-img">
+          <div class="hd-img-glow"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Mobile: layout profissional customizado -->
   <div class="hero-mobile">
