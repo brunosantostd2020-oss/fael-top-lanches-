@@ -237,11 +237,16 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 #toast.show{transform:translateY(0);opacity:1}
 @media print{
   body *{visibility:hidden}
-  #print-area,#print-area *{visibility:visible}
+  #print-area,#print-area *{
+    visibility:visible;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+    color-adjust:exact !important;
+  }
   #print-area{
     position:fixed;left:0;top:0;margin:0;padding:0;
     width:58mm !important;
-    background:white;
+    background:white !important;
   }
   @page{
     margin:0mm 0mm 0mm 0mm;
@@ -688,6 +693,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
           <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Avenida das Indústrias</div>
           <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Avenida Manoel Inácio Peixoto</div>
           <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Ponte Sabiá</div>
+          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Beira Rio</div>
         </div>
       </div>
     </div>
@@ -728,6 +734,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
           <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Astolfo Dutra</div>
           <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Guido Marliere</div>
           <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Meia Pataca</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Miguel</div>
         </div>
       </div>
     </div>
@@ -886,8 +893,8 @@ var PIX_NOME = 'RAPHAEL GONZAGA CORDEIRO';
 var PIX_CIDADE = 'CATAGUASES';
 var OPEN_DAYS = [0,1,3,4,5,6];
 var BAIRROS_GRATIS = ['TAQUARA PRETA','SAO MARCOS','SAO CRISTOVAO'];
-var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','CIDADE NOVA','AVENIDA DAS INDUSTRIAS','AV DAS INDUSTRIAS','AVENIDA MANOEL INACIO PEIXOTO','AV MANOEL INACIO PEIXOTO','PONTE SABIA','PONTE DA SABIA'];
-var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE','VILA DOMINGOS LOPES','VILA TEREZA','AV ASTOLFO DUTRA','AV GUIDO MARLIERE','AV MEIA PATACA'];
+var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','CIDADE NOVA','AVENIDA DAS INDUSTRIAS','AV DAS INDUSTRIAS','AVENIDA MANOEL INACIO PEIXOTO','AV MANOEL INACIO PEIXOTO','PONTE SABIA','PONTE DA SABIA','BEIRA RIO'];
+var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE','VILA DOMINGOS LOPES','VILA TEREZA','AV ASTOLFO DUTRA','AV GUIDO MARLIERE','AV MEIA PATACA','MIGUEL'];
 var adminToken = localStorage.getItem('fael_token') || null;
 var gerenciamentoToken = localStorage.getItem('fael_gerenciamento_token') || null;
 var allProducts = [], allAcrescimos = [], cart = [];
@@ -1390,7 +1397,7 @@ function addCartTam(id, tam, preco) {
   if (tam === 'GGG') tamNome = 'Tamanho Família';
   
   var cid = id + '_' + tam + '_' + Date.now();
-  var nomeProduto = p.name+' ('+tamNome+')';
+  var nomeProduto = 'Pizza '+p.name+' ('+tamNome+')';
   cart.push({id:p.id, cartId:cid, name:nomeProduto, price:preco, qty:1, emoji:p.emoji, acrescimos:[]});
   updateBadge();
   
@@ -2362,7 +2369,7 @@ function printOrd(id) {
     iHtml += '</div>';
   }
   var D = '--------------------------------';
-  var html = '<div style="font-family:\'Courier New\',Courier,monospace;width:52mm;font-size:7pt;color:#000;padding:1mm 2mm;box-sizing:border-box;line-height:1.35">';
+  var html = '<div style="font-family:\'Courier New\',Courier,monospace;width:52mm;font-size:7pt;color:#000;padding:1mm 2mm;box-sizing:border-box;line-height:1.35;-webkit-print-color-adjust:exact;print-color-adjust:exact">';
   // Cabeçalho
   html += '<div style="text-align:center;margin-bottom:3px">';
   html += '<div style="font-size:9pt;font-weight:900;letter-spacing:1px">FAEL TOP LANCHES</div>';
