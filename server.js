@@ -17,6 +17,7 @@ app.use('/api/combos',    require('./routes/combos'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders',   require('./routes/orders'));
 app.use('/api/gerenciamento', require('./routes/gerenciamento'));
+app.use('/api/cupons',       require('./routes/cupons'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toLocaleString('pt-BR') }));
 

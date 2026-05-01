@@ -59,7 +59,7 @@ router.post('/', async (req, res) => {
 
     const subtotal = items.reduce((s, i) => s + (parseFloat(i.unit_price) * parseInt(i.quantity)), 0);
     const delivery_fee = delivery_fee_override != null ? parseFloat(delivery_fee_override) : 0;
-    const total = subtotal;
+    const total = subtotal + delivery_fee;
 
     const oRes = await client.query(
       `INSERT INTO orders

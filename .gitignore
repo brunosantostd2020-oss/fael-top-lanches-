@@ -4,3 +4,10 @@ node_modules/
 *.log
 public/index-backup-*.html
 public/notification.mp3.mp3
+
+# Arquivos soltos acidentais
+cd
+git
+update.txt
+adicionar-frango-desfiado.sql
+{public,db,routes}/
