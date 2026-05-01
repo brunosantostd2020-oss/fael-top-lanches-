@@ -137,27 +137,27 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .rb{background:none;border:none;cursor:pointer;color:#ccc;font-size:16px;padding:4px}
 .rb:hover{color:var(--r)}
 .cempty{text-align:center;padding:2.5rem;color:#aaa}
-.osum{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden}
-.osh{background:var(--r);color:#fff;padding:.9rem 1.3rem;font-weight:900;font-size:1rem}
-.osb{padding:1.1rem}
-.ds label{font-weight:700;font-size:.82rem;color:#666;display:block;margin-bottom:5px;margin-top:13px}
-.ds input,.ds select{width:100%;padding:9px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:.88rem;outline:none}
-.ds input:focus{border-color:var(--r)}
-.dtype{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:2px}
-.do{border:2px solid #e8e8e8;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-weight:800;font-size:12px}
-.do.active{border-color:var(--r);background:#fff5f5;color:var(--r)}
-.do .oi{font-size:20px;display:block;margin-bottom:3px}
-.pays{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.po{border:2px solid #e8e8e8;border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;font-weight:800;font-size:11.5px;background:#fafafa;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:4px;color:#555}
-.po:hover{border-color:#bbb;background:#f0f0f0}
-.po.active{border-color:var(--r);background:linear-gradient(135deg,#fff5f5,#ffe0e0);color:var(--r);box-shadow:0 2px 8px rgba(214,40,40,0.13)}
-.po .pyi{font-size:24px;display:block}
-.srow{display:flex;justify-content:space-between;margin-bottom:7px;font-size:.88rem}
-.stot{display:flex;justify-content:space-between;padding-top:9px;border-top:2px solid #f0f0f0;font-weight:900;font-size:1.1rem;margin-top:3px}
+.osum{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.10);overflow:hidden;border:1.5px solid #f0f0f0}
+.osh{background:linear-gradient(135deg,var(--r) 0%,#a00 100%);color:#fff;padding:1.1rem 1.4rem;font-weight:900;font-size:1rem;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+.osb{padding:1.3rem}
+.ds label{font-weight:700;font-size:.78rem;color:#888;display:block;margin-bottom:5px;margin-top:14px;text-transform:uppercase;letter-spacing:.6px}
+.ds input,.ds select{width:100%;padding:11px 14px;border:2px solid #efefef;border-radius:10px;font-size:.9rem;outline:none;background:#fafafa;color:#222;transition:border-color .2s,background .2s;box-sizing:border-box}
+.ds input:focus{border-color:var(--r);background:#fff}
+.dtype{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px;margin-top:6px}
+.do{border:2px solid #efefef;border-radius:12px;padding:12px 10px;text-align:center;cursor:pointer;font-weight:800;font-size:12px;background:#fafafa;transition:all .2s;color:#666}
+.do.active{border-color:var(--r);background:linear-gradient(135deg,#fff0f0,#ffe4e4);color:var(--r);box-shadow:0 2px 10px rgba(214,40,40,0.12)}
+.do .oi{font-size:22px;display:block;margin-bottom:4px}
+.pays{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px}
+.po{border:2px solid #efefef;border-radius:12px;padding:13px 8px;cursor:pointer;text-align:center;font-weight:800;font-size:11.5px;background:#fafafa;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:5px;color:#555}
+.po:hover{border-color:#ddd;background:#f5f5f5}
+.po.active{border-color:var(--r);background:linear-gradient(135deg,#fff5f5,#ffe0e0);color:var(--r);box-shadow:0 2px 10px rgba(214,40,40,0.13)}
+.po .pyi{font-size:26px;display:block}
+.srow{display:flex;justify-content:space-between;margin-bottom:7px;font-size:.88rem;color:#555}
+.stot{display:flex;justify-content:space-between;padding:10px 14px;border-radius:12px;font-weight:900;font-size:1.1rem;margin-top:6px;background:linear-gradient(135deg,#fff5f5,#ffe8e8);border:2px solid #f8d0d0}
 .stot span:last-child{color:var(--r)}
-.wabtn{width:100%;background:#25D366;color:#fff;border:none;padding:13px;border-radius:12px;font-family:Impact,sans-serif;font-size:1.25rem;letter-spacing:1px;cursor:pointer;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px}
-.wabtn:hover{background:#1aaa4b}
-.wabtn:disabled{background:#aaa;cursor:not-allowed}
+.wabtn{width:100%;background:linear-gradient(135deg,#25D366,#1aaa4b);color:#fff;border:none;padding:15px;border-radius:14px;font-family:Impact,sans-serif;font-size:1.2rem;letter-spacing:1.5px;cursor:pointer;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 20px rgba(37,211,102,0.35);transition:all .2s}
+.wabtn:hover{background:linear-gradient(135deg,#20c05a,#178f3e);box-shadow:0 8px 24px rgba(37,211,102,0.45);transform:translateY(-1px)}
+.wabtn:disabled{background:#aaa;cursor:not-allowed;box-shadow:none;transform:none}
 .adm-tabs{display:flex;gap:5px;margin-bottom:1.5rem;border-bottom:2px solid #e8e8e8;flex-wrap:wrap}
 .atab{padding:8px 16px;background:none;border:none;font-weight:800;font-size:.85rem;cursor:pointer;color:#999;border-bottom:3px solid transparent;margin-bottom:-2px}
 .atab.active{color:var(--r);border-bottom-color:var(--r)}
@@ -509,7 +509,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     </div>
     <div>
       <div class="osum">
-        <div class="osh">Resumo do Pedido</div>
+        <div class="osh">🛒 Resumo do Pedido</div>
         <div class="osb">
           <div class="ds">
             <label>Tipo de entrega</label>
@@ -641,7 +641,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
             <label>Observacoes (opcional)</label>
             <input type="text" id="c-obs" placeholder="Sem cebola, bem passado...">
           </div>
-          <div style="margin-top:.9rem">
+          <div style="margin-top:1rem;background:#fafafa;border-radius:12px;padding:.9rem 1rem;border:1.5px solid #f0f0f0">
             <div class="srow"><span>Subtotal</span><span id="sub-val">R$ 0,00</span></div>
             <div class="srow" id="taxa-row" style="color:#22c55e;font-weight:800"><span>Entrega</span><span id="taxa-display">GRATIS</span></div>
             <div class="stot"><span>TOTAL</span><span id="tot-val">R$ 0,00</span></div>
