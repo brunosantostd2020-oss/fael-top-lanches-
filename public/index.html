@@ -2398,15 +2398,12 @@ function printOrd(id) {
   var items = o.items || [];
   var COLS = 28;
 
-  // Separador com caracteres de bloco (mais escuro que traços)
   function separador() {
-    return '<div style="font-weight:900;font-size:7pt;letter-spacing:0px">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</div>';
+    return '<div style="font-weight:900;letter-spacing:0px">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</div>';
   }
   function separadorFino() {
     return '<div style="border-top:2px solid #000;margin:2px 0"></div>';
   }
-
-  // Alinha esq+dir; se não couber, dir vai na linha seguinte
   function row(esq, dir, bold) {
     var espaco = COLS - esq.length - dir.length;
     var st = bold ? 'font-weight:900;' : '';
@@ -2416,8 +2413,6 @@ function printOrd(id) {
     return '<div style="' + st + '">' + esq + '</div>' +
            '<div style="text-align:right;' + st + '">' + dir + '</div>';
   }
-
-  // Quebra texto em linhas de COLS chars
   function wrap(txt, bold) {
     var st = bold ? 'font-weight:900;' : '';
     var out = '';
@@ -2428,14 +2423,11 @@ function printOrd(id) {
     if (txt.length) out += '<div style="' + st + '">' + txt + '</div>';
     return out;
   }
-
-  // Texto em NEGRITO DUPLO: renderiza o texto duas vezes com text-shadow sobreposto
-  // Isso força a impressora a gastar mais tinta nos pixels
   function bold2(txt, size, center) {
     var align = center ? 'text-align:center;' : '';
     var fs = size ? 'font-size:' + size + ';' : '';
     return '<div style="' + align + fs + 'font-weight:900;' +
-           'text-shadow:0.3px 0 0 #000, -0.3px 0 0 #000, 0 0.3px 0 #000;' +
+           'text-shadow:0.3px 0 0 #000,-0.3px 0 0 #000,0 0.3px 0 #000;' +
            'letter-spacing:0.2px">' + txt + '</div>';
   }
 
@@ -2452,8 +2444,6 @@ function printOrd(id) {
     "text-shadow:0.3px 0 0 #000,-0.3px 0 0 #000";
 
   var html = '<div style="' + BASE + '">';
-
-  // Cabeçalho
   html += '<div style="text-align:center;margin-bottom:1px">';
   html += bold2('FAEL TOP LANCHES', '11pt', true);
   html += bold2('& Pizzaria - Cataguases MG', '7.5pt', true);
@@ -2461,12 +2451,10 @@ function printOrd(id) {
   html += '</div>';
   html += separador();
 
-  // Pedido
   html += bold2('PEDIDO #' + o.id, null, false);
   html += '<div style="font-weight:900">' + (o.created_at||'') + '</div>';
   html += separador();
 
-  // Cliente
   html += wrap('CLIENTE: ' + o.client_name, true);
   html += wrap('TEL: ' + o.client_phone, true);
   if (o.delivery_type === 'entrega' && o.address) {
@@ -2479,7 +2467,6 @@ function printOrd(id) {
   }
   html += separador();
 
-  // Itens
   html += bold2('ITENS DO PEDIDO:', null, false);
   for (var i = 0; i < items.length; i++) {
     var it = items[i];
@@ -2489,7 +2476,6 @@ function printOrd(id) {
   }
   html += separador();
 
-  // Total
   if (o.delivery_fee && parseFloat(o.delivery_fee) > 0) {
     html += row('Subtotal', 'R$' + parseFloat(o.total - o.delivery_fee).toFixed(2).replace('.', ','), true);
     html += row('Taxa entrega', 'R$' + parseFloat(o.delivery_fee).toFixed(2).replace('.', ','), true);
@@ -2506,7 +2492,6 @@ function printOrd(id) {
     html += wrap(o.observations, true);
   }
 
-  // Rodapé
   html += separador();
   html += bold2('Obrigado pela preferencia!', '7.5pt', true);
   html += bold2('Volte sempre! :)', '7.5pt', true);
@@ -2520,4 +2505,983 @@ function printOrd(id) {
   setTimeout(function(){ pa.style.display = 'none'; }, 1500);
 }
 
+// PRODUTOS ADMIN
+function buildPM() {
+  return api('GET','/products/all',null,true).then(function(prods) {
+    var CL = {lanches:'Lanches',pizzas:'Pizzas',omelete:'Omelete',cachorro_quente:'Cachorro Quente',bebidas:'Bebidas',porcoes:'Porcoes'};
+    var pm = '';
+    for (var i=0; i<prods.length; i++) {
+      var p = prods[i];
+      var catLabels = {lanches:'Lanches',frango_desfiado:'🍗 Frango Desfiado',hamburguer_boi:'🥩 Hambúrguer Boi',pizzas:'🍕 Pizzas',moda_fael:'👑 Moda do Fael',omelete:'Omelete',cachorro_quente:'Cachorro Quente',bebidas:'Bebidas',porcoes:'Porções'};
+      pm += '<div class="pmc" style="position:relative;opacity:'+(p.active?'1':'0.55')+'">';
+      pm += '<button onclick="excluirProdutoPermanente('+p.id+',\''+p.name.replace(/\'/g,"\\\'")+'\')\" title="Excluir permanentemente" style="position:absolute;top:6px;right:6px;width:22px;height:22px;background:#EF4444;color:#fff;border:none;border-radius:50%;font-size:.75rem;font-weight:900;cursor:pointer;line-height:1;padding:0;z-index:2">✕</button>';
+      pm += '<div class="pmc-em">'+(p.emoji||'🍽')+'</div>';
+      pm += '<div class="pmc-info">';
+      pm += '<div class="pmc-nm">'+p.name+(p.active?'':' <span style="color:#EF4444;font-size:.7rem">(inativo)</span>')+'</div>';
+      pm += '<div class="pmc-ct">'+(catLabels[p.category]||p.category)+'</div>';
+      pm += '<div class="pmc-pr">R$ '+parseFloat(p.price).toFixed(2).replace('.',',')+'</div>';
+      pm += '<div class="pmc-ac">';
+      pm += '<button class="pmc-btn edit" onclick="editProd('+p.id+')">✏️ Editar</button>';
+      pm += '<button class="pmc-btn del" onclick="delProd('+p.id+')">'+(p.active?'⏸ Desativar':'▶️ Reativar')+'</button>';
+      pm += '</div></div></div>';
+    }
+    return '<button class="add-prod-btn" onclick="showPF(null)">+ Novo Produto</button>' +
+      '<div id="prod-form-box" style="display:none" class="form-box">' +
+      '<h3 id="pf-title">Novo Produto</h3>' +
+      '<div class="frow"><div class="fg"><label>Emoji</label><input id="pf-emoji" placeholder="&#127828;" maxlength="4"></div><div class="fg"><label>Nome</label><input id="pf-name" placeholder="X-Burguer"></div></div>' +
+      '<div class="frow"><div class="fg"><label>Categoria</label><select id="pf-cat" onchange="togPizza();togBebida()"><option value="lanches">Lanches (Geral)</option><option value="frango_desfiado">🍗 Frango Desfiado</option><option value="hamburguer_boi">🥩 Hambúrguer Boi</option><option value="pizzas">Pizzas</option><option value="moda_fael">👑 Moda do Fael</option><option value="omelete">Omelete</option><option value="cachorro_quente">Cachorro Quente</option><option value="bebidas">Bebidas</option><option value="porcoes">Porcoes</option></select></div>' +
+      '<div class="fg" id="pf-price-row"><label>Preco (R$)</label><input id="pf-price" type="number" step="0.50" min="0" placeholder="0.00"></div></div>' +
+      '<div id="bebida-subcat-box" style="display:none;background:#e3f2fd;border:2px solid #2196F3;border-radius:12px;padding:1rem;margin-bottom:12px">' +
+      '<div style="font-weight:900;font-size:.9rem;color:#1976D2;margin-bottom:10px">📌 Subcategoria da Bebida</div>' +
+      '<div style="font-size:.75rem;color:#555;margin-bottom:10px">Para facilitar a busca dos clientes, classifique a bebida:</div>' +
+      '<select id="pf-bebida-subcat" style="width:100%;padding:10px;border:2px solid #2196F3;border-radius:8px;font-size:.9rem;font-weight:600">' +
+      '<option value="">Nenhuma (aparece em Todas)</option>' +
+      '<option value="refrigerante">🥤 Refrigerante (Coca, Pepsi, Guaraná, etc)</option>' +
+      '<option value="suco-leite">🥛 Suco ao Leite (Vitaminas, Milk Shakes)</option>' +
+      '<option value="suco-agua">🧃 Suco à Água (Sucos Naturais)</option>' +
+      '</select>' +
+      '</div>' +
+      '<div id="pizza-tam-box" style="display:none;background:#fff8f0;border:2px solid var(--y);border-radius:12px;padding:1rem;margin-bottom:12px">' +
+      '<div style="font-weight:900;font-size:.9rem;color:var(--yd);margin-bottom:10px">Precos por Tamanho de Pizza</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">' +
+      '<div class="fg"><label style="background:var(--r);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">G</label><input id="pf-pg" type="number" step="0.50" min="0" placeholder="65.00"></div>' +
+      '<div class="fg"><label style="background:#7C3AED;color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">GG</label><input id="pf-pgg" type="number" step="0.50" min="0" placeholder="75.00"></div>' +
+      '<div class="fg"><label style="background:var(--bk);color:#fff;padding:3px 8px;border-radius:6px;font-size:.75rem">Família</label><input id="pf-pggg" type="number" step="0.50" min="0" placeholder="90.00"></div>' +
+      '</div></div>' +
+      '<div id="moda-fael-box" style="display:none;background:linear-gradient(135deg,#fffbe6,#fff3c4);border:2px solid var(--y);border-radius:12px;padding:1rem;margin-bottom:12px">' +
+      '<div style="font-weight:900;font-size:.9rem;color:#c47d00;margin-bottom:6px">👑 Pizza Moda do Fael</div>' +
+      '<div style="font-size:.78rem;color:#666;margin-bottom:10px">Preço único — sem divisão por tamanho</div>' +
+      '<div class="fg"><label style="background:var(--y);color:#000;padding:3px 10px;border-radius:6px;font-size:.75rem;font-weight:900">Preço único (R$)</label><input id="pf-moda-price" type="number" step="0.50" min="0" placeholder="100.00"></div>' +
+      '</div>' +
+      '<div class="fg" style="margin-bottom:12px"><label>Descricao</label><input id="pf-desc" placeholder="Ingredientes..."></div>' +
+      '<!-- UPLOAD DE FOTO -->' +
+      '<div class="fg" style="margin-bottom:16px">' +
+      '<label style="display:flex;align-items:center;gap:6px">📷 Foto do Produto <span style="font-size:.72rem;color:#888;font-weight:500">(opcional)</span></label>' +
+      '<div id="pf-img-preview-wrap" style="display:none;margin-bottom:10px;border-radius:12px;overflow:hidden;background:#f0f0f0;position:relative">' +
+      '<img id="pf-img-preview" src="" style="width:100%;height:160px;object-fit:cover;display:block">' +
+      '<div style="display:flex;gap:8px;padding:8px;background:rgba(0,0,0,0.55);position:absolute;bottom:0;left:0;right:0">' +
+      '<button type="button" onclick="document.getElementById(\'pf-img-input\').click()" style="flex:1;padding:7px;background:#fff;color:#333;border:none;border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><span>📷</span>Trocar foto</button>' +
+      '<button type="button" onclick="removerFotoProd()" style="flex:1;padding:7px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><span>🗑️</span>Remover foto</button>' +
+      '</div>' +
+      '</div>' +
+      '<input type="file" id="pf-img-input" accept="image/*" style="display:none" onchange="carregarFotoProd(this)">' +
+      '<button type="button" onclick="document.getElementById(\'pf-img-input\').click()" id="pf-img-btn" style="width:100%;padding:14px;border:2px dashed #ccc;border-radius:12px;background:#fafafa;color:#666;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px">' +
+      '<span style="font-size:1.3rem">📱</span> Tirar foto ou escolher da galeria' +
+      '</button>' +
+      '<div style="font-size:.72rem;color:#999;margin-top:5px;text-align:center">A foto será redimensionada automaticamente • Funciona no celular e computador</div>' +
+      '</div>' +
+      '<button class="fsub" onclick="saveProd()">Salvar</button><button class="fcancel" onclick="closePF()">Cancelar</button>' +
+      '</div><div class="pm-grid">' + pm + '</div>';
+  }).catch(function(e){ return '<p style="color:var(--r)">Erro: '+e.message+'</p>'; });
+}
 
+// ===== UPLOAD DE FOTO DE PRODUTO =====
+var pfImgBase64 = null;
+
+function carregarFotoProd(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Selecione uma imagem!'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    // Comprimir a imagem usando canvas
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var maxW = 800, maxH = 600;
+      var w = img.width, h = img.height;
+      // Manter proporção
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      var compressed = canvas.toDataURL('image/jpeg', 0.82);
+      pfImgBase64 = compressed;
+      // Mostrar preview
+      var preview = document.getElementById('pf-img-preview');
+      var wrap = document.getElementById('pf-img-preview-wrap');
+      var btn = document.getElementById('pf-img-btn');
+      if (preview) preview.src = compressed;
+      if (wrap) wrap.style.display = 'block';
+      if (btn) btn.style.display = 'none';
+      showToast('Foto carregada!');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removerFotoProd() {
+  if (!confirm('Remover a foto deste produto?')) return;
+  pfImgBase64 = null;
+  var preview = document.getElementById('pf-img-preview');
+  var wrap = document.getElementById('pf-img-preview-wrap');
+  var btn = document.getElementById('pf-img-btn');
+  var input = document.getElementById('pf-img-input');
+  if (preview) preview.src = '';
+  if (wrap) wrap.style.display = 'none';
+  if (btn) btn.style.display = 'flex';
+  if (input) input.value = '';
+  showToast('✅ Foto removida! Salve o produto para confirmar.');
+}
+
+function carregarPreviewEdicao(imgBase64) {
+  if (!imgBase64) return;
+  pfImgBase64 = imgBase64;
+  var preview = document.getElementById('pf-img-preview');
+  var wrap = document.getElementById('pf-img-preview-wrap');
+  var btn = document.getElementById('pf-img-btn');
+  if (preview) preview.src = imgBase64;
+  if (wrap) wrap.style.display = 'block';
+  if (btn) btn.style.display = 'none';
+}
+
+function resetFotoForm() {
+  pfImgBase64 = null;
+  var preview = document.getElementById('pf-img-preview');
+  var wrap = document.getElementById('pf-img-preview-wrap');
+  var btn = document.getElementById('pf-img-btn');
+  var input = document.getElementById('pf-img-input');
+  if (preview) preview.src = '';
+  if (wrap) wrap.style.display = 'none';
+  if (btn) { btn.style.display = 'flex'; }
+  if (input) input.value = '';
+}
+// ===== FIM UPLOAD =====
+
+function togPizza(){
+  var c = document.getElementById('pf-cat') ? document.getElementById('pf-cat').value : '';
+  var b = document.getElementById('pizza-tam-box');
+  var moda = document.getElementById('moda-fael-box');
+  if (b) b.style.display = c === 'pizzas' ? 'block' : 'none';
+  if (moda) moda.style.display = c === 'moda_fael' ? 'block' : 'none';
+  // Preço normal: ocultar para pizzas e moda_fael (usam campos próprios)
+  var priceRow = document.getElementById('pf-price-row');
+  if (priceRow) priceRow.style.display = (c === 'pizzas') ? 'none' : 'flex';
+}
+function togBebida(){ var c=document.getElementById('pf-cat')?document.getElementById('pf-cat').value:''; var b=document.getElementById('bebida-subcat-box'); if(b) b.style.display=c==='bebidas'?'block':'none'; }
+function showPF(id){ editProdId=id; var b=document.getElementById('prod-form-box'); if(!b)return; b.style.display='block'; document.getElementById('pf-title').textContent=id!=null?'Editar Produto':'Novo Produto'; resetFotoForm(); if(id!=null){api('GET','/products/all',null,true).then(function(prods){var p=null;for(var i=0;i<prods.length;i++)if(prods[i].id===id){p=prods[i];break;} if(!p)return; document.getElementById('pf-emoji').value=p.emoji||''; document.getElementById('pf-name').value=p.name; document.getElementById('pf-cat').value=p.category; document.getElementById('pf-price').value=p.price; var cleanDesc=(p.description||'').replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim(); var imgMatch=cleanDesc.match(/##IMG:([^#]+)##/); if(imgMatch){carregarPreviewEdicao(imgMatch[1].trim());cleanDesc=cleanDesc.replace(/##IMG:[^#]+##/gi,'').trim();} document.getElementById('pf-desc').value=cleanDesc; var subcatField=document.getElementById('pf-bebida-subcat'); if(subcatField&&p.description){var desc=p.description.toLowerCase();if(desc.includes('##refri##'))subcatField.value='refrigerante';else if(desc.includes('##suco-leite##'))subcatField.value='suco-leite';else if(desc.includes('##suco-agua##'))subcatField.value='suco-agua';else subcatField.value='';} togPizza();togBebida();});}else{['pf-emoji','pf-name','pf-price','pf-desc','pf-pg','pf-pgg','pf-pggg','pf-moda-price'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});var sc=document.getElementById('pf-bebida-subcat');if(sc)sc.value='';var c=document.getElementById('pf-cat');if(c)c.value='lanches';togPizza();togBebida();}b.scrollIntoView({behavior:'smooth',block:'start'}); }
+function editProd(id){ showPF(id); }
+// ===== GERENCIAMENTO DE COMBOS =====
+var editComboId = null;
+
+function buildCombosMgr() {
+  return api('GET', '/combos/all', null, true).then(function(combos) {
+    var html = '<button class="add-prod-btn" onclick="showComboForm(null)" style="background:linear-gradient(135deg,var(--r),#a00)">🔥 + Novo Combo</button>';
+
+    // Formulário
+    html += '<div id="combo-form-box" style="display:none" class="form-box">';
+    html += '<h3 id="cf-title">Novo Combo</h3>';
+    html += '<div class="frow"><div class="fg"><label>Emoji</label><input id="cf-emoji" placeholder="🍔" maxlength="4"></div><div class="fg"><label>Nome do Combo</label><input id="cf-name" placeholder="Ex: Combo Especial"></div></div>';
+    html += '<div class="fg" style="margin-bottom:12px"><label>Preço (R$)</label><input id="cf-price" type="number" step="0.50" min="0" placeholder="0.00"></div>';
+    html += '<div class="fg" style="margin-bottom:12px"><label>Descrição (opcional)</label><input id="cf-desc" placeholder="Ex: Acompanha batata e refrigerante"></div>';
+    html += '<div class="fg" style="margin-bottom:16px">';
+    html += '<label style="font-weight:800;margin-bottom:8px;display:block">📋 Itens do Combo <span style="font-weight:500;color:#999;font-size:.78rem">(um por linha)</span></label>';
+    html += '<textarea id="cf-items" rows="5" style="width:100%;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:.88rem;resize:vertical;font-family:Inter,sans-serif;outline:none" placeholder="1x Hamburguer Artesanal&#10;1x Batata Palha (200g)&#10;1x Refrigerante Lata (350ml)&#10;1x Molho Especial"></textarea>';
+    html += '<div style="font-size:.72rem;color:#999;margin-top:5px">💡 Digite cada item em uma linha separada</div>';
+    html += '</div>';
+    html += '<div class="fg" style="margin-bottom:16px">';
+    html += '<label style="display:flex;align-items:center;gap:6px">📷 Foto do Combo <span style="font-size:.72rem;color:#888;font-weight:500">(opcional)</span></label>';
+    html += '<div id="cf-img-preview-wrap" style="display:none;margin-bottom:10px;border-radius:12px;overflow:hidden;background:#f0f0f0;position:relative">';
+    html += '<img id="cf-img-preview" src="" style="width:100%;height:160px;object-fit:cover;display:block">';
+    html += '<div style="display:flex;gap:8px;padding:8px;background:rgba(0,0,0,.55);position:absolute;bottom:0;left:0;right:0">';
+    html += '<label for="cf-img-input" style="flex:1;padding:7px;background:#fff;color:#333;border:none;border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center">📷 Trocar foto</label>';
+    html += '<button type="button" onclick="removerFotoCombo()" style="flex:1;padding:7px;background:#dc2626;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer">🗑️ Remover foto</button>';
+    html += '</div></div>';
+    html += '<input type="file" id="cf-img-input" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="carregarFotoCombo(this)">';
+    html += '<label for="cf-img-input" id="cf-img-btn" style="width:100%;padding:14px;border:2px dashed #ccc;border-radius:12px;background:#fafafa;color:#666;font-weight:700;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box">';
+    html += '<span style="font-size:1.3rem">📱</span> Tirar foto ou escolher da galeria</label>';
+    html += '<div style="font-size:.72rem;color:#999;margin-top:5px;text-align:center">A foto será redimensionada automaticamente • Funciona no celular e computador</div>';
+    html += '</div>';
+    html += '<button class="fsub" onclick="saveCombo()">💾 Salvar Combo</button>';
+    html += '<button class="fcancel" onclick="closeComboForm()">Cancelar</button>';
+    html += '</div>';
+
+    // Lista de combos
+    html += '<div class="pm-grid">';
+    if (!combos.length) {
+      html += '<div style="text-align:center;padding:2rem;color:#aaa;grid-column:1/-1"><div style="font-size:3rem">🔥</div><div style="font-weight:700;margin-top:8px">Nenhum combo cadastrado</div></div>';
+    }
+    for (var i=0; i<combos.length; i++) {
+      var cb = combos[i];
+      var itens = cb.items ? cb.items.split('|').filter(function(x){return x.trim();}) : [];
+      html += '<div class="pmc" style="position:relative;opacity:'+(cb.active?'1':'0.55')+'">';
+      var cbNameSafe = cb.name.replace(/'/g,'');
+      var cbImgMatch = (cb.description||'').match(/##IMG:([^#]+)##/);
+      var cbImgUrl = cbImgMatch ? cbImgMatch[1].trim() : null;
+      html += '<button onclick="excluirComboPermanente(' + cb.id + ',\''+cbNameSafe+'\')" title="Excluir" style="position:absolute;top:6px;right:6px;width:22px;height:22px;background:#EF4444;color:#fff;border:none;border-radius:50%;font-size:.75rem;font-weight:900;cursor:pointer;padding:0;z-index:2">✕</button>';
+      if (cbImgUrl) {
+        html += '<div class="pmc-em" style="overflow:hidden;border-radius:8px;width:50px;height:50px;flex-shrink:0"><img src="'+cbImgUrl+'" style="width:100%;height:100%;object-fit:cover"></div>';
+      } else {
+        html += '<div class="pmc-em">'+(cb.emoji||'🍔')+'</div>';
+      }
+      html += '<div class="pmc-info">';
+      html += '<div class="pmc-nm">🔥 '+cb.name+(cb.active?'':' <span style="color:#EF4444;font-size:.7rem">(inativo)</span>')+'</div>';
+      html += '<div class="pmc-ct">COMBO</div>';
+      html += '<div class="pmc-pr">R$ '+parseFloat(cb.price).toFixed(2).replace('.',',')+'</div>';
+      if (itens.length) {
+        html += '<div style="font-size:.7rem;color:#888;margin-top:4px;line-height:1.6">';
+        for (var j=0; j<itens.length; j++) html += '✓ '+itens[j].trim()+'<br>';
+        html += '</div>';
+      }
+      html += '<div class="pmc-ac">';
+      html += '<button class="pmc-btn edit" onclick="showComboForm('+cb.id+')">✏️ Editar</button>';
+      html += '<button class="pmc-btn del" onclick="toggleCombo('+cb.id+')">'+(cb.active?'⏸ Desativar':'▶️ Reativar')+'</button>';
+      html += '</div></div></div>';
+    }
+    html += '</div>';
+    return html;
+  });
+}
+
+// ===== FOTO DO COMBO =====
+var cfImgBase64 = null;
+
+function carregarFotoCombo(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Selecione uma imagem!'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var maxW = 800, maxH = 600;
+      var w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      cfImgBase64 = canvas.toDataURL('image/jpeg', 0.82);
+      var preview = document.getElementById('cf-img-preview');
+      var wrap = document.getElementById('cf-img-preview-wrap');
+      var btn = document.getElementById('cf-img-btn');
+      if (preview) preview.src = cfImgBase64;
+      if (wrap) wrap.style.display = 'block';
+      if (btn) btn.style.display = 'none';
+      showToast('Foto do combo carregada!');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removerFotoCombo() {
+  if (!confirm('Remover a foto deste combo?')) return;
+  cfImgBase64 = null;
+  var preview = document.getElementById('cf-img-preview');
+  var wrap = document.getElementById('cf-img-preview-wrap');
+  var btn = document.getElementById('cf-img-btn');
+  var input = document.getElementById('cf-img-input');
+  if (preview) preview.src = '';
+  if (wrap) wrap.style.display = 'none';
+  if (btn) btn.style.display = 'flex';
+  if (input) input.value = '';
+  showToast('Foto removida! Salve para confirmar.');
+}
+
+function resetFotoCombo() {
+  cfImgBase64 = null;
+  var preview = document.getElementById('cf-img-preview');
+  var wrap = document.getElementById('cf-img-preview-wrap');
+  var btn = document.getElementById('cf-img-btn');
+  var input = document.getElementById('cf-img-input');
+  if (preview) preview.src = '';
+  if (wrap) wrap.style.display = 'none';
+  if (btn) btn.style.display = 'flex';
+  if (input) input.value = '';
+}
+
+function carregarPreviewCombo(imgBase64) {
+  if (!imgBase64) return;
+  cfImgBase64 = imgBase64;
+  var preview = document.getElementById('cf-img-preview');
+  var wrap = document.getElementById('cf-img-preview-wrap');
+  var btn = document.getElementById('cf-img-btn');
+  if (preview) preview.src = imgBase64;
+  if (wrap) wrap.style.display = 'block';
+  if (btn) btn.style.display = 'none';
+}
+// ===== FIM FOTO COMBO =====
+
+function showComboForm(id) {
+  editComboId = id;
+  var b = document.getElementById('combo-form-box');
+  if (!b) return;
+  b.style.display = 'block';
+  document.getElementById('cf-title').textContent = id ? 'Editar Combo' : 'Novo Combo';
+  resetFotoCombo();
+  if (id) {
+    api('GET', '/combos/all', null, true).then(function(combos) {
+      var cb = null;
+      for (var i=0; i<combos.length; i++) if (combos[i].id === id) { cb = combos[i]; break; }
+      if (!cb) return;
+      document.getElementById('cf-emoji').value = cb.emoji || '';
+      document.getElementById('cf-name').value = cb.name;
+      document.getElementById('cf-price').value = cb.price;
+      document.getElementById('cf-desc').value = cb.description || '';
+      // Separar foto da descrição
+      var cleanDesc = (cb.description||'').replace(/##IMG:[^#]+##/gi,'').trim();
+      document.getElementById('cf-desc').value = cleanDesc;
+      document.getElementById('cf-items').value = cb.items ? cb.items.split('|').join('\n') : '';
+      // Carregar foto se existir
+      var imgMatch = (cb.description||'').match(/##IMG:([^#]+)##/);
+      if (imgMatch) carregarPreviewCombo(imgMatch[1].trim());
+    });
+  } else {
+    ['cf-emoji','cf-name','cf-price','cf-desc','cf-items'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});
+  }
+  b.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function closeComboForm() {
+  var b = document.getElementById('combo-form-box');
+  if (b) b.style.display = 'none';
+  editComboId = null;
+  resetFotoCombo();
+}
+
+function saveCombo() {
+  var name = (document.getElementById('cf-name').value||'').trim();
+  var price = parseFloat(document.getElementById('cf-price').value)||0;
+  var emoji = (document.getElementById('cf-emoji').value||'🍔').trim();
+  var desc = (document.getElementById('cf-desc').value||'').trim();
+  var itemsRaw = (document.getElementById('cf-items').value||'').trim();
+  var items = itemsRaw.split('\n').map(function(x){return x.trim();}).filter(function(x){return x;}).join('|');
+  if (!name) { showToast('Informe o nome do combo!'); return; }
+  if (!price) { showToast('Informe o preço do combo!'); return; }
+  // Incluir foto na descrição se houver
+  desc = desc.replace(/##IMG:[^#]+##/gi,'').trim();
+  if (cfImgBase64) desc += ' ##IMG:' + cfImgBase64 + '##';
+  var payload = {name:name, price:price, emoji:emoji, description:desc, items:items};
+  var req = editComboId ? api('PUT','/combos/'+editComboId,payload,true) : api('POST','/combos',payload,true);
+  req.then(function(){
+    showToast('✅ Combo salvo!');
+    closeComboForm();
+    aTab('combos', document.querySelector('.atab[onclick*="combos"]'));
+  }).catch(function(e){showToast('Erro: '+e.message);});
+}
+
+function toggleCombo(id) {
+  api('DELETE','/combos/'+id,null,true).then(function(){
+    showToast('Combo atualizado!');
+    aTab('combos', document.querySelector('.atab[onclick*="combos"]'));
+  }).catch(function(e){showToast(e.message);});
+}
+
+function excluirComboPermanente(id, nome) {
+  if (!confirm('⚠️ EXCLUIR COMBO\n\n"'+nome+'"\n\nEssa ação não pode ser desfeita!')) return;
+  api('DELETE','/combos/'+id+'/permanent',null,true).then(function(){
+    showToast('✅ Combo excluído!');
+    aTab('combos', document.querySelector('.atab[onclick*="combos"]'));
+  }).catch(function(e){showToast(e.message);});
+}
+// ===== FIM COMBOS =====
+
+function delProd(id){ if(!confirm('Desativar/Reativar produto?'))return; api('DELETE','/products/'+id,null,true).then(function(){showToast('Produto atualizado!');aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);}); }
+
+function excluirProdutoPermanente(id, nome) {
+  if (!confirm('\u26a0\ufe0f EXCLUIR PERMANENTE\n\n"' + nome + '"\n\nEssa acao NAO pode ser desfeita!\nTem certeza?')) return;
+  api('DELETE', '/products/' + id + '/permanent', null, true)
+    .then(function() {
+      showToast('\u2705 Produto excluido permanentemente!');
+      aTab('produtos', document.querySelector('.atab[onclick*="produtos"]'));
+    })
+    .catch(function(e) { showToast('Erro: ' + e.message); });
+}
+function closePF(){ var b=document.getElementById('prod-form-box'); if(b)b.style.display='none'; editProdId=null; resetFotoForm(); }
+function saveProd(){
+  var emoji=document.getElementById('pf-emoji').value.trim()||'&#127869;';
+  var name=document.getElementById('pf-name').value.trim();
+  var category=document.getElementById('pf-cat').value;
+  var description=document.getElementById('pf-desc').value.trim();
+  
+  // Se for bebida, adicionar tag de subcategoria na descrição
+  if(category==='bebidas'){
+    var subcat=document.getElementById('pf-bebida-subcat').value;
+    // Remover tags antigas primeiro
+    description=description.replace(/##refri##|##suco-leite##|##suco-agua##/gi,'').trim();
+    // Adicionar nova tag se houver subcategoria
+    if(subcat==='refrigerante') description+=' ##refri##';
+    else if(subcat==='suco-leite') description+=' ##suco-leite##';
+    else if(subcat==='suco-agua') description+=' ##suco-agua##';
+  }
+
+  // Remover imagem antiga e adicionar nova se existir
+  description = description.replace(/##IMG:[^#]+##/gi,'').trim();
+  if(pfImgBase64) description += ' ##IMG:' + pfImgBase64 + '##';
+
+  if(!name){showToast('Informe o nome!');return;}
+
+  // MODA DO FAEL: preço único
+  if(category==='moda_fael'){
+    var modaPrice = parseFloat(document.getElementById('pf-moda-price').value)||0;
+    if(!modaPrice){showToast('Informe o preco da Moda do Fael!');return;}
+    description = description.replace(/##IMG:[^#]+##/gi,'').trim();
+    if(pfImgBase64) description += ' ##IMG:' + pfImgBase64 + '##';
+    var pm3 = editProdId!=null ? api('PUT','/products/'+editProdId,{name,category,price:modaPrice,emoji,description},true) : api('POST','/products',{name,category,price:modaPrice,emoji,description},true);
+    pm3.then(function(){showToast('Moda do Fael salva!');closePF();loadProducts();aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);});
+    return;
+  }
+
+  if(category==='pizzas'){
+    var pg=parseFloat(document.getElementById('pf-pg').value)||0;
+    var pgg=parseFloat(document.getElementById('pf-pgg').value)||0;
+    var pggg=parseFloat(document.getElementById('pf-pggg').value)||0;
+    var price=pg||pgg||pggg;
+    if(!price){showToast('Informe ao menos um preco!');return;}
+    var p = editProdId!=null ? api('PUT','/products/'+editProdId,{name,category,price,emoji,description},true) : api('POST','/products',{name,category,price,emoji,description},true);
+    p.then(function(){showToast('Pizza salva!');closePF();loadProducts();aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);});
+    return;
+  }
+  var price=parseFloat(document.getElementById('pf-price').value);
+  if(!price||price<=0){showToast('Informe um preco valido!');return;}
+  var p2 = editProdId!=null ? api('PUT','/products/'+editProdId,{name,category,price,emoji,description},true) : api('POST','/products',{name,category,price,emoji,description},true);
+  p2.then(function(){showToast('Produto salvo!');closePF();loadProducts();aTab('produtos',document.querySelector('.atab[onclick*="produtos"]'));}).catch(function(e){showToast(e.message);});
+}
+
+// ACRESCIMOS ADMIN
+function buildAcrMgr() {
+  return api('GET','/acrescimos/all',null,true).then(function(acrs) {
+    var lista = '';
+    for (var i=0; i<acrs.length; i++) {
+      var a = acrs[i];
+      lista += '<div class="pmc"><div class="pmc-em">'+(a.emoji||'+')+'</div><div class="pmc-info">';
+      lista += '<div class="pmc-nm">'+a.nome+(a.ativo?'':' <span style="color:#EF4444;font-size:.7rem">(inativo)</span>')+'</div>';
+      lista += '<div class="pmc-pr">R$ '+parseFloat(a.valor).toFixed(2).replace('.',',')+'</div>';
+      lista += '<div class="pmc-ac"><button class="pmc-btn edit" onclick="editAcrFn('+a.id+')">Editar</button><button class="pmc-btn del" onclick="delAcr('+a.id+')">'+(a.ativo?'Remover':'Reativar')+'</button></div>';
+      lista += '</div></div>';
+    }
+    return '<button class="add-prod-btn" onclick="showAcrForm(null)">+ Novo Acrescimo</button>' +
+      '<div id="acr-form-box" style="display:none" class="form-box">' +
+      '<h3 id="af-title">Novo Acrescimo</h3>' +
+      '<div class="frow"><div class="fg"><label>Emoji</label><input id="af-emoji" placeholder="&#129385;" maxlength="4"></div><div class="fg"><label>Nome</label><input id="af-nome" placeholder="Ex: Bife"></div></div>' +
+      '<div class="fg" style="margin-bottom:12px"><label>Valor (R$)</label><input id="af-valor" type="number" step="0.50" min="0" placeholder="0.00"></div>' +
+      '<button class="fsub" onclick="saveAcr()">Salvar</button><button class="fcancel" onclick="closeAcrForm()">Cancelar</button>' +
+      '</div><div class="pm-grid">'+lista+'</div>';
+  }).catch(function(e){ return '<p style="color:var(--r)">Erro: '+e.message+'</p>'; });
+}
+function showAcrForm(id){ editAcrId=id; var b=document.getElementById('acr-form-box'); if(!b)return; b.style.display='block'; document.getElementById('af-title').textContent=id?'Editar Acrescimo':'Novo Acrescimo'; if(id){api('GET','/acrescimos/all',null,true).then(function(acrs){var a=null;for(var i=0;i<acrs.length;i++)if(acrs[i].id===id){a=acrs[i];break;} if(!a)return; document.getElementById('af-emoji').value=a.emoji||''; document.getElementById('af-nome').value=a.nome; document.getElementById('af-valor').value=a.valor;});}else{['af-emoji','af-nome','af-valor'].forEach(function(f){var e=document.getElementById(f);if(e)e.value='';});} b.scrollIntoView({behavior:'smooth',block:'start'}); }
+function editAcrFn(id){ showAcrForm(id); }
+function delAcr(id){ if(!confirm('Confirmar?'))return; api('DELETE','/acrescimos/'+id,null,true).then(function(){showToast('Atualizado!');aTab('acrescimos',document.querySelector('.atab[onclick*="acrescimos"]'));}).catch(function(e){showToast(e.message);}); }
+function closeAcrForm(){ var b=document.getElementById('acr-form-box'); if(b)b.style.display='none'; editAcrId=null; }
+function saveAcr(){
+  var emoji=document.getElementById('af-emoji').value.trim()||'+';
+  var nome=document.getElementById('af-nome').value.trim();
+  var valor=parseFloat(document.getElementById('af-valor').value);
+  if(!nome){showToast('Informe o nome!');return;}
+  if(!valor||valor<=0){showToast('Informe um valor valido!');return;}
+  var p = editAcrId ? api('PUT','/acrescimos/'+editAcrId,{nome,valor,emoji},true) : api('POST','/acrescimos',{nome,valor,emoji},true);
+  p.then(function(){showToast('Acrescimo salvo!');closeAcrForm();loadAcrescimos();aTab('acrescimos',document.querySelector('.atab[onclick*="acrescimos"]'));}).catch(function(e){showToast(e.message);});
+}
+
+// FATURAMENTO
+function buildRev() {
+  return Promise.all([api('GET','/orders/stats/summary',null,true), api('GET','/orders',null,true)])
+    .then(function(results) {
+      var s=results[0], orders=results[1];
+      var days={};
+      for(var i=0;i<orders.length;i++){var o=orders[i];if(o.status!=='cancelado'){var d=(o.created_at||'').split(' ')[0];if(d)days[d]=(days[d]||0)+parseFloat(o.total);}}
+      var entries=Object.keys(days).sort();
+      if(entries.length>7)entries=entries.slice(entries.length-7);
+      var maxV=0; for(var k=0;k<entries.length;k++)if(days[entries[k]]>maxV)maxV=days[entries[k]];
+      var bars='';
+      for(var m=0;m<entries.length;m++){var pct=maxV>0?Math.round(days[entries[m]]/maxV*100):0;bars+='<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:4px"><div style="font-size:.68rem;font-weight:900">R$'+days[entries[m]].toFixed(0)+'</div><div style="background:var(--r);border-radius:4px 4px 0 0;width:100%;min-height:4px;height:'+pct+'%"></div><div style="font-size:.65rem;font-weight:800;color:#aaa">'+entries[m]+'</div></div>';}
+      return '<div class="stats" style="margin-bottom:1.2rem"><div class="sc"><div class="si">&#128176;</div><div class="sv">R$'+parseFloat(s.revenue).toFixed(0)+'</div><div class="sl">Total</div></div><div class="sc"><div class="si">&#128197;</div><div class="sv">R$'+parseFloat(s.today_revenue).toFixed(0)+'</div><div class="sl">Hoje</div></div><div class="sc"><div class="si">&#128203;</div><div class="sv">'+s.total_orders+'</div><div class="sl">Pedidos</div></div></div>' +
+        '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.2rem"><h3 style="font-family:Impact,sans-serif;font-size:1.2rem;margin-bottom:1rem">Faturamento por Dia</h3><div style="display:flex;align-items:flex-end;gap:8px;height:120px">'+(bars||'<p style="color:#aaa">Sem dados ainda</p>')+'</div></div>';
+    }).catch(function(e){ return '<p style="color:var(--r)">Erro: '+e.message+'</p>'; });
+}
+
+// CONFIG ADMIN
+var statusManualCache = 'auto';
+
+function getStatusManual(){ return statusManualCache; }
+
+function setStatusManual(status){
+  console.log('Setando status manual para:', status);
+  api('PUT', '/auth/settings/manual_status', {value:status}, true)
+    .then(function(response) {
+      console.log('Status salvo com sucesso:', response);
+      statusManualCache = status;
+      updateStatus();
+      // Forçar reload do status para garantir sincronização
+      setTimeout(function(){ loadStatusManual(); }, 500);
+      var msgs = {aberto:'✅ Lanchonete ABERTA! Pedidos liberados!', fechado:'🔴 Lanchonete FECHADA! Pedidos bloqueados!', auto:'🔄 Modo AUTOMÁTICO ativado!'};
+      showToast(msgs[status]||'OK');
+      aTab('config', document.querySelector('.atab[onclick*="config"]'));
+    })
+    .catch(function(e){ 
+      console.error('Erro completo:', e);
+      showToast('❌ Erro ao alterar status: ' + e.message);
+      console.error('Erro setStatusManual:', e);
+    });
+}
+
+function loadStatusManual(){
+  api('GET','/auth/status',null,false)
+    .then(function(data) {
+      console.log('Status recebido do servidor:', data);
+      statusManualCache = data.manual_status || 'auto';
+      console.log('Status cache atualizado:', statusManualCache);
+      updateStatus();
+    })
+    .catch(function(e){ 
+      console.log('Erro ao carregar status:', e);
+      statusManualCache = 'auto';
+      updateStatus();
+    });
+}
+function saveConfig(key, value){
+  api('PUT', '/auth/settings/'+key, {value:value}, true)
+    .then(function() {
+      if(key==='whatsapp') WA=value;
+      if(key==='pix_chave') PIX_CHAVE=value;
+      if(key==='pix_nome') PIX_NOME=value;
+      if(key==='pix_cidade') PIX_CIDADE=value;
+      showToast('Configuracao salva!');
+    })
+    .catch(function(e){ showToast('Erro: '+e.message); });
+}
+function buildCfg() {
+  return api('GET','/auth/settings',null,true)
+    .then(function(cfg) {
+      var wa = cfg.whatsapp || WA;
+      var pix = cfg.pix_chave || PIX_CHAVE;
+      var pnome = cfg.pix_nome || PIX_NOME;
+      var pcidade = cfg.pix_cidade || PIX_CIDADE;
+      var sm = getStatusManual();
+      var op = isOpen();
+      var html = '';
+      // Status manual
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.2rem">';
+      html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem">Controle de Abertura</h3>';
+      html += '<div style="background:'+(op?'#f0fdf4':'#fff5f5')+';border:2px solid '+(op?'#22c55e':'#ef4444')+';border-radius:12px;padding:1rem;text-align:center;margin-bottom:1rem">';
+      html += '<div style="font-size:2.5rem;margin-bottom:6px">'+(op?'&#128994;':'&#128308;')+'</div>';
+      html += '<div style="font-weight:900;font-size:1.1rem;color:'+(op?'#15803d':'#b91c1c')+'">'+(op?'ABERTO AGORA':'FECHADO AGORA')+'</div>';
+      html += '<div style="font-size:.78rem;color:#888;margin-top:4px">Status: '+(sm==='auto'?'Automatico por horario':sm==='aberto'?'Aberto manualmente':'Fechado manualmente')+'</div>';
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
+      html += '<button onclick="setStatusManual(\'aberto\')" style="background:#22c55e;color:#fff;border:none;padding:12px 8px;border-radius:10px;font-weight:800;font-size:.82rem;cursor:pointer;'+(sm==='aberto'?'outline:3px solid #15803d':'')+'">Abrir Agora</button>';
+      html += '<button onclick="setStatusManual(\'auto\')" style="background:#555;color:#fff;border:none;padding:12px 8px;border-radius:10px;font-weight:800;font-size:.82rem;cursor:pointer;'+(sm==='auto'?'outline:3px solid #222':'')+'">Automatico</button>';
+      html += '<button onclick="setStatusManual(\'fechado\')" style="background:#ef4444;color:#fff;border:none;padding:12px 8px;border-radius:10px;font-weight:800;font-size:.82rem;cursor:pointer;'+(sm==='fechado'?'outline:3px solid #991b1b':'')+'">Fechar Agora</button>';
+      html += '</div><div style="margin-top:10px;font-size:.75rem;color:#aaa;text-align:center">O modo Automatico segue o horario (18:30-23:45)</div></div>';
+      // Senha
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.2rem">';
+      html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem">Alterar Senha Admin</h3>';
+      html += '<div class="fg" style="margin-bottom:12px"><label>Senha atual</label><input type="password" id="pwd-old" placeholder="Senha atual"></div>';
+      html += '<div class="fg" style="margin-bottom:12px"><label>Nova senha</label><input type="password" id="pwd-new" placeholder="Minimo 4 caracteres"></div>';
+      html += '<div class="fg" style="margin-bottom:16px"><label>Confirmar nova senha</label><input type="password" id="pwd-cf" placeholder="Repita"></div>';
+      html += '<button class="fsub" onclick="changePwd()">Alterar Senha</button>';
+      html += '<div style="margin-top:1.5rem;padding-top:1.5rem;border-top:2px solid #f0f0f0">';
+      html += '<div style="font-size:.85rem;color:#666;line-height:2.1">Horarios: Seg/Qua/Qui/Sex/Sab/Dom: 18:30-23:45 | Terca: Fechado</div>';
+      html += '</div></div>';
+      // WhatsApp
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.2rem">';
+      html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem">WhatsApp da Loja</h3>';
+      html += '<div style="display:flex;gap:8px;align-items:center">';
+      html += '<input id="cfg-wa" type="tel" value="'+wa+'" style="flex:1;padding:9px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:.88rem;outline:none" placeholder="5532998204435">';
+      html += '<button onclick="saveConfig(\'whatsapp\',document.getElementById(\'cfg-wa\').value)" style="background:#25D366;color:#fff;border:none;padding:9px 16px;border-radius:10px;font-weight:800;font-size:.82rem;cursor:pointer">Salvar</button>';
+      html += '</div><div style="font-size:.72rem;color:#aaa;margin-top:4px">Com codigo do pais: 55 + DDD + numero (ex: 5532998204435)</div></div>';
+      // PIX
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.2rem">';
+      html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem">Chave PIX</h3>';
+      html += '<div style="display:flex;gap:8px;margin-bottom:8px">';
+      html += '<input id="cfg-pix" value="'+pix+'" style="flex:1;padding:9px 12px;border:2px solid #e8e8e8;border-radius:10px;font-family:monospace;font-size:.78rem;outline:none" placeholder="Chave PIX">';
+      html += '<button onclick="saveConfig(\'pix_chave\',document.getElementById(\'cfg-pix\').value)" style="background:#22c55e;color:#fff;border:none;padding:9px 16px;border-radius:10px;font-weight:800;font-size:.78rem;cursor:pointer">Salvar</button>';
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+      html += '<div><div style="font-size:.73rem;font-weight:800;color:#666;margin-bottom:3px">Nome do recebedor</div><input id="cfg-pix-nome" value="'+pnome+'" style="width:100%;padding:8px;border:2px solid #e8e8e8;border-radius:8px;font-size:.82rem;outline:none"><button onclick="saveConfig(\'pix_nome\',document.getElementById(\'cfg-pix-nome\').value)" style="margin-top:4px;background:#22c55e;color:#fff;border:none;padding:6px;border-radius:8px;font-weight:800;font-size:.72rem;cursor:pointer;width:100%">Salvar</button></div>';
+      html += '<div><div style="font-size:.73rem;font-weight:800;color:#666;margin-bottom:3px">Cidade</div><input id="cfg-pix-cidade" value="'+pcidade+'" style="width:100%;padding:8px;border:2px solid #e8e8e8;border-radius:8px;font-size:.82rem;outline:none"><button onclick="saveConfig(\'pix_cidade\',document.getElementById(\'cfg-pix-cidade\').value)" style="margin-top:4px;background:#22c55e;color:#fff;border:none;padding:6px;border-radius:8px;font-weight:800;font-size:.72rem;cursor:pointer;width:100%">Salvar</button></div>';
+      html += '</div></div>';
+      // Notificações e Impressão
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.2rem">';
+      html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem">Alertas de Pedidos</h3>';
+      html += '<div style="background:#fffbe6;border:2px solid #F7B731;border-radius:12px;padding:1rem;margin-bottom:1rem;text-align:center">';
+      html += '<div style="font-size:2rem;margin-bottom:6px">🔔</div>';
+      html += '<div style="font-size:.85rem;color:#856404;line-height:1.6">Configure como deseja ser notificado quando um novo pedido chegar</div>';
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+      html += '<div style="border:2px solid #e8e8e8;border-radius:10px;padding:1rem;text-align:center">';
+      html += '<div style="font-size:1.5rem;margin-bottom:8px">🔊</div>';
+      html += '<div style="font-weight:800;font-size:.88rem;margin-bottom:8px">Som de Notificação</div>';
+      html += '<label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer"><input type="checkbox" id="cfg-notification" '+(notificationEnabled?'checked':'')+' onchange="toggleNotification(this.checked)" style="width:18px;height:18px;cursor:pointer"><span style="font-size:.82rem;font-weight:700">'+(notificationEnabled?'Ativado':'Desativado')+'</span></label>';
+      html += '</div>';
+      html += '<div style="border:2px solid #e8e8e8;border-radius:10px;padding:1rem;text-align:center">';
+      html += '<div style="font-size:1.5rem;margin-bottom:8px">🖨️</div>';
+      html += '<div style="font-weight:800;font-size:.88rem;margin-bottom:8px">Impressão Automática</div>';
+      html += '<label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer"><input type="checkbox" id="cfg-autoprint" '+(autoPrintEnabled?'checked':'')+' onchange="toggleAutoPrint(this.checked)" style="width:18px;height:18px;cursor:pointer"><span style="font-size:.82rem;font-weight:700">'+(autoPrintEnabled?'Ativado':'Desativado')+'</span></label>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div style="margin-top:12px;font-size:.75rem;color:#888;text-align:center">O som toca e/ou a impressão acontece automaticamente quando um novo pedido é recebido</div>';
+      html += '</div>';
+      // Reset de Pedidos
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.2rem">';
+      html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem;color:#EF4444">⚠️ Zona Perigosa</h3>';
+      html += '<div style="background:#fff5f5;border:2px solid #EF4444;border-radius:12px;padding:1.2rem;margin-bottom:1rem">';
+      html += '<div style="text-align:center;margin-bottom:1rem">';
+      html += '<div style="font-size:3rem;margin-bottom:8px">🗑️</div>';
+      html += '<div style="font-weight:900;font-size:1.1rem;color:#991b1b;margin-bottom:6px">Reset de Pedidos e Faturamento</div>';
+      html += '<div style="font-size:.85rem;color:#666;line-height:1.6">Esta ação irá DELETAR PERMANENTEMENTE todos os pedidos e zerar o faturamento. Use apenas para começar um novo período do zero.</div>';
+      html += '</div>';
+      html += '<div style="background:#fff;border-radius:10px;padding:1rem;margin-bottom:1rem;border:2px solid #FEE2E2">';
+      html += '<div style="font-size:.82rem;color:#991b1b;font-weight:700;margin-bottom:8px">⚠️ Esta ação NÃO pode ser desfeita!</div>';
+      html += '<ul style="font-size:.78rem;color:#666;padding-left:1.2rem;line-height:1.8">';
+      html += '<li>Todos os pedidos serão deletados</li>';
+      html += '<li>Histórico de faturamento será zerado</li>';
+      html += '<li>Contadores voltam para #001</li>';
+      html += '<li>Estatísticas serão perdidas</li>';
+      html += '</ul>';
+      html += '</div>';
+      html += '<div style="display:flex;gap:8px;align-items:center">';
+      html += '<input type="text" id="confirm-reset" placeholder="Digite RESETAR para confirmar" style="flex:1;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:.88rem;outline:none;text-transform:uppercase">';
+      html += '<button onclick="resetAllOrders()" style="background:#EF4444;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:900;font-size:.88rem;cursor:pointer;white-space:nowrap">RESETAR TUDO</button>';
+      html += '</div>';
+      html += '<div style="margin-top:8px;font-size:.72rem;color:#888;text-align:center">Digite exatamente "RESETAR" (sem aspas) e clique no botão</div>';
+      html += '</div></div>';
+      // Sair
+      html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem"><button style="background:#EF4444;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-weight:800;font-size:.85rem;cursor:pointer" onclick="logout()">Sair do Admin</button></div>';
+      return html;
+    })
+    .catch(function(e){ return '<p style="color:var(--r)">Erro: '+e.message+'</p>'; });
+}
+
+function changePwd(){
+  var old=document.getElementById('pwd-old').value;
+  var nw=document.getElementById('pwd-new').value;
+  var cf=document.getElementById('pwd-cf').value;
+  if(nw.length<4){showToast('Minimo 4 caracteres!');return;}
+  if(nw!==cf){showToast('Senhas nao coincidem!');return;}
+  api('POST','/auth/change-password',{current_password:old,new_password:nw},true)
+    .then(function(){showToast('Senha alterada!');['pwd-old','pwd-new','pwd-cf'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});})
+    .catch(function(e){showToast('Erro: '+e.message);});
+}
+
+function toggleNotification(enabled) {
+  notificationEnabled = enabled;
+  localStorage.setItem('fael_notification', enabled ? 'true' : 'false');
+  showToast(enabled ? 'Som de notificação ATIVADO! 🔊' : 'Som de notificação DESATIVADO');
+  var label = document.querySelector('#cfg-notification + span');
+  if (label) label.textContent = enabled ? 'Ativado' : 'Desativado';
+}
+
+function toggleAutoPrint(enabled) {
+  autoPrintEnabled = enabled;
+  localStorage.setItem('fael_autoprint', enabled ? 'true' : 'false');
+  showToast(enabled ? 'Impressão automática ATIVADA! 🖨️' : 'Impressão automática DESATIVADA');
+  var label = document.querySelector('#cfg-autoprint + span');
+  if (label) label.textContent = enabled ? 'Ativado' : 'Desativado';
+}
+
+function resetAllOrders() {
+  var confirmText = document.getElementById('confirm-reset');
+  if (!confirmText || confirmText.value.toUpperCase() !== 'RESETAR') {
+    showToast('Digite RESETAR para confirmar!');
+    return;
+  }
+  
+  if (!confirm('TEM CERTEZA ABSOLUTA? Esta ação é IRREVERSÍVEL!\n\n- Todos os pedidos serão deletados\n- Faturamento será zerado\n- Histórico será perdido\n\nDeseja continuar?')) {
+    return;
+  }
+  
+  api('DELETE', '/orders/reset-all', null, true)
+    .then(function() {
+      confirmText.value = '';
+      showToast('✅ Todos os pedidos e faturamento foram resetados!');
+      loadAdmStats();
+      loadAdmContent(curATab);
+    })
+    .catch(function(e) {
+      if (e.message && (e.message.includes('Token') || e.message.includes('token') || e.message.includes('401') || e.message.includes('Unauthorized'))) {
+        showToast('⚠️ Sessão expirou! Faça login novamente.');
+        logout();
+      } else {
+        showToast('Erro ao resetar: ' + e.message);
+      }
+    });
+}
+
+function logout(){ adminToken=null; localStorage.removeItem('fael_token'); showPage('cardapio'); showToast('Saiu do Admin'); }
+
+// GERENCIAMENTO
+var curGTab = 'faturamento';
+
+function openGerenciamento() {
+  if (gerenciamentoToken) { showPage('gerenciamento'); loadGerenciamentoStats(); loadGerenciamentoContent(curGTab); return; }
+  document.getElementById('login-gerenciamento-screen').style.display = 'flex';
+  document.getElementById('login-gerenciamento-pwd').value = '';
+  document.getElementById('login-gerenciamento-err').style.display = 'none';
+  setTimeout(function(){ document.getElementById('login-gerenciamento-pwd').focus(); }, 100);
+}
+
+function doLoginGerenciamento() {
+  var pwd = document.getElementById('login-gerenciamento-pwd').value;
+  
+  api('POST', '/auth/login-gerenciamento', {password: pwd})
+    .then(function(r) {
+      gerenciamentoToken = r.token;
+      localStorage.setItem('fael_gerenciamento_token', gerenciamentoToken);
+      document.getElementById('login-gerenciamento-screen').style.display = 'none';
+      showPage('gerenciamento');
+      loadGerenciamentoStats();
+      loadGerenciamentoContent(curGTab);
+    })
+    .catch(function() {
+      document.getElementById('login-gerenciamento-err').style.display = 'block';
+      document.getElementById('login-gerenciamento-pwd').value = '';
+    });
+}
+
+function gTab(tab, el) {
+  curGTab = tab;
+  var tabs = document.querySelectorAll('#page-gerenciamento .atab');
+  for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  loadGerenciamentoContent(tab);
+}
+
+function loadGerenciamentoStats() {
+  if (!gerenciamentoToken) return;
+  
+  // Usar rota específica do gerenciamento com autenticação
+  fetch('/api/gerenciamento/stats', {
+    headers: { 'Authorization': 'Bearer ' + gerenciamentoToken }
+  })
+  .then(function(res) { 
+    if (res.status === 401) {
+      gerenciamentoToken = null;
+      localStorage.removeItem('fael_gerenciamento_token');
+      showPage('cardapio');
+      showToast('Sessão expirada. Faça login novamente.');
+      throw new Error('Token expirado');
+    }
+    return res.json(); 
+  })
+  .then(function(orders) {
+    var total = 0;
+    var hoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    var hojeTotal = 0;
+    
+    for (var i=0; i<orders.length; i++) {
+      var orderTotal = parseFloat(orders[i].total);
+      total += orderTotal;
+      
+      if (orders[i].order_date === hoje) {
+        hojeTotal += orderTotal;
+      }
+    }
+    
+    var html = '<div class="scard"><div class="sc-l">TOTAL GERAL</div><div class="sc-v">R$ ' + total.toFixed(2).replace('.',',') + '</div></div>';
+    html += '<div class="scard"><div class="sc-l">HOJE</div><div class="sc-v">R$ ' + hojeTotal.toFixed(2).replace('.',',') + '</div></div>';
+    document.getElementById('gerenciamento-stats').innerHTML = html;
+  })
+  .catch(function(e) {
+    if (e.message !== 'Token expirado') {
+      console.error('Erro ao carregar stats:', e);
+    }
+  });
+}
+
+function loadGerenciamentoContent(tab) {
+  if (!gerenciamentoToken) return;
+  var el = document.getElementById('gerenciamento-content');
+  if (tab === 'faturamento') {
+    buildRev().then(function(h){ el.innerHTML = h; });
+  } else if (tab === 'relatorios') {
+    el.innerHTML = '<div style="padding:2rem;text-align:center"><h3>Relatórios em desenvolvimento</h3></div>';
+  } else if (tab === 'config') {
+    buildGerenciamentoConfig().then(function(h){ el.innerHTML = h; });
+  }
+}
+
+function buildGerenciamentoConfig() {
+  return new Promise(function(resolve) {
+    var html = '<div style="max-width:600px;margin:0 auto">';
+    
+    // Alterar Senha
+    html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem;margin-bottom:1.5rem">';
+    html += '<h3 style="font-family:Impact,sans-serif;font-size:1.4rem;margin-bottom:1rem">&#128274; Alterar Senha do Gerenciamento</h3>';
+    html += '<div style="margin-bottom:1rem">';
+    html += '<label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem">Senha Atual</label>';
+    html += '<input type="password" id="gerente-old-pwd" placeholder="Digite a senha atual" style="width:100%;padding:10px;border:2px solid #e8e8e8;border-radius:8px;font-size:.9rem">';
+    html += '</div>';
+    html += '<div style="margin-bottom:1rem">';
+    html += '<label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem">Nova Senha</label>';
+    html += '<input type="password" id="gerente-new-pwd" placeholder="Digite a nova senha" style="width:100%;padding:10px;border:2px solid #e8e8e8;border-radius:8px;font-size:.9rem">';
+    html += '</div>';
+    html += '<div style="margin-bottom:1rem">';
+    html += '<label style="display:block;font-weight:700;margin-bottom:5px;font-size:.85rem">Confirmar Nova Senha</label>';
+    html += '<input type="password" id="gerente-confirm-pwd" placeholder="Confirme a nova senha" style="width:100%;padding:10px;border:2px solid #e8e8e8;border-radius:8px;font-size:.9rem">';
+    html += '</div>';
+    html += '<button onclick="changeGerenteSenha()" style="width:100%;background:var(--r);color:#fff;border:none;padding:12px;border-radius:10px;font-family:Impact,sans-serif;font-size:1.1rem;cursor:pointer">ALTERAR SENHA</button>';
+    html += '</div>';
+    
+    // Botão Sair
+    html += '<div style="background:#fff;border-radius:14px;box-shadow:var(--sh);padding:1.5rem">';
+    html += '<button onclick="logoutGerenciamento()" style="width:100%;background:#666;color:#fff;border:none;padding:12px;border-radius:10px;font-family:Impact,sans-serif;font-size:1.1rem;cursor:pointer">&#128682; SAIR DO GERENCIAMENTO</button>';
+    html += '</div>';
+    
+    html += '</div>';
+    resolve(html);
+  });
+}
+
+function logoutGerenciamento() {
+  gerenciamentoToken = null;
+  localStorage.removeItem('fael_gerenciamento_token');
+  showPage('cardapio');
+  showToast('Saiu do Gerenciamento');
+}
+
+function changeGerenteSenha() {
+  var oldPwd = document.getElementById('gerente-old-pwd').value;
+  var newPwd = document.getElementById('gerente-new-pwd').value;
+  var confirmPwd = document.getElementById('gerente-confirm-pwd').value;
+  
+  if (!oldPwd || !newPwd || !confirmPwd) {
+    showToast('⚠️ Preencha todos os campos!');
+    return;
+  }
+  
+  // Verificar senha atual
+  var senhaAtual = localStorage.getItem('fael_gerente_senha') || 'gerente123';
+  if (oldPwd !== senhaAtual) {
+    showToast('❌ Senha atual incorreta!');
+    document.getElementById('gerente-old-pwd').value = '';
+    return;
+  }
+  
+  // Validar nova senha
+  if (newPwd.length < 6) {
+    showToast('⚠️ Nova senha deve ter no mínimo 6 caracteres!');
+    return;
+  }
+  
+  if (newPwd !== confirmPwd) {
+    showToast('❌ As senhas não conferem!');
+    document.getElementById('gerente-confirm-pwd').value = '';
+    return;
+  }
+  
+  // Salvar nova senha
+  localStorage.setItem('fael_gerente_senha', newPwd);
+  
+  // Limpar campos
+  document.getElementById('gerente-old-pwd').value = '';
+  document.getElementById('gerente-new-pwd').value = '';
+  document.getElementById('gerente-confirm-pwd').value = '';
+  
+  showToast('✅ Senha alterada com sucesso!');
+}
+
+function showPage(pg) {
+  var pages = document.querySelectorAll('.page');
+  for (var i=0; i<pages.length; i++) pages[i].classList.remove('active');
+  var navBtns = document.querySelectorAll('nav button');
+  for (var j=0; j<navBtns.length; j++) navBtns[j].classList.remove('active');
+  document.getElementById('page-'+pg).classList.add('active');
+  var m = {cardapio:0, carrinho:1, entregas:2, admin:3};
+  if (m[pg]!==undefined && navBtns[m[pg]]) navBtns[m[pg]].classList.add('active');
+  if (pg==='carrinho') renderCart();
+  if (pg==='admin') { renderAdmin(); if (navBtns[3]) navBtns[3].classList.add('active'); }
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+// INIT
+loadProducts();
+loadAcrescimos();
+loadConfigs();
+loadStatusManual();
+updateStatus();
+
+// Função para atualizar timestamp
+function updateAdminTimestamp() {
+  var now = new Date();
+  var hours = String(now.getHours()).padStart(2, '0');
+  var minutes = String(now.getMinutes()).padStart(2, '0');
+  var seconds = String(now.getSeconds()).padStart(2, '0');
+  var el = document.getElementById('admin-last-update');
+  if (el) {
+    el.innerHTML = '🔄 Atualizado às ' + hours + ':' + minutes + ':' + seconds;
+    // Animar brevemente
+    el.style.color = '#22c55e';
+    setTimeout(function() { el.style.color = '#888'; }, 1000);
+  }
+}
+
+setInterval(function(){ 
+  loadStatusManual();
+  if(adminToken && document.getElementById('page-admin').classList.contains('active')) {
+    // Atualizar SOMENTE se estiver na aba Pendentes
+    if (curATab === 'pend') {
+      loadAdmStats();
+      loadAdmContent('pend');
+      updateAdminTimestamp();
+    }
+  } else if (adminToken) {
+    checkNewOrders();
+  }
+}, 30000); // A cada 30 segundos
+</script>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+
+    <!-- Logo e descrição -->
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <div class="footer-logo-icon">🍔</div>
+        <div>
+          <div class="footer-logo-name">FAEL TOP <span>LANCHES</span></div>
+          <div class="footer-logo-sub">& Pizzaria • Cataguases - MG</div>
+        </div>
+      </div>
+      <p class="footer-desc">Sabor de verdade, do jeito que você gosta! Lanches artesanais, pizzas irresistíveis e muito mais, entregues com amor na sua porta.</p>
+      <div class="footer-stars">★ ★ ★ ★ ★ <span>5.0 no Google</span></div>
+    </div>
+
+    <!-- Links rápidos -->
+    <div class="footer-col">
+      <div class="footer-col-title">Cardápio</div>
+      <ul class="footer-links">
+        <li onclick="showPage('cardapio');filterCat('lanches',null)">🍔 Lanches</li>
+        <li onclick="showPage('cardapio');filterCat('pizzas_tam',null)">🍕 Pizzas</li>
+        <li onclick="showPage('cardapio');filterCat('moda_fael',null)">👑 Moda do Fael</li>
+        <li onclick="showPage('cardapio');filterCat('bebidas',null)">🥤 Bebidas</li>
+        <li onclick="showPage('cardapio');filterCat('porcoes',null)">🍟 Porções</li>
+      </ul>
+    </div>
+
+    <!-- Contato -->
+    <div class="footer-col">
+      <div class="footer-col-title">Fale Conosco</div>
+      <ul class="footer-links">
+        <li onclick="window.open('https://wa.me/5532998204435','_blank')">📱 (32) 99820-4435</li>
+        <li onclick="window.open('https://instagram.com/faeltoplanches','_blank')">📸 @faeltoplanches</li>
+        <li onclick="showPage('entregas')">🛵 Ver zonas de entrega</li>
+        <li onclick="showPage('carrinho')">🛒 Meu carrinho</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Divisor -->
+  <div class="footer-divider"></div>
+
+  <!-- Bottom bar -->
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2024-2026 Fael Top Lanches e Pizzaria. Todos os direitos reservados.</div>
+    <div class="footer-dev">
+      Desenvolvido e criado por <strong>BRUNO OLIVEIRA</strong> — Web Developer & Designer
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
