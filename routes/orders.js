@@ -38,6 +38,18 @@ router.get('/', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// GET novos pedidos desde um timestamp (para notificação em tempo real)
+router.get('/new-since/:ts', requireAdmin, async (req, res) => {
+  try {
+    const ts = new Date(parseInt(req.params.ts));
+    const result = await pool.query(
+      "SELECT id, client_name, total FROM orders WHERE created_at > $1 AND status = 'pendente' ORDER BY created_at ASC",
+      [ts]
+    );
+    res.json(result.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // GET single order
 router.get('/:id', async (req, res) => {
   try {

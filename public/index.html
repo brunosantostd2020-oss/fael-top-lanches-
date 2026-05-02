@@ -909,7 +909,7 @@ var curDel = 'entrega', curPay = '', curATab = 'todos';
 var editProdId = null, editAcrId = null;
 var taxaAtual = 0, bairroOk = true;
 var produtoParaAdicionar = null, acrSelecionados = [];
-var lastOrderCheck = 0;
+var lastOrderCheck = 0; // será definido como Date.now() no primeiro check
 var notificationEnabled = localStorage.getItem('fael_notification') !== 'false';
 var autoPrintEnabled = localStorage.getItem('fael_autoprint') !== 'false';
 
@@ -2131,44 +2131,70 @@ function loadAdmStats() {
 
 function checkNewOrders() {
   if (!adminToken) return;
-  api('GET', '/orders?status=pendente&limit=1', null, true)
-    .then(function(orders) {
-      if (orders.length > 0) {
-        var latestOrderId = orders[0].id;
-        if (lastOrderCheck > 0 && latestOrderId > lastOrderCheck) {
-          playNotificationSound();
-          if (autoPrintEnabled) {
-            setTimeout(function(){ printOrd(latestOrderId); }, 500);
+  // Inicializa com timestamp atual na primeira chamada
+  if (lastOrderCheck === 0) {
+    lastOrderCheck = Date.now();
+    return;
+  }
+  api('GET', '/orders/new-since/' + lastOrderCheck, null, true)
+    .then(function(newOrders) {
+      if (newOrders && newOrders.length > 0) {
+        // Atualiza timestamp para agora
+        lastOrderCheck = Date.now();
+        // Toca som e mostra notificação para cada novo pedido
+        playNotificationSound(newOrders.length);
+        if (autoPrintEnabled) {
+          for (var i = 0; i < newOrders.length; i++) {
+            (function(ordId){ setTimeout(function(){ printOrd(ordId); }, 600 * (i+1)); })(newOrders[i].id);
           }
         }
-        lastOrderCheck = Math.max(lastOrderCheck, latestOrderId);
+        // Atualiza painel se estiver aberto
+        if (document.getElementById('page-admin').classList.contains('active')) {
+          if (curATab === 'pend' || curATab === 'todos') {
+            loadAdmStats();
+            loadAdmContent(curATab);
+            updateAdminTimestamp();
+          } else {
+            loadAdmStats();
+          }
+        }
+      } else {
+        // Atualiza timestamp mesmo sem pedidos novos
+        lastOrderCheck = Date.now();
       }
     })
     .catch(function(e) { console.log('Erro ao verificar pedidos:', e); });
 }
 
-function playNotificationSound() {
-  if (!notificationEnabled) return;
+function playNotificationSound(count) {
+  var n = count || 1;
+  var msg = n > 1 ? '🔔 ' + n + ' NOVOS PEDIDOS!' : '🔔 NOVO PEDIDO RECEBIDO!';
   
+  // Notificação visual persistente (não some em 2.8s, fica 6s)
+  var t = document.getElementById('toast');
+  if (t) {
+    t.textContent = msg;
+    t.classList.add('show');
+    t.style.background = '#d40000';
+    t.style.fontSize = '1rem';
+    t.style.padding = '14px 22px';
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(function(){
+      t.classList.remove('show');
+      t.style.background = '';
+      t.style.fontSize = '';
+      t.style.padding = '';
+    }, 6000);
+  }
+
+  if (!notificationEnabled) return;
   try {
-    // Tocar arquivo de áudio personalizado
     var audio = new Audio('/notification.mp3');
-    audio.volume = 0.8; // 80% do volume máximo
-    
-    // Tentar tocar o áudio
-    audio.play().catch(function(error) {
-      console.log('Erro ao tocar áudio personalizado:', error);
-      // Fallback: tocar som sintetizado se o arquivo não existir
-      playSynthSound();
-    });
-    
+    audio.volume = 1.0;
+    audio.play().catch(function() { playSynthSound(); });
   } catch(e) {
-    console.log('Erro ao tocar som:', e);
-    // Fallback para som sintetizado
     playSynthSound();
   }
-  
-  showToast('🔔 NOVO PEDIDO RECEBIDO!');
 }
 
 // Função de fallback com som sintetizado (caso o arquivo MP3 não exista)
@@ -3438,20 +3464,10 @@ setInterval(function(){
   loadStatusManual();
 }, 30000);
 
-// Polling rápido: verificação de novos pedidos a cada 3s quando admin logado
+// Polling rápido: verifica novos pedidos a cada 3s quando admin logado
 setInterval(function(){
   if (!adminToken) return;
-  if (document.getElementById('page-admin').classList.contains('active')) {
-    if (curATab === 'pend') {
-      loadAdmStats();
-      loadAdmContent('pend');
-      updateAdminTimestamp();
-    } else {
-      checkNewOrders();
-    }
-  } else {
-    checkNewOrders();
-  }
+  checkNewOrders();
 }, 3000); // A cada 3 segundos — notificação quase imediata
 </script>
 
