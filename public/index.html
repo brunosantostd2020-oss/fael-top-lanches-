@@ -2399,102 +2399,98 @@ function printOrd(id) {
   var COLS = 28;
 
   function separador() {
-    return '<div style="font-weight:900;letter-spacing:0px">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</div>';
+    return '<div>----------------------------</div>';
   }
   function separadorFino() {
-    return '<div style="border-top:2px solid #000;margin:2px 0"></div>';
+    return '<div style="border-top:1px solid #000;margin:2px 0"></div>';
   }
-  function row(esq, dir, bold) {
+  function row(esq, dir) {
     var espaco = COLS - esq.length - dir.length;
-    var st = bold ? 'font-weight:900;' : '';
     if (espaco >= 1) {
-      return '<div style="' + st + '">' + esq + Array(espaco+1).join(' ') + dir + '</div>';
+      return '<div>' + esq + Array(espaco+1).join(' ') + dir + '</div>';
     }
-    return '<div style="' + st + '">' + esq + '</div>' +
-           '<div style="text-align:right;' + st + '">' + dir + '</div>';
+    return '<div>' + esq + '</div><div style="text-align:right">' + dir + '</div>';
   }
-  function wrap(txt, bold) {
-    var st = bold ? 'font-weight:900;' : '';
+  function wrap(txt) {
     var out = '';
     while (txt.length > COLS) {
-      out += '<div style="' + st + '">' + txt.substring(0, COLS) + '</div>';
+      out += '<div>' + txt.substring(0, COLS) + '</div>';
       txt = txt.substring(COLS);
     }
-    if (txt.length) out += '<div style="' + st + '">' + txt + '</div>';
+    if (txt.length) out += '<div>' + txt + '</div>';
     return out;
-  }
-  function bold2(txt, size, center) {
-    var align = center ? 'text-align:center;' : '';
-    var fs = size ? 'font-size:' + size + ';' : '';
-    return '<div style="' + align + fs + 'font-weight:900;' +
-           'text-shadow:0.3px 0 0 #000,-0.3px 0 0 #000,0 0.3px 0 #000;' +
-           'letter-spacing:0.2px">' + txt + '</div>';
   }
 
   var BASE =
     "font-family:'Courier New',Courier,monospace;" +
     "width:48mm;max-width:48mm;" +
-    "font-size:7.5pt;color:#000;font-weight:900;" +
+    "font-size:8pt;color:#000;font-weight:700;" +
     "line-height:1.45;" +
     "-webkit-print-color-adjust:exact !important;" +
     "print-color-adjust:exact !important;" +
     "color-adjust:exact !important;" +
     "box-sizing:border-box;padding:0;margin:0;" +
-    "word-break:break-all;overflow:hidden;" +
-    "text-shadow:0.3px 0 0 #000,-0.3px 0 0 #000";
+    "word-break:break-all;overflow:hidden";
 
   var html = '<div style="' + BASE + '">';
-  html += '<div style="text-align:center;margin-bottom:1px">';
-  html += bold2('FAEL TOP LANCHES', '11pt', true);
-  html += bold2('& Pizzaria - Cataguases MG', '7.5pt', true);
-  html += bold2('Tel: (32) 99820-4435', '7.5pt', true);
+
+  // Cabeçalho
+  html += '<div style="text-align:center;margin-bottom:2px">';
+  html += '<div style="font-size:10pt;font-weight:900">FAEL TOP LANCHES</div>';
+  html += '<div>& Pizzaria - Cataguases MG</div>';
+  html += '<div>Tel: (32) 99820-4435</div>';
   html += '</div>';
   html += separador();
 
-  html += bold2('PEDIDO #' + o.id, null, false);
-  html += '<div style="font-weight:900">' + (o.created_at||'') + '</div>';
+  // Pedido
+  html += '<div style="font-weight:900">PEDIDO #' + o.id + '</div>';
+  html += '<div>' + (o.created_at||'') + '</div>';
   html += separador();
 
-  html += wrap('CLIENTE: ' + o.client_name, true);
-  html += wrap('TEL: ' + o.client_phone, true);
+  // Cliente
+  html += wrap('CLIENTE: ' + o.client_name);
+  html += wrap('TEL: ' + o.client_phone);
   if (o.delivery_type === 'entrega' && o.address) {
-    html += bold2('ENDERECO:', null, false);
-    html += wrap(o.address, true);
-    if (o.complement) html += wrap(o.complement, true);
-    html += bold2('TIPO: Entrega', null, false);
+    html += '<div style="font-weight:900">ENDERECO:</div>';
+    html += wrap(o.address);
+    if (o.complement) html += wrap(o.complement);
+    html += '<div>TIPO: Entrega</div>';
   } else {
-    html += bold2('TIPO: Retirada no local', null, false);
+    html += '<div>TIPO: Retirada no local</div>';
   }
   html += separador();
 
-  html += bold2('ITENS DO PEDIDO:', null, false);
+  // Itens
+  html += '<div style="font-weight:900">ITENS DO PEDIDO:</div>';
   for (var i = 0; i < items.length; i++) {
     var it = items[i];
     var nome = it.quantity + 'x ' + it.product_name;
     var val  = 'R$' + parseFloat(it.subtotal).toFixed(2).replace('.', ',');
-    html += row(nome, val, true);
+    html += row(nome, val);
   }
   html += separador();
 
+  // Total
   if (o.delivery_fee && parseFloat(o.delivery_fee) > 0) {
-    html += row('Subtotal', 'R$' + parseFloat(o.total - o.delivery_fee).toFixed(2).replace('.', ','), true);
-    html += row('Taxa entrega', 'R$' + parseFloat(o.delivery_fee).toFixed(2).replace('.', ','), true);
+    html += row('Subtotal', 'R$' + parseFloat(o.total - o.delivery_fee).toFixed(2).replace('.', ','));
+    html += row('Taxa entrega', 'R$' + parseFloat(o.delivery_fee).toFixed(2).replace('.', ','));
     html += separadorFino();
   }
-  html += row('TOTAL', 'R$' + parseFloat(o.total).toFixed(2).replace('.', ','), true);
+  html += '<div style="font-weight:900">' + row('TOTAL', 'R$' + parseFloat(o.total).toFixed(2).replace('.', ',')) + '</div>';
   html += separadorFino();
-  html += row('PAGAMENTO:', PM[o.payment] || o.payment, true);
+  html += row('PAGAMENTO:', PM[o.payment] || o.payment);
   if (o.change_for && parseFloat(o.change_for) > 0) {
-    html += row('TROCO PARA:', 'R$' + parseFloat(o.change_for).toFixed(2).replace('.', ','), true);
+    html += row('TROCO PARA:', 'R$' + parseFloat(o.change_for).toFixed(2).replace('.', ','));
   }
   if (o.observations) {
-    html += bold2('OBS:', null, false);
-    html += wrap(o.observations, true);
+    html += '<div style="font-weight:900">OBS:</div>';
+    html += wrap(o.observations);
   }
 
+  // Rodapé
   html += separador();
-  html += bold2('Obrigado pela preferencia!', '7.5pt', true);
-  html += bold2('Volte sempre! :)', '7.5pt', true);
+  html += '<div style="text-align:center">Obrigado pela preferencia!</div>';
+  html += '<div style="text-align:center">Volte sempre! :)</div>';
   html += '<div style="margin-bottom:10mm"></div>';
   html += '</div>';
 
@@ -2504,7 +2500,6 @@ function printOrd(id) {
   window.print();
   setTimeout(function(){ pa.style.display = 'none'; }, 1500);
 }
-
 // PRODUTOS ADMIN
 function buildPM() {
   return api('GET','/products/all',null,true).then(function(prods) {
