@@ -653,7 +653,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
             <div class="srow" id="taxa-row" style="color:#22c55e;font-weight:800"><span>Entrega</span><span id="taxa-display">GRATIS</span></div>
             <div class="stot"><span>TOTAL</span><span id="tot-val">R$ 0,00</span></div>
           </div>
-          <div id="bebida-aviso" style="display:none;background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:12px 14px;margin-bottom:12px;text-align:center"><div style="font-size:1.2rem;margin-bottom:4px">🚫🥤</div><div style="font-weight:800;color:#856404;font-size:.88rem;margin-bottom:4px">Não entregamos somente bebidas</div><div style="color:#6d5103;font-size:.78rem">Adicione um lanche, pizza ou combo ao seu pedido para continuar.</div></div><button class="wabtn" id="wa-btn" onclick="sendWA()">ENVIAR VIA WHATSAPP</button>
+          <div id="bebida-aviso" style="display:none;background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:12px 14px;margin-bottom:12px;text-align:center"><div style="font-size:1.2rem;margin-bottom:4px">🚫🥤</div><div style="font-weight:800;color:#856404;font-size:.88rem;margin-bottom:4px">Pedido mínimo de 2 bebidas</div><div style="color:#6d5103;font-size:.78rem">Adicione mais 1 bebida, ou inclua um lanche/pizza/combo para continuar.</div></div><button class="wabtn" id="wa-btn" onclick="sendWA()">ENVIAR VIA WHATSAPP</button>
         </div>
       </div>
     </div>
@@ -1792,19 +1792,24 @@ function calcSum() {
 }
 
 function verificarSomenteBebidas() {
+  var av = document.getElementById('bebida-aviso');
+  var btn = document.getElementById('wa-btn');
   if (!cart.length) {
-    var av = document.getElementById('bebida-aviso');
-    var btn = document.getElementById('wa-btn');
     if (av) av.style.display = 'none';
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     return;
   }
-  var somenteBebidas = cart.every(function(item) {
-    return item.category === 'bebidas';
-  });
-  var av = document.getElementById('bebida-aviso');
-  var btn = document.getElementById('wa-btn');
-  if (somenteBebidas) {
+  var somenteBebidas = cart.every(function(item) { return item.category === 'bebidas'; });
+  if (!somenteBebidas) {
+    if (av) av.style.display = 'none';
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    return;
+  }
+  // Só bebidas no carrinho: contar total de unidades
+  var totalUnidades = 0;
+  for (var i = 0; i < cart.length; i++) totalUnidades += cart[i].qty;
+  var bloquear = totalUnidades < 2;
+  if (bloquear) {
     if (av) av.style.display = 'block';
     if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
   } else {
@@ -1987,7 +1992,11 @@ function getForm() {
 function valid() {
   if (!cart.length) { showToast('Carrinho vazio!'); return false; }
   var somenteBebidas = cart.length > 0 && cart.every(function(item) { return item.category === 'bebidas'; });
-  if (somenteBebidas) { showToast('Adicione um lanche ou pizza ao pedido! Não entregamos somente bebidas.'); return false; }
+  if (somenteBebidas) {
+    var totalUnid = 0;
+    for (var ii = 0; ii < cart.length; ii++) totalUnid += cart[ii].qty;
+    if (totalUnid < 2) { showToast('Pedido mínimo: 2 bebidas ou adicione um lanche/pizza!'); return false; }
+  }
   var d = getForm();
   if (!d.name) { showToast('Informe seu nome!'); return false; }
   if (!d.phone) { showToast('Informe seu telefone!'); return false; }
