@@ -2098,6 +2098,10 @@ function doLogin() {
       localStorage.setItem('fael_token', adminToken);
       document.getElementById('login-screen').style.display = 'none';
       loadConfigs();
+      // Pré-carregar o som de notificação
+      window._notifAudio = new Audio('/notification.mp3');
+      window._notifAudio.volume = 1.0;
+      window._notifAudio.load();
       showPage('admin');
     })
     .catch(function() {
@@ -2168,36 +2172,41 @@ function checkNewOrders() {
 
 function playNotificationSound(count) {
   var n = count || 1;
-  var msg = n > 1 ? '🔔 ' + n + ' NOVOS PEDIDOS!' : '🔔 NOVO PEDIDO RECEBIDO!';
-  
-  // Notificação visual persistente (não some em 2.8s, fica 6s)
+  var msg = n > 1 ? '🔔 ' + n + ' NOVOS PEDIDOS!' : '🔔 NOVO PEDIDO!';
+
+  // Toast grande e vermelho por 8 segundos
   var t = document.getElementById('toast');
   if (t) {
     t.textContent = msg;
+    t.style.background = '#c00';
+    t.style.color = '#fff';
+    t.style.fontSize = '1.1rem';
+    t.style.fontWeight = '900';
+    t.style.padding = '16px 28px';
+    t.style.borderRadius = '14px';
     t.classList.add('show');
-    t.style.background = '#d40000';
-    t.style.fontSize = '1rem';
-    t.style.padding = '14px 22px';
     clearTimeout(window._toastTimer);
     window._toastTimer = setTimeout(function(){
       t.classList.remove('show');
-      t.style.background = '';
-      t.style.fontSize = '';
-      t.style.padding = '';
-    }, 6000);
+      t.style.cssText = '';
+    }, 8000);
   }
 
-  if (!notificationEnabled) return;
+  // Som — usa pré-carregado se disponível, senão sintetizado
   try {
-    var audio = new Audio('/notification.mp3');
-    audio.volume = 1.0;
-    audio.play().catch(function() { playSynthSound(); });
+    if (window._notifAudio && window._notifAudio.readyState >= 2) {
+      window._notifAudio.currentTime = 0;
+      window._notifAudio.play().catch(function(){ playSynthSound(); });
+    } else {
+      var audio = new Audio('/notification.mp3');
+      audio.volume = 1.0;
+      audio.play().catch(function(){ playSynthSound(); });
+    }
   } catch(e) {
     playSynthSound();
   }
 }
 
-// Função de fallback com som sintetizado (caso o arquivo MP3 não exista)
 function playSynthSound() {
   try {
     var audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -3438,6 +3447,12 @@ function showToast(msg) {
 }
 
 // INIT
+// Pré-carregar som se já estiver logado
+if (adminToken) {
+  window._notifAudio = new Audio('/notification.mp3');
+  window._notifAudio.volume = 1.0;
+  window._notifAudio.load();
+}
 loadProducts();
 loadAcrescimos();
 loadConfigs();
