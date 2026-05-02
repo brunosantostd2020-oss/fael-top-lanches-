@@ -246,13 +246,20 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   #print-area{
     position:fixed;left:0;top:0;margin:0;padding:0;
     width:58mm !important;
+    max-width:58mm !important;
     background:white !important;
+    overflow:visible !important;
   }
   @page{
-    margin:0mm 0mm 0mm 0mm;
+    margin:0mm;
     size:58mm auto;
   }
-  html,body{width:58mm !important}
+  html,body{
+    width:58mm !important;
+    max-width:58mm !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
 }
 @media(max-width:600px){
   header{height:auto;padding:0.8rem 1rem;flex-direction:column;gap:8px}
@@ -2388,74 +2395,109 @@ function printOrd(id) {
   if (!o) return;
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Cartao de Credito',debito:'Cartao de Debito'};
   var items = o.items || [];
-  var iHtml = '';
-  for (var i=0; i<items.length; i++) {
-    iHtml += '<div style="display:flex;justify-content:space-between;margin-bottom:3px;gap:4px">';
-    iHtml += '<span style="flex:1">'+items[i].quantity+'x '+items[i].product_name+'</span>';
-    iHtml += '<span style="white-space:nowrap">R$'+parseFloat(items[i].subtotal).toFixed(2).replace('.',',')+'</span>';
-    iHtml += '</div>';
+
+  // Função para alinhar texto esquerda+direita em largura fixa (32 chars = ~52mm courier)
+  function linha(esq, dir) {
+    var total = 32;
+    var espaco = total - esq.length - dir.length;
+    if (espaco < 1) espaco = 1;
+    return esq + Array(espaco+1).join(' ') + dir;
   }
-  var D = '--------------------------------';
-  var html = '<div style="font-family:\'Courier New\',Courier,monospace;width:52mm;font-size:7pt;color:#000;padding:1mm 2mm;box-sizing:border-box;line-height:1.35;-webkit-print-color-adjust:exact;print-color-adjust:exact">';
+  function separador() {
+    return '<div style="font-weight:900;letter-spacing:0">--------------------------------</div>';
+  }
+  function row(esq, dir, bold) {
+    var l = linha(esq, dir);
+    return bold
+      ? '<div style="font-weight:900">' + l + '</div>'
+      : '<div>' + l + '</div>';
+  }
+
+  var BASE = 'font-family:\'Courier New\',Courier,monospace;width:54mm;max-width:54mm;font-size:8.5pt;color:#000;font-weight:900;line-height:1.45;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;box-sizing:border-box;padding:0 1mm;word-break:break-word;overflow:hidden';
+
+  var html = '<div style="' + BASE + '">';
+
   // Cabeçalho
   html += '<div style="text-align:center;margin-bottom:3px">';
-  html += '<div style="font-size:9pt;font-weight:900;letter-spacing:1px">FAEL TOP LANCHES</div>';
-  html += '<div style="font-size:6.5pt">& Pizzaria - Cataguases MG</div>';
-  html += '<div style="font-size:6.5pt">Tel: (32) 99820-4435</div>';
+  html += '<div style="font-size:12pt;font-weight:900;letter-spacing:1px">FAEL TOP LANCHES</div>';
+  html += '<div style="font-size:8pt;font-weight:900">& Pizzaria - Cataguases MG</div>';
+  html += '<div style="font-size:8pt;font-weight:900">Tel: (32) 99820-4435</div>';
   html += '</div>';
-  html += '<div style="border-top:1px dashed #000;margin:3px 0"></div>';
+  html += separador();
+
   // Pedido
-  html += '<div style="font-size:6.5pt;margin-bottom:2px">';
-  html += '<b>Pedido #'+o.id+'</b><br>';
-  html += o.created_at;
+  html += '<div style="font-size:8pt;margin:2px 0">';
+  html += '<div style="font-weight:900">PEDIDO #' + o.id + '</div>';
+  html += '<div>' + (o.created_at||'') + '</div>';
   html += '</div>';
-  html += '<div style="border-top:1px dashed #000;margin:3px 0"></div>';
+  html += separador();
+
   // Cliente
-  html += '<div style="font-size:6.5pt;margin-bottom:2px">';
-  html += '<b>Cliente:</b> '+o.client_name+'<br>';
-  html += '<b>Tel:</b> '+o.client_phone+'<br>';
+  html += '<div style="font-size:8pt;margin:2px 0">';
+  html += '<div><b>CLIENTE:</b> ' + o.client_name + '</div>';
+  html += '<div><b>TEL:</b> ' + o.client_phone + '</div>';
   if (o.delivery_type === 'entrega' && o.address) {
-    html += '<b>End:</b> '+o.address;
-    if (o.complement) html += ' - '+o.complement;
-    html += '<br>';
+    html += '<div><b>ENDERECO:</b></div>';
+    html += '<div style="padding-left:2mm">' + o.address + '</div>';
+    if (o.complement) html += '<div style="padding-left:2mm">' + o.complement + '</div>';
+    html += '<div><b>TIPO:</b> Entrega</div>';
   } else {
-    html += '<b>Tipo:</b> Retirada no local<br>';
+    html += '<div><b>TIPO:</b> Retirada no local</div>';
   }
   html += '</div>';
-  html += '<div style="border-top:1px dashed #000;margin:3px 0"></div>';
+  html += separador();
+
   // Itens
-  html += '<div style="font-size:7pt;margin-bottom:2px">';
-  html += '<b>ITENS:</b><br>';
-  html += iHtml;
-  html += '</div>';
-  html += '<div style="border-top:1px dashed #000;margin:3px 0"></div>';
-  // Total
-  html += '<div style="font-size:7pt">';
-  if (o.delivery_fee && parseFloat(o.delivery_fee) > 0) {
-    html += '<div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>R$'+parseFloat(o.total - o.delivery_fee).toFixed(2).replace('.',',')+'</span></div>';
-    html += '<div style="display:flex;justify-content:space-between"><span>Entrega</span><span>R$'+parseFloat(o.delivery_fee).toFixed(2).replace('.',',')+'</span></div>';
+  html += '<div style="font-size:8pt;margin:2px 0">';
+  html += '<div style="font-weight:900">ITENS DO PEDIDO:</div>';
+  for (var i=0; i<items.length; i++) {
+    var it = items[i];
+    var nome = it.quantity + 'x ' + it.product_name;
+    var val = 'R$' + parseFloat(it.subtotal).toFixed(2).replace('.',',');
+    // Se nome for longo, quebra em duas linhas
+    if (nome.length + val.length + 1 > 32) {
+      html += '<div style="font-weight:900">' + nome + '</div>';
+      html += '<div style="text-align:right;font-weight:900">' + val + '</div>';
+    } else {
+      html += row(nome, val, false);
+    }
   }
-  html += '<div style="display:flex;justify-content:space-between;font-weight:900;font-size:8pt;border-top:1px solid #000;padding-top:2px;margin-top:2px">';
-  html += '<span>TOTAL</span><span>R$'+parseFloat(o.total).toFixed(2).replace('.',',')+'</span></div>';
-  html += '<div style="font-size:6.5pt;margin-top:2px"><b>Pgto:</b> '+(PM[o.payment]||o.payment)+'</div>';
-  if (o.change_for) html += '<div style="font-size:6.5pt"><b>Troco p/:</b> R$'+parseFloat(o.change_for).toFixed(2).replace('.',',')+'</div>';
-  if (o.observations) html += '<div style="font-size:6.5pt;margin-top:2px"><b>Obs:</b> '+o.observations+'</div>';
   html += '</div>';
+  html += separador();
+
+  // Total
+  html += '<div style="font-size:8pt;margin:2px 0">';
+  if (o.delivery_fee && parseFloat(o.delivery_fee) > 0) {
+    html += row('Subtotal', 'R$'+parseFloat(o.total - o.delivery_fee).toFixed(2).replace('.',','), false);
+    html += row('Taxa entrega', 'R$'+parseFloat(o.delivery_fee).toFixed(2).replace('.',','), false);
+  }
+  html += '<div style="border-top:2px solid #000;margin:2px 0;padding-top:2px">';
+  html += row('TOTAL', 'R$'+parseFloat(o.total).toFixed(2).replace('.',','), true);
+  html += '</div>';
+  html += row('PAGAMENTO:', PM[o.payment]||o.payment, false);
+  if (o.change_for && parseFloat(o.change_for) > 0) {
+    html += row('TROCO PARA:', 'R$'+parseFloat(o.change_for).toFixed(2).replace('.',','), false);
+  }
+  if (o.observations) {
+    html += '<div style="margin-top:2px"><b>OBS:</b></div>';
+    html += '<div style="padding-left:2mm;font-weight:900">' + o.observations + '</div>';
+  }
+  html += '</div>';
+
   // Rodapé
-  html += '<div style="border-top:1px dashed #000;margin:4px 0 2px"></div>';
-  html += '<div style="text-align:center;font-size:6pt;color:#333">';
-  html += 'Obrigado pela preferencia!<br>Volte sempre :)';
+  html += separador();
+  html += '<div style="text-align:center;font-size:8pt;font-weight:700;margin:2px 0">';
+  html += 'Obrigado pela preferencia!<br>Volte sempre! :)';
   html += '</div>';
+  html += '<div style="margin-bottom:8mm"></div>';
   html += '</div>';
+
   var pa = document.getElementById('print-area');
   pa.innerHTML = html;
   pa.style.display = 'block';
-  // Forçar escala correta para 58mm
-  document.body.style.zoom = '1';
   window.print();
   setTimeout(function(){
     pa.style.display = 'none';
-    document.body.style.zoom = '';
   }, 1500);
 }
 
