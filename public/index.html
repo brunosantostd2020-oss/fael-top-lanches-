@@ -251,7 +251,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     overflow:visible !important;
   }
   @page{
-    margin:0mm;
+    margin:0mm 5mm 0mm 5mm;
     size:58mm auto;
   }
   html,body{
@@ -2396,112 +2396,129 @@ function printOrd(id) {
   var PM = {dinheiro:'Dinheiro',pix:'PIX',credito:'Cartao de Credito',debito:'Cartao de Debito'};
   var items = o.items || [];
 
-  // Função para alinhar texto esquerda+direita em largura fixa (32 chars = ~52mm courier)
-  function linha(esq, dir) {
-    var total = 32;
-    var espaco = total - esq.length - dir.length;
-    if (espaco < 1) espaco = 1;
-    return esq + Array(espaco+1).join(' ') + dir;
-  }
+  // Largura fixa em caracteres Courier para 48mm imprimível (28 chars cabe sem cortar)
+  var COLS = 28;
+
   function separador() {
-    return '<div style="font-weight:900;letter-spacing:0">--------------------------------</div>';
-  }
-  function row(esq, dir, bold) {
-    var l = linha(esq, dir);
-    return bold
-      ? '<div style="font-weight:900">' + l + '</div>'
-      : '<div>' + l + '</div>';
+    return '<div>' + '----------------------------' + '</div>';
   }
 
-  var BASE = 'font-family:\'Courier New\',Courier,monospace;width:54mm;max-width:54mm;font-size:8.5pt;color:#000;font-weight:900;line-height:1.45;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;box-sizing:border-box;padding:0 1mm;word-break:break-word;overflow:hidden';
+  // Alinha esq+dir em COLS colunas; se não couber, dir vai na linha de baixo
+  function row(esq, dir, bold) {
+    var espaco = COLS - esq.length - dir.length;
+    var linha;
+    if (espaco >= 1) {
+      linha = esq + Array(espaco + 1).join(' ') + dir;
+      return bold ? '<div style="font-weight:900">' + linha + '</div>'
+                  : '<div>' + linha + '</div>';
+    } else {
+      return (bold ? '<div style="font-weight:900">' : '<div>') +
+             esq + '</div>' +
+             '<div style="text-align:right' + (bold ? ';font-weight:900' : '') + '">' + dir + '</div>';
+    }
+  }
+
+  // Quebra texto longo em linhas de COLS chars
+  function wrap(txt) {
+    var out = '';
+    while (txt.length > COLS) {
+      out += '<div>' + txt.substring(0, COLS) + '</div>';
+      txt = txt.substring(COLS);
+    }
+    if (txt.length) out += '<div>' + txt + '</div>';
+    return out;
+  }
+
+  // Estilos base: fonte menor (7.5pt) + padding zero nas laterais = sem corte
+  var BASE = "font-family:'Courier New',Courier,monospace;" +
+             "width:48mm;max-width:48mm;" +
+             "font-size:7.5pt;color:#000;font-weight:900;" +
+             "line-height:1.4;" +
+             "-webkit-print-color-adjust:exact !important;" +
+             "print-color-adjust:exact !important;" +
+             "color-adjust:exact !important;" +
+             "box-sizing:border-box;padding:0;margin:0;" +
+             "word-break:break-all;overflow:hidden";
 
   var html = '<div style="' + BASE + '">';
 
   // Cabeçalho
-  html += '<div style="text-align:center;margin-bottom:3px">';
-  html += '<div style="font-size:12pt;font-weight:900;letter-spacing:1px">FAEL TOP LANCHES</div>';
-  html += '<div style="font-size:8pt;font-weight:900">& Pizzaria - Cataguases MG</div>';
-  html += '<div style="font-size:8pt;font-weight:900">Tel: (32) 99820-4435</div>';
+  html += '<div style="text-align:center;margin-bottom:2px">';
+  html += '<div style="font-size:10pt;font-weight:900;letter-spacing:0.5px">FAEL TOP LANCHES</div>';
+  html += '<div style="font-size:7.5pt;font-weight:900">& Pizzaria - Cataguases MG</div>';
+  html += '<div style="font-size:7.5pt;font-weight:900">Tel: (32) 99820-4435</div>';
   html += '</div>';
   html += separador();
 
   // Pedido
-  html += '<div style="font-size:8pt;margin:2px 0">';
+  html += '<div style="margin:1px 0">';
   html += '<div style="font-weight:900">PEDIDO #' + o.id + '</div>';
   html += '<div>' + (o.created_at||'') + '</div>';
   html += '</div>';
   html += separador();
 
   // Cliente
-  html += '<div style="font-size:8pt;margin:2px 0">';
-  html += '<div><b>CLIENTE:</b> ' + o.client_name + '</div>';
-  html += '<div><b>TEL:</b> ' + o.client_phone + '</div>';
+  html += '<div style="margin:1px 0">';
+  html += wrap('CLIENTE: ' + o.client_name);
+  html += wrap('TEL: ' + o.client_phone);
   if (o.delivery_type === 'entrega' && o.address) {
-    html += '<div><b>ENDERECO:</b></div>';
-    html += '<div style="padding-left:2mm">' + o.address + '</div>';
-    if (o.complement) html += '<div style="padding-left:2mm">' + o.complement + '</div>';
-    html += '<div><b>TIPO:</b> Entrega</div>';
+    html += '<div style="font-weight:900">ENDERECO:</div>';
+    html += wrap(o.address);
+    if (o.complement) html += wrap(o.complement);
+    html += '<div>TIPO: Entrega</div>';
   } else {
-    html += '<div><b>TIPO:</b> Retirada no local</div>';
+    html += '<div>TIPO: Retirada no local</div>';
   }
   html += '</div>';
   html += separador();
 
   // Itens
-  html += '<div style="font-size:8pt;margin:2px 0">';
+  html += '<div style="margin:1px 0">';
   html += '<div style="font-weight:900">ITENS DO PEDIDO:</div>';
-  for (var i=0; i<items.length; i++) {
+  for (var i = 0; i < items.length; i++) {
     var it = items[i];
     var nome = it.quantity + 'x ' + it.product_name;
-    var val = 'R$' + parseFloat(it.subtotal).toFixed(2).replace('.',',');
-    // Se nome for longo, quebra em duas linhas
-    if (nome.length + val.length + 1 > 32) {
-      html += '<div style="font-weight:900">' + nome + '</div>';
-      html += '<div style="text-align:right;font-weight:900">' + val + '</div>';
-    } else {
-      html += row(nome, val, false);
-    }
+    var val  = 'R$' + parseFloat(it.subtotal).toFixed(2).replace('.', ',');
+    html += row(nome, val, false);
   }
   html += '</div>';
   html += separador();
 
   // Total
-  html += '<div style="font-size:8pt;margin:2px 0">';
+  html += '<div style="margin:1px 0">';
   if (o.delivery_fee && parseFloat(o.delivery_fee) > 0) {
-    html += row('Subtotal', 'R$'+parseFloat(o.total - o.delivery_fee).toFixed(2).replace('.',','), false);
-    html += row('Taxa entrega', 'R$'+parseFloat(o.delivery_fee).toFixed(2).replace('.',','), false);
+    html += row('Subtotal', 'R$' + parseFloat(o.total - o.delivery_fee).toFixed(2).replace('.', ','), false);
+    html += row('Taxa entrega', 'R$' + parseFloat(o.delivery_fee).toFixed(2).replace('.', ','), false);
   }
-  html += '<div style="border-top:2px solid #000;margin:2px 0;padding-top:2px">';
-  html += row('TOTAL', 'R$'+parseFloat(o.total).toFixed(2).replace('.',','), true);
+  html += '<div style="border-top:2px solid #000;padding-top:2px;margin-top:2px">';
+  html += row('TOTAL', 'R$' + parseFloat(o.total).toFixed(2).replace('.', ','), true);
   html += '</div>';
-  html += row('PAGAMENTO:', PM[o.payment]||o.payment, false);
+  html += row('PAGAMENTO:', PM[o.payment] || o.payment, false);
   if (o.change_for && parseFloat(o.change_for) > 0) {
-    html += row('TROCO PARA:', 'R$'+parseFloat(o.change_for).toFixed(2).replace('.',','), false);
+    html += row('TROCO PARA:', 'R$' + parseFloat(o.change_for).toFixed(2).replace('.', ','), false);
   }
   if (o.observations) {
-    html += '<div style="margin-top:2px"><b>OBS:</b></div>';
-    html += '<div style="padding-left:2mm;font-weight:900">' + o.observations + '</div>';
+    html += '<div style="font-weight:900">OBS:</div>';
+    html += wrap(o.observations);
   }
   html += '</div>';
 
   // Rodapé
   html += separador();
-  html += '<div style="text-align:center;font-size:8pt;font-weight:700;margin:2px 0">';
+  html += '<div style="text-align:center;font-size:7.5pt;font-weight:900;margin:1px 0">';
   html += 'Obrigado pela preferencia!<br>Volte sempre! :)';
   html += '</div>';
-  html += '<div style="margin-bottom:8mm"></div>';
+  html += '<div style="margin-bottom:10mm"></div>';
   html += '</div>';
 
   var pa = document.getElementById('print-area');
   pa.innerHTML = html;
   pa.style.display = 'block';
   window.print();
-  setTimeout(function(){
-    pa.style.display = 'none';
-  }, 1500);
+  setTimeout(function(){ pa.style.display = 'none'; }, 1500);
 }
 
-// PRODUTOS ADMIN
+
 function buildPM() {
   return api('GET','/products/all',null,true).then(function(prods) {
     var CL = {lanches:'Lanches',pizzas:'Pizzas',omelete:'Omelete',cachorro_quente:'Cachorro Quente',bebidas:'Bebidas',porcoes:'Porcoes'};
