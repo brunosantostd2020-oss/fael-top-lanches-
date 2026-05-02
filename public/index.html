@@ -3433,19 +3433,26 @@ function updateAdminTimestamp() {
   }
 }
 
-setInterval(function(){ 
+// Polling lento: status da loja a cada 30s (leve)
+setInterval(function(){
   loadStatusManual();
-  if(adminToken && document.getElementById('page-admin').classList.contains('active')) {
-    // Atualizar SOMENTE se estiver na aba Pendentes
+}, 30000);
+
+// Polling rápido: verificação de novos pedidos a cada 3s quando admin logado
+setInterval(function(){
+  if (!adminToken) return;
+  if (document.getElementById('page-admin').classList.contains('active')) {
     if (curATab === 'pend') {
       loadAdmStats();
       loadAdmContent('pend');
       updateAdminTimestamp();
+    } else {
+      checkNewOrders();
     }
-  } else if (adminToken) {
+  } else {
     checkNewOrders();
   }
-}, 30000); // A cada 30 segundos
+}, 3000); // A cada 3 segundos — notificação quase imediata
 </script>
 
 <footer class="site-footer">
