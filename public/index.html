@@ -2593,7 +2593,7 @@ function carregarFotoProd(input) {
     var img = new Image();
     img.onload = function() {
       var canvas = document.createElement('canvas');
-      var maxW = 800, maxH = 600;
+      var maxW = 400, maxH = 300;
       var w = img.width, h = img.height;
       // Manter proporção
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
@@ -2601,7 +2601,13 @@ function carregarFotoProd(input) {
       canvas.width = w; canvas.height = h;
       var ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
-      var compressed = canvas.toDataURL('image/jpeg', 0.82);
+      var compressed = canvas.toDataURL('image/jpeg', 0.65);
+      // Segurança: se ainda for muito grande, comprimir mais
+      if (compressed.length > 150000) {
+        canvas.width = Math.round(w * 0.6); canvas.height = Math.round(h * 0.6);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        compressed = canvas.toDataURL('image/jpeg', 0.5);
+      }
       pfImgBase64 = compressed;
       // Mostrar preview
       var preview = document.getElementById('pf-img-preview');
@@ -2752,13 +2758,21 @@ function carregarFotoCombo(input) {
     var img = new Image();
     img.onload = function() {
       var canvas = document.createElement('canvas');
-      var maxW = 800, maxH = 600;
+      var maxW = 400, maxH = 300;
       var w = img.width, h = img.height;
       if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
       if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      cfImgBase64 = canvas.toDataURL('image/jpeg', 0.82);
+      var ctx2 = canvas.getContext('2d');
+      ctx2.drawImage(img, 0, 0, w, h);
+      var compressed2 = canvas.toDataURL('image/jpeg', 0.65);
+      // Segurança: se ainda for muito grande, comprimir mais
+      if (compressed2.length > 150000) {
+        canvas.width = Math.round(w * 0.6); canvas.height = Math.round(h * 0.6);
+        ctx2.drawImage(img, 0, 0, canvas.width, canvas.height);
+        compressed2 = canvas.toDataURL('image/jpeg', 0.5);
+      }
+      cfImgBase64 = compressed2;
       var preview = document.getElementById('cf-img-preview');
       var wrap = document.getElementById('cf-img-preview-wrap');
       var btn = document.getElementById('cf-img-btn');
