@@ -32,10 +32,7 @@ router.post('/validar', async (req, res) => {
     const c = r.rows[0];
     if (!c.ativo) return res.status(400).json({ error: 'Cupom desativado' });
     // Comparação feita no banco para evitar problemas de timezone na string retornada
-    const expCheck = await pool.query(
-      "SELECT NOW() AT TIME ZONE 'America/Sao_Paulo' > expira_em AS expirado FROM cupons WHERE id = $1", [c.id]
-    );
-    if (expCheck.rows[0].expirado) return res.status(400).json({ error: 'Cupom expirado' });
+    if (new Date() > new Date(c.expira_em)) return res.status(400).json({ error: 'Cupom expirado' });
     if (c.usos_atuais >= c.usos_maximos) return res.status(400).json({ error: 'Cupom esgotado' });
     res.json({
       valido: true,
@@ -56,10 +53,7 @@ router.post('/usar', async (req, res) => {
     );
     if (!r.rows.length) return res.status(404).json({ error: 'Cupom inválido' });
     const c = r.rows[0];
-    const expCheck2 = await pool.query(
-      "SELECT NOW() AT TIME ZONE 'America/Sao_Paulo' > expira_em AS expirado FROM cupons WHERE id = $1", [c.id]
-    );
-    if (!c.ativo || expCheck2.rows[0].expirado || c.usos_atuais >= c.usos_maximos)
+    if (!c.ativo || new Date() > new Date(c.expira_em) || c.usos_atuais >= c.usos_maximos)
       return res.status(400).json({ error: 'Cupom não pode ser usado' });
     await pool.query(
       "UPDATE cupons SET usos_atuais = usos_atuais + 1 WHERE id = $1", [c.id]

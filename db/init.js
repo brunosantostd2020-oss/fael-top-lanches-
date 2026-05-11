@@ -1,11 +1,6 @@
 require('dotenv').config();
-const { Pool, types } = require('pg');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
-
-// Faz o driver retornar timestamps como string pura (sem conversão automática pelo Node.js)
-// Isso evita que o driver interprete o valor como UTC quando o campo é TIMESTAMP sem timezone
-types.setTypeParser(1114, (val) => val); // TIMESTAMP
-types.setTypeParser(1184, (val) => val); // TIMESTAMPTZ
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

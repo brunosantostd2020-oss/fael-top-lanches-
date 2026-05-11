@@ -4,16 +4,33 @@ const { pool } = require('../db/init');
 const { requireAdmin } = require('./auth');
 
 async function getOrderWithItems(id) {
-  const oRes = await pool.query(
-    "SELECT *, TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI:SS') AS created_at_fmt FROM orders WHERE id = $1", [id]
-  );
+  const oRes = await pool.query("SELECT * FROM orders WHERE id = $1", [id]);
   if (!oRes.rows.length) return null;
   const order = oRes.rows[0];
-  order.created_at = order.created_at_fmt;
-  delete order.created_at_fmt;
   const iRes = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [id]);
   order.items = iRes.rows;
+  order.created_at = new Date(order.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   return order;
+}
+
+// Busca múltiplos pedidos com seus itens em apenas 2 queries (evita N+1)
+async function getOrdersWithItems(orderRows) {
+  if (!orderRows.length) return [];
+  const ids = orderRows.map(o => o.id);
+  const iRes = await pool.query(
+    "SELECT * FROM order_items WHERE order_id = ANY($1::int[])",
+    [ids]
+  );
+  const itemsByOrder = {};
+  for (const item of iRes.rows) {
+    if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
+    itemsByOrder[item.order_id].push(item);
+  }
+  return orderRows.map(o => {
+    o.items = itemsByOrder[o.id] || [];
+    o.created_at = new Date(o.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    return o;
+  });
 }
 
 // GET all orders (admin)
@@ -26,17 +43,9 @@ router.get('/', requireAdmin, async (req, res) => {
       q += " WHERE status = $1";
       params.push(status);
     }
-    q = q.replace('SELECT *', "SELECT *, TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI:SS') AS created_at_fmt");
     q += " ORDER BY created_at DESC";
     const result = await pool.query(q, params);
-    const orders = result.rows;
-    // attach items
-    for (const o of orders) {
-      const iRes = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [o.id]);
-      o.items = iRes.rows;
-      o.created_at = o.created_at_fmt;
-      delete o.created_at_fmt;
-    }
+    const orders = await getOrdersWithItems(result.rows);
     res.json(orders);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -45,11 +54,9 @@ router.get('/', requireAdmin, async (req, res) => {
 router.get('/new-since/:ts', requireAdmin, async (req, res) => {
   try {
     const ts = new Date(parseInt(req.params.ts));
-    // Converte o timestamp JS para o horário de Brasília antes de comparar com o TIMESTAMP do banco
-    const tsBSB = ts.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace('T', ' ');
     const result = await pool.query(
       "SELECT id, client_name, total FROM orders WHERE created_at > $1 AND status = 'pendente' ORDER BY created_at ASC",
-      [tsBSB]
+      [ts]
     );
     res.json(result.rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
