@@ -243,9 +243,14 @@ nav button.active{background:rgba(247,183,49,.08);color:#F7B731;border-color:rgb
 .pdesc{font-size:11.5px;color:#888;margin-bottom:10px;line-height:1.4}
 .pfooter{display:flex;align-items:center;justify-content:space-between}
 .pprice{font-weight:900;font-size:1.1rem;color:var(--r)}
-.abtn{background:var(--r);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer}
-.abtn:hover{background:var(--rd)}
+.abtn{background:var(--r);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s}
+.abtn:hover{background:var(--rd);transform:scale(1.05)}
 .abtn:disabled{background:#bbb;cursor:not-allowed}
+.abtn.added{background:#16a34a!important;transform:scale(1.08)}
+@keyframes badge-pulse{0%{transform:scale(1)}30%{transform:scale(1.5)}60%{transform:scale(.9)}100%{transform:scale(1)}}
+.cbadge.pulse{animation:badge-pulse .4s ease}
+@keyframes float-pulse{0%{transform:translateY(0)}30%{transform:translateY(-4px)}60%{transform:translateY(1px)}100%{transform:translateY(0)}}
+#float-cart.pulse{animation:float-pulse .4s ease}
 .csec{display:grid;grid-template-columns:1fr 340px;gap:1.5rem}
 @media(max-width:780px){.csec{grid-template-columns:1fr}}
 .citems{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden}
@@ -1334,7 +1339,7 @@ function renderProducts(cat, subcat) {
       html += '<div class="pdesc">'+cleanMDesc+'</div>';
       html += '<div class="pfooter">';
       html += '<div class="pprice" style="color:#c47d00">R$ '+parseFloat(pizza.price).toFixed(2).replace('.',',')+'</div>';
-      html += '<button class="abtn" style="background:var(--y);color:#000;border-color:var(--y)" onclick="addCart('+pizza.id+')" '+(op?'':'disabled')+'>'+(op?'+ Adicionar':'Fechado')+'</button>';
+      html += '<button class="abtn" style="background:var(--y);color:#000;border-color:var(--y)" onclick="addCart('+pizza.id+',this)" '+(op?'':'disabled')+'>'+(op?'+ Adicionar':'Fechado')+'</button>';
       html += '</div></div></div>';
     }
     html += '</div></div>';
@@ -1417,7 +1422,7 @@ function renderProducts(cat, subcat) {
       html += '<div class="pdesc">' + cleanDesc + '</div>';
       html += '<div class="pfooter">';
       html += '<div class="pprice">R$ ' + parseFloat(pr.price).toFixed(2).replace('.',',') + '</div>';
-      html += '<button class="abtn" onclick="addCart(' + pr.id + ')" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
+      html += '<button class="abtn" onclick="addCart(' + pr.id + ',this)" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
       html += '</div></div></div>';
     }
     g.innerHTML = html;
@@ -1450,7 +1455,7 @@ function renderProducts(cat, subcat) {
     html += '<div class="pdesc">' + cleanDesc + '</div>';
     html += '<div class="pfooter">';
     html += '<div class="pprice">R$ ' + parseFloat(pr.price).toFixed(2).replace('.',',') + '</div>';
-    html += '<button class="abtn" onclick="addCart(' + pr.id + ')" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
+    html += '<button class="abtn" onclick="addCart(' + pr.id + ',this)" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
     html += '</div></div></div>';
   }
   g.innerHTML = html;
@@ -1523,7 +1528,7 @@ function filterBebidas(tipo) {
       html += '<div class="pdesc">' + cleanDesc + '</div>';
       html += '<div class="pfooter">';
       html += '<div class="pprice">R$ ' + parseFloat(pr.price).toFixed(2).replace('.',',') + '</div>';
-      html += '<button class="abtn" onclick="addCart(' + pr.id + ')" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
+      html += '<button class="abtn" onclick="addCart(' + pr.id + ',this)" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
       html += '</div></div></div>';
     }
   }
@@ -1588,7 +1593,7 @@ function buscarProdutos(q) {
       html += '<div class="pdesc">' + p.description.replace(/##[^#]+##/g,'').trim() + '</div>';
     }
     html += '<div class="pfooter"><span class="pprice">' + preco + '</span>';
-    if (op) html += '<button class="abtn" onclick="addCart(' + p.id + ')">+</button>';
+    if (op) html += '<button class="abtn" onclick="addCart(' + p.id + ',this)">+</button>';
     html += '</div></div></div>';
   }
   g.innerHTML = html;
@@ -1623,23 +1628,18 @@ function filterCat(cat, el) {
 }
 
 // ACRESCIMOS
-function addCart(id) {
+function addCart(id, btnEl) {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
-  
-  // Buscar o produto para verificar a categoria
   var p = allProducts.filter(function(x){return x.id===id;})[0];
   if (!p) return;
-  
-  // Categorias que permitem acréscimos
   var categoriasComAcrescimo = ['lanches', 'frango_desfiado', 'hamburguer_boi', 'pizzas_tam', 'omelete', 'cachorro_quente', 'porcoes'];
-  
-  // Verificar se a categoria do produto permite acréscimos
   var permiteAcrescimo = categoriasComAcrescimo.indexOf(p.category) >= 0;
-  
-  if (allAcrescimos.length > 0 && permiteAcrescimo) { 
-    abrirModalAcr(id); 
-  } else { 
-    abrirModalRemocao(id, []); 
+  if (allAcrescimos.length > 0 && permiteAcrescimo) {
+    abrirModalAcr(id);
+  } else {
+    // Animar botão direto se não abre modal
+    if (btnEl) animarAdicionar(btnEl);
+    abrirModalRemocao(id, []);
   }
 }
 
@@ -2095,10 +2095,27 @@ function addCartDireto(id, acrescimos) {
   mostrarModalProdutoAdicionado((p.emoji||'') + ' ' + nome);
 }
 
-function updateBadge() {
+function animarAdicionar(btnEl) {
+  if (!btnEl) return;
+  var originalText = btnEl.textContent;
+  btnEl.textContent = '✓';
+  btnEl.classList.add('added');
+  setTimeout(function() {
+    btnEl.textContent = originalText;
+    btnEl.classList.remove('added');
+  }, 1000);
+}
+
+function updateBadge(btnEl) {
   var total = 0;
   for (var i=0; i<cart.length; i++) total += cart[i].qty;
-  document.getElementById('cart-badge').textContent = total;
+  var badge = document.getElementById('cart-badge');
+  badge.textContent = total;
+  // Pulsar badge
+  badge.classList.remove('pulse');
+  void badge.offsetWidth; // reflow para reiniciar animação
+  badge.classList.add('pulse');
+  setTimeout(function(){ badge.classList.remove('pulse'); }, 500);
   // Atualizar barra flutuante mobile
   var sub = 0;
   for (var i=0; i<cart.length; i++) sub += cart[i].price * cart[i].qty;
@@ -2106,12 +2123,18 @@ function updateBadge() {
   if (fc) {
     if (total > 0 && window.innerWidth <= 600) {
       fc.style.display = 'flex';
+      fc.classList.remove('pulse');
+      void fc.offsetWidth;
+      fc.classList.add('pulse');
+      setTimeout(function(){ fc.classList.remove('pulse'); }, 500);
       document.getElementById('float-cart-items').textContent = total + (total === 1 ? ' item' : ' itens');
       document.getElementById('float-cart-total').textContent = 'R$ ' + sub.toFixed(2).replace('.',',');
     } else {
       fc.style.display = 'none';
     }
   }
+  // Animar botão se fornecido
+  if (btnEl) animarAdicionar(btnEl);
   // Atualizar valor PIX se estiver selecionado
   if (curPay === 'pix') atualizarValorPix();
 }
