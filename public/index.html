@@ -2723,12 +2723,24 @@ function printOrd(id) {
   window._printing = true;
   pa.innerHTML = html;
   pa.style.display = 'block';
+  // Só libera DEPOIS que o diálogo de impressão fechar de verdade
+  window.onafterprint = function() {
+    pa.style.display = 'none';
+    pa.innerHTML = '';
+    window._printing = false;
+    window.onafterprint = null;
+  };
   setTimeout(function() {
     window.print();
+    // Fallback: se onafterprint não disparar (alguns browsers), libera após 30s
     setTimeout(function(){
-      pa.style.display = 'none';
-      window._printing = false;
-    }, 2000);
+      if (window._printing) {
+        pa.style.display = 'none';
+        pa.innerHTML = '';
+        window._printing = false;
+        window.onafterprint = null;
+      }
+    }, 30000);
   }, 150);
 }
 // PRODUTOS ADMIN
