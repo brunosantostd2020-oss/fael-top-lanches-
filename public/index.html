@@ -14,16 +14,44 @@ html,body{margin:0;padding:0;width:100%;overflow-x:hidden}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--gr);color:var(--bk);min-height:100vh;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 #closed-banner{display:none;background:#111;color:#fff;text-align:center;padding:12px;font-weight:800;font-size:.95rem;border-bottom:3px solid var(--r)}
 #closed-banner span{color:var(--y)}
-header{background:var(--bk);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:68px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.5)}
-.logo{display:flex;align-items:center;gap:10px;cursor:pointer}
-.logo-ic{width:42px;height:42px;background:var(--r);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px}
-.logo-tx{font-family:'Poppins',Impact,sans-serif;color:#fff;line-height:1;font-size:1.1rem;font-weight:800}
+header{
+  background:linear-gradient(180deg,#111111 0%,#0d0d0d 100%);
+  padding:0 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  height:64px;position:sticky;top:0;z-index:100;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  box-shadow:0 4px 24px rgba(0,0,0,.4);
+}
+.logo{display:flex;align-items:center;gap:12px;cursor:pointer}
+.logo-ic{
+  width:40px;height:40px;
+  background:linear-gradient(135deg,var(--r),#9B1B1B);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  box-shadow:0 2px 8px rgba(214,40,40,.4);
+}
+.logo-tx{font-family:'Poppins',Impact,sans-serif;color:#fff;line-height:1.1;font-size:1rem;font-weight:900;letter-spacing:.3px}
 .logo-tx span{color:var(--y)}
-.logo-tx small{font-family:'Inter',Arial,sans-serif;font-size:10px;font-weight:700;color:#888;display:block}
-nav{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-nav button{background:transparent;border:none;color:#ccc;font-size:12px;font-weight:800;padding:7px 12px;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap}
-nav button:hover,nav button.active{background:var(--r);color:#fff}
-.cbtn{background:var(--y)!important;color:var(--bk)!important;position:relative}
+.logo-tx small{font-family:'Inter',Arial,sans-serif;font-size:9px;font-weight:600;color:#444;display:block;letter-spacing:.5px;margin-top:1px}
+nav{display:flex;gap:3px;align-items:center;flex-wrap:wrap}
+nav button{
+  background:transparent;
+  border:none;
+  color:#888;
+  font-size:11.5px;font-weight:700;
+  padding:7px 13px;border-radius:8px;
+  cursor:pointer;transition:all .18s;
+  white-space:nowrap;letter-spacing:.2px;
+}
+nav button:hover{background:rgba(255,255,255,.07);color:#fff}
+nav button.active{background:rgba(214,40,40,.15);color:#fff;border:1px solid rgba(214,40,40,.3)}
+.cbtn{
+  background:linear-gradient(135deg,var(--y),#E59E00)!important;
+  color:#111!important;position:relative;
+  box-shadow:0 2px 8px rgba(247,183,49,.25)!important;
+}
+.cbtn:hover{box-shadow:0 4px 14px rgba(247,183,49,.35)!important;opacity:.92}
 .cbadge{background:var(--r);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-4px;right:-4px}
 /* ===== HERO ===== */
 .hero{padding:0;margin:0;width:100%;position:relative;overflow:hidden;line-height:0;font-size:0;background:#000}
@@ -282,11 +310,11 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   }
 }
 @media(max-width:600px){
-  header{height:auto;padding:0.8rem 1rem;flex-direction:column;gap:8px}
-  nav{width:100%;justify-content:center;gap:4px}
-  nav button{font-size:10px;padding:6px 8px}
-  .logo-tx{font-size:0.95rem}
-  .logo-ic{width:36px;height:36px;font-size:18px}
+  header{height:auto;padding:.7rem 1rem;flex-direction:column;gap:6px}
+  nav{width:100%;justify-content:center;gap:3px;flex-wrap:wrap}
+  nav button{font-size:10px;padding:5px 9px;border-radius:7px}
+  .logo-tx{font-size:0.9rem}
+  .logo-ic{width:34px;height:34px;font-size:17px;border-radius:8px}
   .page{padding:.85rem .65rem}
   .sec-title{font-size:1.2rem;margin-bottom:.8rem}
   .cat-tabs{gap:5px;margin-bottom:.9rem;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;scrollbar-width:none}
@@ -294,6 +322,32 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   .ct{flex-shrink:0;font-size:11px;padding:6px 12px;white-space:nowrap}
 }
 #print-area{display:none}
+
+/* ===== BARRA FLUTUANTE CARRINHO MOBILE ===== */
+#float-cart{
+  display:none;
+  position:fixed;
+  bottom:16px;left:16px;right:16px;
+  z-index:999;
+  background:linear-gradient(135deg,#D62828,#9B1B1B);
+  border-radius:16px;
+  padding:14px 18px;
+  box-shadow:0 8px 32px rgba(214,40,40,.5);
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  cursor:pointer;
+  transition:transform .2s, opacity .2s;
+  animation:floatIn .3s ease;
+}
+#float-cart:active{transform:scale(.98)}
+@keyframes floatIn{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}
+#float-cart-left{display:flex;align-items:center;gap:10px}
+#float-cart-icon{font-size:1.3rem}
+#float-cart-info strong{display:block;color:#fff;font-size:.9rem;font-weight:800}
+#float-cart-info span{color:rgba(255,255,255,.7);font-size:.72rem}
+#float-cart-total{color:#fff;font-size:1.1rem;font-weight:900;white-space:nowrap}
+@media(min-width:601px){#float-cart{display:none!important}}
 /* Subcategorias de lanches */
 /* Seções de pizza estilo iFood */
 .pzz-section{background:#fff;border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:1.5rem}
@@ -1849,6 +1903,19 @@ function updateBadge() {
   var total = 0;
   for (var i=0; i<cart.length; i++) total += cart[i].qty;
   document.getElementById('cart-badge').textContent = total;
+  // Atualizar barra flutuante mobile
+  var sub = 0;
+  for (var i=0; i<cart.length; i++) sub += cart[i].price * cart[i].qty;
+  var fc = document.getElementById('float-cart');
+  if (fc) {
+    if (total > 0 && window.innerWidth <= 600) {
+      fc.style.display = 'flex';
+      document.getElementById('float-cart-items').textContent = total + (total === 1 ? ' item' : ' itens');
+      document.getElementById('float-cart-total').textContent = 'R$ ' + sub.toFixed(2).replace('.',',');
+    } else {
+      fc.style.display = 'none';
+    }
+  }
   // Atualizar valor PIX se estiver selecionado
   if (curPay === 'pix') atualizarValorPix();
 }
@@ -2401,7 +2468,7 @@ function oCard(o, isAdm, mostrarCheckbox) {
   var iNames = items.map(function(i){return i.quantity+'x '+i.product_name;}).join(', ') || '--';
   var acts = '';
   if (isAdm) {
-    if (NS[st]) acts += '<button class="sbtn next" onclick="advSt('+o.id+')">'+NL[st]+'</button>';
+    if (NS[st]) acts += '<button class="sbtn next adv-btn" onclick="advSt('+o.id+')">'+NL[st]+'</button>';
     if (st!=='entregue'&&st!=='cancelado') acts += '<button class="sbtn cancel" onclick="cancelOrd('+o.id+')">Cancelar</button>';
     acts += '<button class="sbtn wa" onclick="waOrd('+o.id+')">WhatsApp</button>';
     acts += '<button class="sbtn print" onclick="printOrd('+o.id+')">Imprimir</button>';
@@ -2430,21 +2497,30 @@ function oCard(o, isAdm, mostrarCheckbox) {
 function advSt(id) {
   var o = null; if (window._admOrd) for (var i=0; i<window._admOrd.length; i++) if (window._admOrd[i].id===id) { o=window._admOrd[i]; break; }
   if (!o || !NS[o.status]) return;
-  
+
   var newStatus = NS[o.status];
-  
+
+  // Desabilitar botão durante o salvamento para evitar duplo clique
+  var btn = document.querySelector('#oc-'+id+' .adv-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
   api('PATCH', '/orders/'+id+'/status', {status:newStatus}, true)
-    .then(function() { 
-      o.status = newStatus; 
-      var c=document.getElementById('oc-'+id); 
-      if(c) c.outerHTML=oCard(o,true); 
-      loadAdmStats(); 
-      showToast('Status atualizado!'); 
-      
-      // Enviar notificação WhatsApp automaticamente
-      enviarNotificacaoStatus(o, newStatus);
+    .then(function(res) {
+      if (!res.success) throw new Error('Falha ao salvar');
+      o.status = newStatus;
+      var c=document.getElementById('oc-'+id);
+      if(c) c.outerHTML=oCard(o,true);
+      loadAdmStats();
+      showToast('✅ Status atualizado!');
+      // Abrir WhatsApp só DEPOIS de confirmar que salvou
+      setTimeout(function(){ enviarNotificacaoStatus(o, newStatus); }, 300);
     })
-    .catch(function(e){showToast(e.message);});
+    .catch(function(e){
+      showToast('❌ Erro: '+e.message+' — tente novamente');
+      // Reabilitar botão em caso de erro
+      var btn2 = document.querySelector('#oc-'+id+' .adv-btn');
+      if (btn2) { btn2.disabled = false; btn2.textContent = NL[o.status] || '▶ Avançar'; }
+    });
 }
 
 function enviarNotificacaoStatus(order, status) {
@@ -2475,9 +2551,17 @@ function enviarNotificacaoStatus(order, status) {
 function cancelOrd(id) {
   var o = null; if (window._admOrd) for (var i=0; i<window._admOrd.length; i++) if (window._admOrd[i].id===id) { o=window._admOrd[i]; break; }
   if (!o) return;
+  if (!confirm('Cancelar este pedido?')) return;
   api('PATCH', '/orders/'+id+'/status', {status:'cancelado'}, true)
-    .then(function() { o.status='cancelado'; var c=document.getElementById('oc-'+id); if(c) c.outerHTML=oCard(o,true); loadAdmStats(); showToast('Pedido cancelado!'); })
-    .catch(function(e){showToast(e.message);});
+    .then(function(res) {
+      if (!res.success) throw new Error('Falha ao cancelar');
+      o.status='cancelado';
+      var c=document.getElementById('oc-'+id);
+      if(c) c.outerHTML=oCard(o,true);
+      loadAdmStats();
+      showToast('❌ Pedido cancelado!');
+    })
+    .catch(function(e){showToast('❌ Erro: '+e.message+' — tente novamente');});
 }
 
 // FUNÇÕES DE EXCLUSÃO EM MASSA
@@ -3584,6 +3668,9 @@ function showPage(pg) {
   var m = {cardapio:0, carrinho:1, entregas:2, admin:3};
   if (m[pg]!==undefined && navBtns[m[pg]]) navBtns[m[pg]].classList.add('active');
   if (pg==='carrinho') renderCart();
+  // Esconder barra flutuante quando estiver no carrinho
+  var fc = document.getElementById('float-cart');
+  if (fc) fc.style.display = (pg === 'carrinho') ? 'none' : (cart.length > 0 && window.innerWidth <= 600 ? 'flex' : 'none');
   if (pg==='admin') { renderAdmin(); if (navBtns[3]) navBtns[3].classList.add('active'); }
 }
 
@@ -3686,5 +3773,15 @@ setInterval(function(){
   </div>
 </footer>
 
+<div id="float-cart" onclick="showPage('carrinho')">
+  <div id="float-cart-left">
+    <div id="float-cart-icon">🛒</div>
+    <div id="float-cart-info">
+      <strong id="float-cart-items">0 itens</strong>
+      <span>Toque para finalizar</span>
+    </div>
+  </div>
+  <div id="float-cart-total">R$ 0,00</div>
+</div>
 </body>
 </html>
