@@ -1,0 +1,198 @@
+const express = require('express');
+const router = express.Router();
+const { pool } = require('../db/init');
+const { requireAdmin } = require('./auth');
+
+async function getOrderWithItems(id) {
+  const oRes = await pool.query(
+    "SELECT *, TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI:SS') AS created_at_fmt FROM orders WHERE id = $1", [id]
+  );
+  if (!oRes.rows.length) return null;
+  const order = oRes.rows[0];
+  order.created_at = order.created_at_fmt;
+  delete order.created_at_fmt;
+  const iRes = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [id]);
+  order.items = iRes.rows;
+  return order;
+}
+
+// GET all orders (admin)
+router.get('/', requireAdmin, async (req, res) => {
+  const { status } = req.query;
+  try {
+    let q = "SELECT * FROM orders";
+    const params = [];
+    if (status && status !== 'todos') {
+      q += " WHERE status = $1";
+      params.push(status);
+    }
+    q = q.replace('SELECT *', "SELECT *, TO_CHAR(created_at, 'DD/MM/YYYY HH24:MI:SS') AS created_at_fmt");
+    q += " ORDER BY created_at DESC";
+    const result = await pool.query(q, params);
+    const orders = result.rows;
+    // attach items
+    for (const o of orders) {
+      const iRes = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [o.id]);
+      o.items = iRes.rows;
+      o.created_at = o.created_at_fmt;
+      delete o.created_at_fmt;
+    }
+    res.json(orders);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET novos pedidos desde um timestamp (para notificação em tempo real)
+router.get('/new-since/:ts', requireAdmin, async (req, res) => {
+  try {
+    const ts = new Date(parseInt(req.params.ts));
+    // Converte o timestamp JS para o horário de Brasília antes de comparar com o TIMESTAMP do banco
+    const tsBSB = ts.toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo' }).replace('T', ' ');
+    const result = await pool.query(
+      "SELECT id, client_name, total FROM orders WHERE created_at > $1 AND status = 'pendente' ORDER BY created_at ASC",
+      [tsBSB]
+    );
+    res.json(result.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET single order
+router.get('/:id', async (req, res) => {
+  try {
+    const order = await getOrderWithItems(parseInt(req.params.id));
+    if (!order) return res.status(404).json({ error: 'Pedido não encontrado' });
+    res.json(order);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST create order
+router.post('/', async (req, res) => {
+  const { client_name, client_phone, address, complement, delivery_type, payment, change_for, items, observations, delivery_fee_override } = req.body;
+  if (!client_name || !client_phone || !items?.length)
+    return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const subtotal = items.reduce((s, i) => s + (parseFloat(i.unit_price) * parseInt(i.quantity)), 0);
+    const delivery_fee = delivery_fee_override != null ? parseFloat(delivery_fee_override) : 0;
+    const total = subtotal + delivery_fee;
+
+    const oRes = await client.query(
+      `INSERT INTO orders
+        (client_name, client_phone, address, complement, delivery_type, payment, change_for, subtotal, delivery_fee, total, observations)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      [client_name, client_phone, address || '', complement || '',
+       delivery_type || 'entrega', payment || 'dinheiro',
+       change_for ? parseFloat(change_for) : null,
+       subtotal, delivery_fee, total, observations || '']
+    );
+    const order = oRes.rows[0];
+
+    for (const item of items) {
+      const itemSubtotal = parseFloat(item.unit_price) * parseInt(item.quantity);
+      await client.query(
+        `INSERT INTO order_items (order_id, product_id, product_name, product_emoji, quantity, unit_price, subtotal)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [order.id, item.id || null, item.name, item.emoji || '🍽',
+         parseInt(item.quantity), parseFloat(item.unit_price), itemSubtotal]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    const fullOrder = await getOrderWithItems(order.id);
+    res.status(201).json(fullOrder);
+  } catch (e) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
+  }
+});
+
+// PATCH update status
+router.patch('/:id/status', requireAdmin, async (req, res) => {
+  const { status } = req.body;
+  const valid = ['pendente','preparo','entrega','entregue','cancelado'];
+  if (!valid.includes(status)) return res.status(400).json({ error: 'Status inválido' });
+  try {
+    await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [status, parseInt(req.params.id)]);
+    res.json({ success: true, status });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET stats summary (admin)
+router.get('/stats/summary', requireAdmin, async (req, res) => {
+  try {
+    const [tot, pend, deliv, rev, todayRev, todayOrd] = await Promise.all([
+      pool.query("SELECT COUNT(*) FROM orders WHERE status != 'cancelado'"),
+      pool.query("SELECT COUNT(*) FROM orders WHERE status = 'pendente'"),
+      pool.query("SELECT COUNT(*) FROM orders WHERE status = 'entrega'"),
+      pool.query("SELECT COALESCE(SUM(total),0) as s FROM orders WHERE status != 'cancelado'"),
+      pool.query("SELECT COALESCE(SUM(total),0) as s FROM orders WHERE status != 'cancelado' AND DATE(created_at AT TIME ZONE 'America/Sao_Paulo') = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date"),
+      pool.query("SELECT COUNT(*) FROM orders WHERE DATE(created_at AT TIME ZONE 'America/Sao_Paulo') = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date"),
+    ]);
+    res.json({
+      total_orders: parseInt(tot.rows[0].count),
+      pending: parseInt(pend.rows[0].count),
+      in_delivery: parseInt(deliv.rows[0].count),
+      revenue: parseFloat(rev.rows[0].s),
+      today_revenue: parseFloat(todayRev.rows[0].s),
+      today_orders: parseInt(todayOrd.rows[0].count),
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE reset all orders (admin only - DANGER!)
+router.delete('/reset-all', requireAdmin, async (req, res) => {
+  try {
+    // Delete all order items first (foreign key constraint)
+    await pool.query("DELETE FROM order_items");
+    // Delete all orders
+    await pool.query("DELETE FROM orders");
+    // Reset the sequence to start from 1 again
+    await pool.query("ALTER SEQUENCE orders_id_seq RESTART WITH 1");
+    res.json({ 
+      success: true, 
+      message: 'Todos os pedidos e faturamento foram resetados com sucesso!' 
+    });
+  } catch (e) { 
+    res.status(500).json({ error: e.message }); 
+  }
+});
+
+// DELETE individual order (admin only)
+router.delete('/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Verificar se pedido existe
+    const orderCheck = await pool.query('SELECT id, status FROM orders WHERE id = $1', [id]);
+    if (orderCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido não encontrado' });
+    }
+    
+    // Só permite excluir pedidos finalizados (entregue ou cancelado)
+    const status = orderCheck.rows[0].status;
+    if (status !== 'entregue' && status !== 'cancelado') {
+      return res.status(400).json({ 
+        error: 'Só é permitido excluir pedidos entregues ou cancelados. Cancele o pedido primeiro.' 
+      });
+    }
+    
+    // Delete order items first (foreign key constraint)
+    await pool.query('DELETE FROM order_items WHERE order_id = $1', [id]);
+    
+    // Delete the order
+    await pool.query('DELETE FROM orders WHERE id = $1', [id]);
+    
+    res.json({ 
+      success: true, 
+      message: 'Pedido excluído com sucesso!' 
+    });
+  } catch (e) { 
+    res.status(500).json({ error: e.message }); 
+  }
+});
+
+module.exports = router;

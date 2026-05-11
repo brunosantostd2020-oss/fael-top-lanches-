@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Pedidos - Fael Lanches</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #D62828; }
+        h2 { color: #333; font-size: 1.2rem; }
+        button {
+            background: #D62828;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover { background: #b51e1e; }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnóstico do Sistema de Pedidos</h1>
+    
+    <div class="test-box">
+        <h2>Teste 1: Conexão com API</h2>
+        <button onclick="testAPI()">Testar Conexão</button>
+        <div id="test1-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Teste 2: Criar Pedido Teste</h2>
+        <button onclick="testCreateOrder()">Criar Pedido Teste</button>
+        <div id="test2-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Teste 3: Listar Todos os Pedidos (Precisa de Login Admin)</h2>
+        <input type="password" id="admin-pwd" placeholder="Senha Admin" style="padding:8px; border:1px solid #ddd; border-radius:5px; width:200px;">
+        <button onclick="testListOrders()">Listar Pedidos</button>
+        <div id="test3-result"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Teste 4: Verificar Banco de Dados</h2>
+        <button onclick="testDatabase()">Verificar BD</button>
+        <div id="test4-result"></div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const result = document.getElementById('test1-result');
+            result.innerHTML = '<div class="result info">Testando...</div>';
+            
+            try {
+                const response = await fetch('/api/products');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<div class="result success">
+                        ✅ API Funcionando!<br>
+                        Produtos encontrados: ${data.length}
+                    </div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">
+                        ❌ Erro na API: ${data.error || response.statusText}
+                    </div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">
+                    ❌ Erro de conexão: ${error.message}
+                </div>`;
+            }
+        }
+
+        async function testCreateOrder() {
+            const result = document.getElementById('test2-result');
+            result.innerHTML = '<div class="result info">Criando pedido teste...</div>';
+            
+            const testOrder = {
+                client_name: "Cliente Teste",
+                client_phone: "32999999999",
+                address: "Rua Teste, 123",
+                complement: "Apto 1",
+                delivery_type: "entrega",
+                payment: "dinheiro",
+                change_for: null,
+                delivery_fee_override: 0,
+                observations: "Pedido de teste do sistema",
+                items: [
+                    {
+                        id: 1,
+                        name: "X-Burger Teste",
+                        emoji: "🍔",
+                        quantity: 1,
+                        unit_price: 18.00
+                    }
+                ]
+            };
+
+            try {
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testOrder)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<div class="result success">
+                        ✅ Pedido criado com sucesso!<br>
+                        ID: #${String(data.id).padStart(3, '0')}<br>
+                        Cliente: ${data.client_name}<br>
+                        Total: R$ ${parseFloat(data.total).toFixed(2)}<br>
+                        Status: ${data.status}<br>
+                        Criado em: ${data.created_at}
+                    </div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">
+                        ❌ Erro ao criar pedido:<br>
+                        ${data.error || response.statusText}
+                    </div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">
+                    ❌ Erro: ${error.message}
+                </div>`;
+            }
+        }
+
+        async function testListOrders() {
+            const result = document.getElementById('test3-result');
+            const password = document.getElementById('admin-pwd').value;
+            
+            if (!password) {
+                result.innerHTML = '<div class="result error">❌ Digite a senha admin!</div>';
+                return;
+            }
+
+            result.innerHTML = '<div class="result info">Fazendo login...</div>';
+
+            try {
+                // Login
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                if (!loginResponse.ok) {
+                    result.innerHTML = `<div class="result error">❌ Senha incorreta!</div>`;
+                    return;
+                }
+
+                const token = loginData.token;
+
+                // Listar pedidos
+                const ordersResponse = await fetch('/api/orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const orders = await ordersResponse.json();
+                
+                if (ordersResponse.ok) {
+                    let html = `<div class="result success">
+                        ✅ Total de pedidos: ${orders.length}<br><br>`;
+                    
+                    if (orders.length > 0) {
+                        html += '<strong>Últimos 5 pedidos:</strong><br>';
+                        orders.slice(0, 5).forEach(order => {
+                            html += `#${String(order.id).padStart(3, '0')} - ${order.client_name} - ${order.status} - ${order.created_at}<br>`;
+                        });
+                    } else {
+                        html += '<strong>⚠️ Nenhum pedido encontrado no banco!</strong>';
+                    }
+                    
+                    html += '</div>';
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = `<div class="result error">
+                        ❌ Erro ao listar pedidos: ${orders.error || ordersResponse.statusText}
+                    </div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">
+                    ❌ Erro: ${error.message}
+                </div>`;
+            }
+        }
+
+        async function testDatabase() {
+            const result = document.getElementById('test4-result');
+            result.innerHTML = '<div class="result info">Verificando...</div>';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<div class="result success">
+                        ✅ Servidor funcionando!<br>
+                        Status: ${data.status}<br>
+                        Horário do servidor: ${data.time}
+                    </div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">
+                        ❌ Servidor com problemas
+                    </div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">
+                    ❌ Servidor offline ou erro de conexão: ${error.message}
+                </div>`;
+            }
+        }
+    </script>
+</body>
+</html>
