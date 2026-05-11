@@ -358,6 +358,29 @@ nav button.active{background:rgba(247,183,49,.08);color:#F7B731;border-color:rgb
 .loading{text-align:center;padding:3rem;color:#aaa}
 .spin{font-size:36px;animation:spin 1s linear infinite;display:block;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* ===== SKELETON LOADING ===== */
+@keyframes sk-shimmer{
+  0%{background-position:-600px 0}
+  100%{background-position:600px 0}
+}
+.sk-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.1rem}
+.sk-card{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden}
+.sk-img{width:100%;height:160px;background:#f0f0f0;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:600px 100%;animation:sk-shimmer 1.4s infinite}
+.sk-body{padding:.9rem}
+.sk-line{height:12px;border-radius:6px;background:#f0f0f0;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:600px 100%;animation:sk-shimmer 1.4s infinite;margin-bottom:8px}
+.sk-line.w80{width:80%}
+.sk-line.w60{width:60%}
+.sk-line.w40{width:40%}
+.sk-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.sk-price{height:16px;width:70px;border-radius:6px;background:#f0f0f0;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:600px 100%;animation:sk-shimmer 1.4s infinite}
+.sk-btn{width:32px;height:32px;border-radius:50%;background:#f0f0f0;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:600px 100%;animation:sk-shimmer 1.4s infinite}
+@media(max-width:600px){
+  .sk-wrap{grid-template-columns:1fr;gap:.75rem}
+  .sk-card{display:flex;flex-direction:row;min-height:100px;border-radius:14px}
+  .sk-img{width:110px;height:auto;min-height:100px;flex-shrink:0;border-radius:0}
+  .sk-body{flex:1;padding:.7rem .8rem}
+  .sk-line{height:10px}
+}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--bk);color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:.82rem;transform:translateY(70px);opacity:0;transition:all .3s;z-index:500;border-left:4px solid var(--y);max-width:280px}
 #toast.show{transform:translateY(0);opacity:1}
 @media print{
@@ -622,7 +645,7 @@ nav button.active{background:rgba(247,183,49,.08);color:#F7B731;border-color:rgb
   <h2 class="sec-title">Nosso <span>Cardapio</span></h2>
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
-    <input class="search-input" id="search-input" type="text" placeholder="Buscar lanche, pizza, bebida..." oninput="buscarProdutos(this.value)" autocomplete="off">
+    <input class="search-input" id="search-input" type="text" placeholder="Buscar lanche, pizza, bebida..." oninput="buscarProdutos(this.value)" autocomplete="off" onfocus="fixSearchFocus(this)" inputmode="search">
     <button class="search-clear" id="search-clear" onclick="limparBusca()">✕</button>
   </div>
   <div class="cat-tabs" id="cat-tabs">
@@ -637,7 +660,7 @@ nav button.active{background:rgba(247,183,49,.08);color:#F7B731;border-color:rgb
     <button class="ct" onclick="filterCat('bebidas',this)">🥤 Bebidas</button>
     <button class="ct" onclick="filterCat('porcoes',this)">🍟 Porções</button>
   </div>
-  <div class="pg" id="product-grid"><div class="loading"><span class="spin">&#9203;</span>Carregando...</div></div>
+  <div class="pg" id="product-grid"><div class="sk-wrap" id="sk-init"><div class="sk-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w80"></div><div class="sk-line w60"></div><div class="sk-footer"><div class="sk-price"></div><div class="sk-btn"></div></div></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w80"></div><div class="sk-line w60"></div><div class="sk-footer"><div class="sk-price"></div><div class="sk-btn"></div></div></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w80"></div><div class="sk-line w60"></div><div class="sk-footer"><div class="sk-price"></div><div class="sk-btn"></div></div></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w80"></div><div class="sk-line w60"></div><div class="sk-footer"><div class="sk-price"></div><div class="sk-btn"></div></div></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w80"></div><div class="sk-line w60"></div><div class="sk-footer"><div class="sk-price"></div><div class="sk-btn"></div></div></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-body"><div class="sk-line w80"></div><div class="sk-line w60"></div><div class="sk-footer"><div class="sk-price"></div><div class="sk-btn"></div></div></div></div></div></div>
 </div>
 <div class="page" id="page-carrinho">
   <h2 class="sec-title">Seu <span>Carrinho</span></h2>
@@ -1132,7 +1155,7 @@ function loadConfigs() {
 
 function loadProducts() {
   var g = document.getElementById('product-grid');
-  g.innerHTML = '<div class="loading"><span class="spin">&#9203;</span>Carregando...</div>';
+  g.innerHTML = skeletonHTML(6);
   fetch('/api/products')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -1149,6 +1172,21 @@ function loadAcrescimos() {
     .then(function(r) { return r.json(); })
     .then(function(d) { allAcrescimos = d; })
     .catch(function() { allAcrescimos = []; });
+}
+
+function skeletonHTML(n) {
+  var html = '<div class="sk-wrap">';
+  for (var i=0; i<n; i++) {
+    html += '<div class="sk-card">';
+    html += '<div class="sk-img"></div>';
+    html += '<div class="sk-body">';
+    html += '<div class="sk-line w80"></div>';
+    html += '<div class="sk-line w60"></div>';
+    html += '<div class="sk-footer"><div class="sk-price"></div><div class="sk-btn"></div></div>';
+    html += '</div></div>';
+  }
+  html += '</div>';
+  return html;
 }
 
 function renderProducts(cat, subcat) {
@@ -1556,9 +1594,18 @@ function buscarProdutos(q) {
   g.innerHTML = html;
 }
 
+function fixSearchFocus(el) {
+  // Previne que o teclado mobile empurre a tela — scroll suave até o input
+  if (window.innerWidth <= 600) {
+    setTimeout(function() {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+  }
+}
+
 function limparBusca() {
   var input = document.getElementById('search-input');
-  if (input) { input.value = ''; buscarProdutos(''); input.focus(); }
+  if (input) { input.value = ''; buscarProdutos(''); input.blur(); }
 }
 
 function filterCat(cat, el) {
@@ -2582,7 +2629,7 @@ function loadAdmContent(f) {
   if (f === 'acrescimos') { buildAcrMgr().then(function(h){el.innerHTML=h;}); return; }
   if (f === 'combos') { buildCombosMgr().then(function(h){el.innerHTML=h;}); return; }
   if (f === 'config') { buildCfg().then(function(h){el.innerHTML=h;}); return; }
-  el.innerHTML = '<div class="loading"><span class="spin">&#9203;</span>Carregando...</div>';
+  el.innerHTML = skeletonHTML(4);
   var url = '/orders' + (f!=='todos' ? '?status='+f : '');
   api('GET', url, null, true)
     .then(function(orders) {
