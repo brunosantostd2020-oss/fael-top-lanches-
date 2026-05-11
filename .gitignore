@@ -10,4 +10,3 @@ cd
 git
 update.txt
 adicionar-frango-desfiado.sql
-{public,db,routes}/
