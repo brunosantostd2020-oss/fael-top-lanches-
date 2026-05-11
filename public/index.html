@@ -25,22 +25,70 @@ nav button{background:transparent;border:none;color:#ccc;font-size:12px;font-wei
 nav button:hover,nav button.active{background:var(--r);color:#fff}
 .cbtn{background:var(--y)!important;color:var(--bk)!important;position:relative}
 .cbadge{background:var(--r);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-4px;right:-4px}
-.hero{padding:0;margin:0;width:100%;line-height:0;font-size:0}
-.hero img.banner-principal{
+/* ===== HERO ===== */
+.hero{padding:0;margin:0;width:100%;position:relative;overflow:hidden;line-height:0;font-size:0;background:#000}
+.hero-banner-wrap{position:relative;width:100%;overflow:hidden}
+.hero-banner-img{
   width:100%;
+  display:block;
   height:320px;
   object-fit:cover;
   object-position:center center;
-  display:block;
 }
-@media(min-width:1200px){
-  .hero img.banner-principal{height:400px;}
+/* Overlay escuro nas bordas para fundir com o site */
+.hero-banner-wrap::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to bottom, transparent 60%, #0a0a0a 100%),
+             linear-gradient(to right, rgba(0,0,0,.25) 0%, transparent 20%, transparent 80%, rgba(0,0,0,.25) 100%);
+  pointer-events:none;
 }
+/* Barra inferior com CTA */
+.hero-cta-bar{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  z-index:3;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:14px 20px;
+  background:linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 100%);
+}
+.hero-cta-btn{
+  background:linear-gradient(135deg,#D62828,#9B1B1B);
+  color:#fff;border:none;
+  padding:10px 24px;border-radius:10px;
+  font-weight:900;font-size:.88rem;
+  cursor:pointer;
+  box-shadow:0 4px 16px rgba(214,40,40,.5);
+  transition:all .2s;
+  white-space:nowrap;
+}
+.hero-cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(214,40,40,.6)}
+.hero-cta-wpp{
+  background:rgba(255,255,255,.1);
+  border:1.5px solid rgba(255,255,255,.2);
+  color:#fff;
+  padding:9px 20px;border-radius:10px;
+  font-weight:700;font-size:.85rem;
+  cursor:pointer;transition:all .2s;
+  white-space:nowrap;
+}
+.hero-cta-wpp:hover{background:rgba(255,255,255,.18)}
+/* DESKTOP grande */
+@media(min-width:900px){
+  .hero-banner-img{height:400px;object-position:center 30%}
+}
+/* MOBILE */
 @media(max-width:600px){
-  .hero img.banner-principal{
-    height:180px;
+  .hero-banner-img{
+    height:auto;
+    max-height:220px;
+    object-fit:cover;
     object-position:center center;
   }
+  .hero-cta-bar{gap:8px;padding:10px 12px}
+  .hero-cta-btn{padding:9px 16px;font-size:.8rem}
+  .hero-cta-wpp{padding:8px 14px;font-size:.78rem}
 }
 .hero h1 span{color:var(--y)}
 .hero p{color:#e0e0e0;margin:10px 0 20px;font-size:1rem;text-shadow:1px 1px 4px rgba(0,0,0,0.8)}
@@ -361,27 +409,6 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 </style>
 </head>
 <body>
-<style>
-#maes-banner{background:linear-gradient(90deg,#c2185b,#e91e8c,#c2185b);color:#fff;text-align:center;padding:10px 16px;font-weight:800;font-size:.92rem;letter-spacing:.3px;position:relative;overflow:hidden}
-#maes-banner::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);animation:maes-shine 2.8s infinite}
-@keyframes maes-shine{0%{left:-100%}100%{left:180%}}
-@media(max-width:600px){
-  #maes-banner{padding:14px 12px;background:linear-gradient(135deg,#880e4f,#c2185b,#e91e8c,#c2185b,#880e4f)}
-  #maes-banner .maes-emoji{display:block;font-size:2rem;margin-bottom:4px}
-  #maes-banner .maes-txt{display:block;font-size:1rem;font-weight:900;letter-spacing:.5px;text-shadow:0 1px 6px rgba(0,0,0,.3)}
-  #maes-banner .maes-sub{display:block;font-size:.75rem;font-weight:700;opacity:.9;margin-top:2px}
-}
-@media(min-width:601px){
-  #maes-banner .maes-emoji{display:inline}
-  #maes-banner .maes-txt{display:inline}
-  #maes-banner .maes-sub{display:inline}
-}
-</style>
-<div id="maes-banner">
-  <span class="maes-emoji">💐🌸</span>
-  <span class="maes-txt"> Feliz Dia das Mães!</span>
-  <span class="maes-sub"> Com muito amor da equipe Fael Top Lanches 🍔❤️</span>
-</div>
 <div id="closed-banner">Estamos <span>fechados</span> agora</div>
 <div id="login-screen" style="display:none">
   <div class="login-box">
@@ -417,7 +444,13 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   </nav>
 </header>
 <div class="hero">
-  <img src="/banner-fael.png" alt="Fael Top Lanches" class="banner-principal">
+  <div class="hero-banner-wrap">
+    <img src="/banner-fael.png" alt="Fael Top Lanches" class="hero-banner-img">
+    <div class="hero-cta-bar">
+      <button class="hero-cta-btn" onclick="showPage('cardapio')">🍔 Ver Cardápio</button>
+      <button class="hero-cta-wpp" onclick="window.open('https://wa.me/5532998204435','_blank')">📱 WhatsApp</button>
+    </div>
+  </div>
 
   <div style="background:#111;padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
     <span class="badge" id="status-badge"><span id="status-txt">Verificando...</span></span>
