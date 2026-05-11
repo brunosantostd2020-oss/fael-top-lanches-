@@ -26,14 +26,20 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .cbtn{background:var(--y)!important;color:var(--bk)!important;position:relative}
 .cbadge{background:var(--r);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-4px;right:-4px}
 .hero{padding:0;margin:0;width:100%;line-height:0;font-size:0}
-.hero img.banner-principal{width:100%;height:auto;display:block}
+.hero img.banner-principal{
+  width:100%;
+  height:320px;
+  object-fit:cover;
+  object-position:center center;
+  display:block;
+}
+@media(min-width:1200px){
+  .hero img.banner-principal{height:400px;}
+}
 @media(max-width:600px){
   .hero img.banner-principal{
-    width:100%;
-    height:220px;
-    object-fit:cover;
+    height:180px;
     object-position:center center;
-    display:block;
   }
 }
 .hero h1 span{color:var(--y)}
