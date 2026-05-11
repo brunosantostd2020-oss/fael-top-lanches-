@@ -27,6 +27,9 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .cbadge{background:var(--r);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:-4px;right:-4px}
 .hero{background:#000;padding:0;margin:0;position:relative;width:100%;overflow:hidden}
 .hero-banner{display:none}
+.hero-full-banner{width:100%;display:block;line-height:0}
+.hero-full-banner img{width:100%;height:auto;display:block;max-height:420px;object-fit:contain;object-position:center;background:#000}
+@media(max-width:600px){.hero-full-banner img{max-height:none;object-fit:contain}}
 
 /* ===== HERO DESKTOP ===== */
 .hero-desktop{display:block;background:linear-gradient(135deg,#0d0d0d 0%,#1a0800 40%,#0d0d0d 100%);position:relative;overflow:hidden;min-height:360px}
@@ -445,64 +448,9 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   </nav>
 </header>
 <div class="hero">
-  <!-- Desktop: hero profissional CSS -->
-  <div class="hero-desktop">
-    <!-- Partículas decorativas -->
-    <div class="hd-particles">
-      <div class="hd-p" style="top:15%;left:8%;width:6px;height:6px;animation-delay:0s"></div>
-      <div class="hd-p" style="top:60%;left:5%;width:4px;height:4px;animation-delay:.8s"></div>
-      <div class="hd-p" style="top:30%;left:18%;width:3px;height:3px;animation-delay:1.4s"></div>
-      <div class="hd-p" style="top:75%;left:22%;width:5px;height:5px;animation-delay:.3s"></div>
-      <div class="hd-p" style="top:20%;right:15%;width:4px;height:4px;animation-delay:1s"></div>
-      <div class="hd-p" style="top:70%;right:10%;width:6px;height:6px;animation-delay:.5s"></div>
-    </div>
-    <!-- Conteúdo central -->
-    <div class="hd-inner">
-      <!-- Lado esquerdo -->
-      <div class="hd-left">
-        <div class="hd-tag">👑 O MELHOR DA CIDADE</div>
-        <h1 class="hd-title">FAEL TOP<br><span>LANCHES</span></h1>
-        <div class="hd-sub">& Pizzaria • Cataguases</div>
-        <div class="hd-stars">★ ★ ★ ★ ★</div>
-        <p class="hd-slogan">Sabor de verdade,<br><strong>do jeito que você gosta!</strong></p>
-        <div class="hd-badges-row">
-          <div class="hd-badge-item">🏅<span>Ingredientes<br>de Qualidade</span></div>
-          <div class="hd-badge-item">🔥<span>Feito na<br>Hora</span></div>
-          <div class="hd-badge-item">🛵<span>Entrega<br>Rápida</span></div>
-        </div>
-        <button onclick="showPage('cardapio')" class="hd-cta">🍔 VER CARDÁPIO</button>
-      </div>
-      <!-- Lado direito: imagem -->
-      <div class="hd-right">
-        <div class="hd-img-wrap">
-          <img src="/banner-fael.png" alt="Fael Top Lanches" class="hd-img">
-          <div class="hd-img-glow"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mobile: layout profissional customizado -->
-  <div class="hero-mobile">
-    <div class="hero-mobile-glow"></div>
-    <div class="hero-mobile-strip">
-      <span>👑</span>
-      <span>FAEL TOP LANCHES & PIZZARIA</span>
-      <span>⭐⭐⭐⭐⭐</span>
-    </div>
-    <div class="hero-mobile-inner">
-      <div class="hero-mobile-left">
-        <div class="hero-mobile-logo">
-          <span>🍔 O melhor</span>
-          LANCHE<br>DA CIDADE
-        </div>
-        <div class="hero-mobile-stars">★ ★ ★ ★ ★</div>
-        <div class="hero-mobile-sub">Sabor de verdade,<br>do jeito que você gosta!</div>
-      </div>
-      <div class="hero-mobile-right">
-        <img src="/banner-fael.png" alt="Lanche" style="border-radius:12px;width:130px;height:130px;object-fit:cover;object-position:right center">
-      </div>
-    </div>
+  <!-- Banner completo - desktop e mobile -->
+  <div class="hero-full-banner">
+    <img src="/banner-fael.png" alt="Fael Top Lanches">
   </div>
 
   <div style="background:#111;padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
