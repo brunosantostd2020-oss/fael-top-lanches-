@@ -271,7 +271,7 @@ nav button.active{background:rgba(214,40,40,.15);color:#fff;border:1px solid rgb
 .login-err{color:var(--r);font-size:.8rem;font-weight:700;margin-bottom:6px;display:none}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
 .mo.open{opacity:1;pointer-events:all}
-.md{background:#fff;border-radius:var(--rad);padding:2rem;max-width:420px;width:90%;transform:scale(.95);transition:transform .3s;text-align:center}
+.md{background:#fff;border-radius:var(--rad);padding:2rem;max-width:420px;width:90%;transform:scale(.95);transition:transform .3s;text-align:center;max-height:90vh;overflow-y:auto}
 .mo.open .md{transform:scale(1)}
 .md-ic{font-size:64px;margin-bottom:12px}
 .md h2{font-family:Impact,sans-serif;font-size:1.8rem;margin-bottom:5px}
@@ -322,6 +322,36 @@ nav button.active{background:rgba(214,40,40,.15);color:#fff;border:1px solid rgb
   .ct{flex-shrink:0;font-size:11px;padding:6px 12px;white-space:nowrap}
 }
 #print-area{display:none}
+
+/* ===== BOTTOM SHEET ESTILO IFOOD ===== */
+.bs-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:210;opacity:0;pointer-events:none;transition:opacity .25s}
+.bs-overlay.open{opacity:1;pointer-events:all}
+.bs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:211;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);max-height:90vh;overflow-y:auto}
+.bs.open{transform:translateY(0)}
+.bs-handle{width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 0}
+.bs-header{padding:16px 20px 12px;border-bottom:1px solid #f0f0f0}
+.bs-header h3{margin:0;font-size:1rem;font-weight:800;color:#1a1a1a}
+.bs-header p{margin:4px 0 0;font-size:.78rem;color:#888}
+.bs-body{padding:16px 20px}
+.bs-footer{padding:12px 20px 24px;border-top:1px solid #f0f0f0;display:flex;gap:10px}
+.bs-btn-main{flex:1;background:var(--r);color:#fff;border:none;padding:14px;border-radius:12px;font-weight:800;font-size:.95rem;cursor:pointer}
+.bs-btn-sec{background:#f5f5f5;color:#444;border:none;padding:14px 18px;border-radius:12px;font-weight:700;font-size:.9rem;cursor:pointer}
+/* Acréscimos grid */
+.acr-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f5f5f5}
+.acr-item:last-child{border-bottom:none}
+.acr-left{display:flex;align-items:center;gap:10px}
+.acr-check{width:22px;height:22px;border-radius:6px;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0}
+.acr-check.sel{background:var(--r);border-color:var(--r);color:#fff}
+.acr-name{font-size:.88rem;font-weight:600;color:#1a1a1a}
+.acr-price{font-size:.78rem;color:#888;margin-top:1px}
+.acr-val{font-size:.85rem;font-weight:700;color:var(--r)}
+/* Remoção tags */
+.rem-tag{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:20px;border:1.5px solid #e0e0e0;background:#fff;font-size:.78rem;font-weight:600;color:#444;cursor:pointer;transition:all .15s;margin:4px}
+.rem-tag.sel{background:#fff5f5;border-color:#fca5a5;color:#dc2626;text-decoration:line-through}
+/* Total bar */
+.bs-total{display:flex;justify-content:space-between;align-items:center;padding:12px 0;margin-bottom:4px}
+.bs-total span{font-size:.85rem;color:#888;font-weight:600}
+.bs-total strong{font-size:1.05rem;color:var(--r);font-weight:900}
 
 /* ===== BARRA FLUTUANTE CARRINHO MOBILE ===== */
 #float-cart{
@@ -828,43 +858,31 @@ nav button.active{background:rgba(214,40,40,.15);color:#fff;border:1px solid rgb
     <button class="md-btn" onclick="closeModal()">Voltar ao Cardapio</button>
   </div>
 </div>
-<div class="mo" id="modal-acr">
-  <div class="md" style="max-width:480px">
-    <div style="font-size:48px;margin-bottom:8px">+</div>
-    <h2 style="margin-bottom:4px">Acrescimos</h2>
-    <p style="margin-bottom:14px;font-size:.85rem;color:#888">Selecione os extras para o seu pedido</p>
-    <div id="acr-lista" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;max-height:300px;overflow-y:auto"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid #f0f0f0;margin-bottom:12px">
-      <span style="font-weight:800;font-size:.9rem">Total acrescimos:</span>
-      <span id="acr-total" style="font-weight:900;color:var(--r);font-size:1.1rem">R$ 0,00</span>
+<!-- BOTTOM SHEET OVERLAY -->
+<div class="bs-overlay" id="bs-overlay" onclick="fecharBS()"></div>
+
+<!-- BOTTOM SHEET ACRÉSCIMOS -->
+<div class="bs" id="bs-acr">
+  <div class="bs-handle"></div>
+  <div class="bs-header">
+    <h3>Acréscimos</h3>
+    <p>Selecione os extras desejados</p>
+  </div>
+  <div class="bs-body">
+    <div id="acr-lista"></div>
+    <div class="bs-total">
+      <span>Total acréscimos</span>
+      <strong id="acr-total">R$ 0,00</strong>
     </div>
-    <button class="md-btn" onclick="confirmarAcrescimos()" style="width:100%;padding:13px;font-size:1rem">Adicionar ao Carrinho</button>
-    <button onclick="fecharModalAcr()" style="width:100%;margin-top:8px;background:#fff;color:#666;border:2px solid #ddd;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">Algo Mais? 🤔</button>
-    <button onclick="cancelarProduto()" style="width:100%;margin-top:8px;background:#fff5f5;color:#dc2626;border:2px solid #fca5a5;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">❌ Cancelar</button>
+  </div>
+  <div class="bs-footer">
+    <button class="bs-btn-sec" onclick="cancelarProduto()">Cancelar</button>
+    <button class="bs-btn-main" onclick="confirmarAcrescimos()">Adicionar ao Carrinho</button>
   </div>
 </div>
-<div class="mo" id="modal-escolha">
-  <div class="md" style="max-width:420px">
-    <div style="font-size:48px;margin-bottom:8px">✅</div>
-    <h2 style="margin-bottom:8px">Item Adicionado!</h2>
-    <p style="margin-bottom:20px;font-size:.9rem;color:#666">O que deseja fazer agora?</p>
-    
-    <button onclick="abrirCarrinhoModal()" style="width:100%;padding:15px;margin-bottom:10px;background:#fff;border:2px solid var(--r);color:var(--r);border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px">
-      <span style="font-size:1.3rem">🛒</span>
-      <span>Ver Carrinho</span>
-    </button>
-    
-    <button onclick="finalizarDiretoModal()" style="width:100%;padding:15px;margin-bottom:10px;background:linear-gradient(135deg,var(--r),var(--rd));border:none;color:#fff;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(214,40,40,0.3);display:flex;align-items:center;justify-content:center;gap:8px">
-      <span style="font-size:1.3rem">💰</span>
-      <span>Finalizar Pedido</span>
-    </button>
-    
-    <button onclick="continuarComprandoModal()" style="width:100%;padding:13px;background:#fff;color:#666;border:2px solid #ddd;border-radius:10px;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px">
-      <span style="font-size:1.2rem">🍔</span>
-      <span>Continuar Comprando</span>
-    </button>
-  </div>
-</div>
+
+<!-- BOTTOM SHEET MODAL ESCOLHA (mantido por compatibilidade mas simplificado) -->
+<div class="mo" id="modal-escolha" style="display:none;pointer-events:none"></div>
 <div class="mo" id="modal-metade">
   <div class="md" style="max-width:550px">
     <div style="font-size:48px;margin-bottom:8px">🍕</div>
@@ -903,35 +921,22 @@ nav button.active{background:rgba(214,40,40,.15);color:#fff;border:1px solid rgb
     <button onclick="fecharModalMetade()" style="width:100%;margin-top:8px;background:#fff;color:#666;border:2px solid #ddd;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">Cancelar</button>
   </div>
 </div>
-<div class="mo" id="modal-produto-adicionado">
-  <div class="md" style="max-width:420px">
-    <div style="font-size:60px;margin-bottom:12px">✅</div>
-    <h2 style="margin-bottom:8px">Produto Adicionado!</h2>
-    <p style="margin-bottom:24px;font-size:.9rem;color:#666" id="produto-add-nome">Item adicionado ao carrinho</p>
-    <button class="md-btn" onclick="irParaCarrinho()" style="width:100%;padding:15px;font-size:1.05rem;margin-bottom:10px;background:var(--r)">
-      🛒 IR PARA O CARRINHO
-    </button>
-    <button onclick="continuarComprando()" style="width:100%;background:#fff;color:var(--r);border:2px solid var(--r);padding:13px;border-radius:10px;font-weight:800;font-size:.95rem;cursor:pointer;transition:all .2s;margin-bottom:8px">
-      🍔 CONTINUAR COMPRANDO
-    </button>
-    <button onclick="cancelarUltimoProduto()" style="width:100%;background:#fff5f5;color:#dc2626;border:2px solid #fca5a5;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">
-      ❌ Cancelar
-    </button>
-  </div>
+<div class="mo" id="modal-produto-adicionado" style="display:none;pointer-events:none">
+  <span id="produto-add-nome" style="display:none"></span>
 </div>
-<!-- MODAL REMOÇÃO DE INGREDIENTES -->
-<div class="mo" id="modal-remocao">
-  <div class="md" style="max-width:460px;padding:0;border-radius:16px;overflow:hidden">
-    <div style="background:var(--r);padding:20px 20px 16px;color:#fff">
-      <h2 style="margin:0 0 4px;font-size:1.1rem;font-weight:800">Alguma observação?</h2>
-      <p style="margin:0;font-size:.82rem;opacity:.9" id="remocao-prod-nome"></p>
-    </div>
-    <div style="padding:16px 20px 20px">
-      <p style="margin:0 0 12px;font-size:.83rem;color:#888;font-weight:600">Toque para retirar um ingrediente:</p>
-      <div id="remocao-lista" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;max-height:260px;overflow-y:auto"></div>
-      <button class="md-btn" onclick="confirmarRemocao()" style="width:100%;padding:14px;font-size:1rem;margin-bottom:8px;border-radius:10px">Confirmar</button>
-      <button onclick="semRemocao()" style="width:100%;background:#fff;color:#666;border:2px solid #e5e7eb;padding:12px;border-radius:10px;font-weight:700;font-size:.9rem;cursor:pointer">Sem retiradas — do jeito que vem! 👍</button>
-    </div>
+<!-- BOTTOM SHEET REMOÇÃO DE INGREDIENTES -->
+<div class="bs" id="bs-remocao">
+  <div class="bs-handle"></div>
+  <div class="bs-header">
+    <h3>Alguma observação?</h3>
+    <p id="remocao-prod-nome">Toque para retirar ingredientes</p>
+  </div>
+  <div class="bs-body">
+    <div id="remocao-lista" style="display:flex;flex-wrap:wrap;margin-bottom:8px"></div>
+  </div>
+  <div class="bs-footer">
+    <button class="bs-btn-sec" onclick="semRemocao()">Do jeito que vem 👍</button>
+    <button class="bs-btn-main" onclick="confirmarRemocao()">Confirmar</button>
   </div>
 </div>
 <div id="print-area"></div>
@@ -1480,26 +1485,30 @@ function abrirModalAcr(prodId) {
   for (var i=0; i<allAcrescimos.length; i++) {
     var a = allAcrescimos[i];
     html += '<div class="acr-item" id="acr-' + a.id + '" onclick="toggleAcr(' + a.id + ')">';
-    html += '<span class="acr-emoji">' + (a.emoji||'+') + '</span>';
-    html += '<span class="acr-nome">' + a.nome + '</span>';
-    html += '<span class="acr-val">+R$ ' + parseFloat(a.valor).toFixed(2).replace('.',',') + '</span></div>';
+    html += '<div class="acr-left">';
+    html += '<div class="acr-check" id="acr-chk-' + a.id + '"></div>';
+    html += '<div><div class="acr-name">' + (a.emoji||'') + ' ' + a.nome + '</div>';
+    html += '<div class="acr-price">+R$ ' + parseFloat(a.valor).toFixed(2).replace('.',',') + '</div></div>';
+    html += '</div>';
+    html += '<div class="acr-val">+R$ ' + parseFloat(a.valor).toFixed(2).replace('.',',') + '</div>';
+    html += '</div>';
   }
   lista.innerHTML = html;
   calcAcrTotal();
-  document.getElementById('modal-acr').classList.add('open');
+  abrirBS('bs-acr');
 }
 
 function toggleAcr(id) {
   var idx = -1;
   for (var i=0; i<acrSelecionados.length; i++) { if (acrSelecionados[i].id===id) { idx=i; break; } }
-  var el = document.getElementById('acr-' + id);
+  var chk = document.getElementById('acr-chk-' + id);
   if (idx >= 0) {
     acrSelecionados.splice(idx, 1);
-    if (el) el.classList.remove('selected');
+    if (chk) { chk.classList.remove('sel'); chk.textContent = ''; }
   } else {
     var a = null;
     for (var j=0; j<allAcrescimos.length; j++) { if (allAcrescimos[j].id===id) { a=allAcrescimos[j]; break; } }
-    if (a) { acrSelecionados.push(a); if (el) el.classList.add('selected'); }
+    if (a) { acrSelecionados.push(a); if (chk) { chk.classList.add('sel'); chk.textContent = '✓'; } }
   }
   calcAcrTotal();
 }
@@ -1520,38 +1529,38 @@ function confirmarAcrescimos() {
   abrirModalRemocao(prodId, acrs);
 }
 
+function abrirBS(id) {
+  document.getElementById('bs-overlay').classList.add('open');
+  document.getElementById(id).classList.add('open');
+}
+
+function fecharBS() {
+  document.getElementById('bs-overlay').classList.remove('open');
+  var sheets = document.querySelectorAll('.bs');
+  for (var i=0; i<sheets.length; i++) sheets[i].classList.remove('open');
+}
+
 function fecharModalAcr() {
-  document.getElementById('modal-acr').classList.remove('open');
+  fecharBS();
   produtoParaAdicionar = null;
   acrSelecionados = [];
 }
 
 function cancelarProduto() {
-  document.getElementById('modal-acr').classList.remove('open');
+  fecharBS();
   produtoParaAdicionar = null;
   acrSelecionados = [];
 }
 
-// FUNÇÕES DO MODAL DE ESCOLHA
-function abrirCarrinhoModal() {
-  document.getElementById('modal-escolha').classList.remove('open');
-  showPage('carrinho');
-}
-
+function abrirCarrinhoModal() { showPage('carrinho'); }
 function finalizarDiretoModal() {
-  document.getElementById('modal-escolha').classList.remove('open');
   showPage('carrinho');
-  // Scroll até o formulário de finalização
   setTimeout(function() {
     var form = document.getElementById('checkout-form');
     if (form) form.scrollIntoView({behavior: 'smooth', block: 'start'});
   }, 300);
 }
-
-function continuarComprandoModal() {
-  document.getElementById('modal-escolha').classList.remove('open');
-  showPage('cardapio');
-}
+function continuarComprandoModal() { showPage('cardapio'); }
 
 // FUNÇÕES PIZZA METADE/METADE
 var metadeTamanho = null;
@@ -1673,18 +1682,11 @@ function fecharModalMetade() {
 
 // FUNÇÕES MODAL PRODUTO ADICIONADO
 function mostrarModalProdutoAdicionado(nomeProduto) {
-  document.getElementById('produto-add-nome').textContent = nomeProduto;
-  document.getElementById('modal-produto-adicionado').classList.add('open');
+  showToast('✅ ' + nomeProduto + ' adicionado!');
 }
 
-function irParaCarrinho() {
-  document.getElementById('modal-produto-adicionado').classList.remove('open');
-  showPage('carrinho');
-}
-
-function continuarComprando() {
-  document.getElementById('modal-produto-adicionado').classList.remove('open');
-}
+function irParaCarrinho() { showPage('carrinho'); }
+function continuarComprando() {}
 
 function addComboToCart(id, nome, preco) {
   if (!id || !preco) { showToast('Erro ao adicionar combo!'); return; }
@@ -1705,13 +1707,11 @@ function addComboToCart(id, nome, preco) {
 }
 
 function cancelarUltimoProduto() {
-  // Remove o último item adicionado ao carrinho
   if (cart.length > 0) {
     cart.pop();
     updateBadge();
     showToast('Produto removido do carrinho');
   }
-  document.getElementById('modal-produto-adicionado').classList.remove('open');
 }
 
 // FUNÇÕES REMOÇÃO DE INGREDIENTES
@@ -1770,7 +1770,7 @@ function abrirModalRemocao(prodId, acrescimos) {
   }
   lista.innerHTML = html;
   
-  document.getElementById('modal-remocao').classList.add('open');
+  abrirBS('bs-remocao');
 }
 
 function toggleRemocao(idx, ingrediente) {
@@ -1794,21 +1794,15 @@ function toggleRemocao(idx, ingrediente) {
 }
 
 function confirmarRemocao() {
-  document.getElementById('modal-remocao').classList.remove('open');
+  fecharBS();
   addCartDiretoComRemocao(remocaoIdAtual, remocaoAcrescimosAtual, remocaoSelecionados.slice());
   remocaoIdAtual = null; remocaoAcrescimosAtual = []; remocaoSelecionados = [];
-  setTimeout(function() {
-    document.getElementById('modal-escolha').classList.add('open');
-  }, 300);
 }
 
 function semRemocao() {
-  document.getElementById('modal-remocao').classList.remove('open');
+  fecharBS();
   addCartDiretoComRemocao(remocaoIdAtual, remocaoAcrescimosAtual, []);
   remocaoIdAtual = null; remocaoAcrescimosAtual = []; remocaoSelecionados = [];
-  setTimeout(function() {
-    document.getElementById('modal-escolha').classList.add('open');
-  }, 300);
 }
 
 function addCartDiretoComRemocao(id, acrescimos, remocoes) {
