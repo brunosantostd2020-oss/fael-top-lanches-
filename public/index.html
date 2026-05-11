@@ -158,9 +158,57 @@ nav button.active{background:rgba(247,183,49,.08);color:#F7B731;border-color:rgb
 .page{display:none;padding:1.5rem;max-width:1100px;margin:0 auto}
 .page.active{display:block}
 .sec-title{font-family:'Poppins',Impact,sans-serif;font-size:1.8rem;margin-bottom:1.2rem;color:var(--bk);font-weight:800}
+/* ===== BARRA DE BUSCA ===== */
+.search-wrap{position:relative;margin-bottom:1.2rem}
+.search-input{
+  width:100%;box-sizing:border-box;
+  padding:12px 18px 12px 44px;
+  border:2px solid #eee;border-radius:12px;
+  font-size:.9rem;font-family:'Inter',sans-serif;
+  background:#fff;color:var(--bk);
+  transition:border-color .2s;outline:none;
+}
+.search-input:focus{border-color:var(--r)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.1rem;pointer-events:none;opacity:.4}
+.search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:1rem;cursor:pointer;opacity:.4;padding:4px;display:none}
+.search-clear:hover{opacity:.8}
+.search-empty{text-align:center;padding:3rem 1rem;color:#888}
+.search-empty div{font-size:3rem;margin-bottom:12px}
+.search-empty p{font-size:.9rem;font-weight:600}
 .sec-title span{color:var(--r)}
-.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem}
-.ct{padding:7px 16px;border-radius:30px;border:2px solid #ddd;background:#fff;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;color:#666}
+.cat-tabs{
+  display:flex;gap:8px;
+  overflow-x:auto;flex-wrap:nowrap;
+  margin-bottom:1.2rem;
+  padding:4px 2px 10px;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:x mandatory;
+}
+.cat-tabs::-webkit-scrollbar{display:none}
+.ct{
+  flex-shrink:0;
+  scroll-snap-align:start;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 18px;
+  border-radius:30px;
+  border:2px solid #eee;
+  background:#fff;
+  font-weight:800;font-size:12px;
+  cursor:pointer;
+  transition:all .2s;
+  color:#666;
+  white-space:nowrap;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+.ct:hover{border-color:#D62828;color:#D62828;background:#fff5f5}
+.ct.active{
+  background:var(--r);
+  border-color:var(--r);
+  color:#fff;
+  box-shadow:0 3px 12px rgba(214,40,40,.3);
+  transform:translateY(-1px);
+}
 .ct.active,.ct:hover{background:var(--r);border-color:var(--r);color:#fff}
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.1rem}
 .pc{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden;transition:transform .2s;display:flex;flex-direction:column}
@@ -342,9 +390,8 @@ nav button.active{background:rgba(247,183,49,.08);color:#F7B731;border-color:rgb
 
   .page{padding:.85rem .65rem}
   .sec-title{font-size:1.2rem;margin-bottom:.8rem}
-  .cat-tabs{gap:5px;margin-bottom:.9rem;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;scrollbar-width:none}
-  .cat-tabs::-webkit-scrollbar{display:none}
-  .ct{flex-shrink:0;font-size:11px;padding:6px 12px;white-space:nowrap}
+  .cat-tabs{gap:6px;margin-bottom:.9rem;padding:2px 0 8px}
+  .ct{font-size:11px;padding:7px 14px}
 }
 #print-area{display:none}
 
@@ -573,17 +620,22 @@ nav button.active{background:rgba(247,183,49,.08);color:#F7B731;border-color:rgb
 </div>
 <div class="page active" id="page-cardapio">
   <h2 class="sec-title">Nosso <span>Cardapio</span></h2>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search-input" type="text" placeholder="Buscar lanche, pizza, bebida..." oninput="buscarProdutos(this.value)" autocomplete="off">
+    <button class="search-clear" id="search-clear" onclick="limparBusca()">✕</button>
+  </div>
   <div class="cat-tabs" id="cat-tabs">
-    <button class="ct active" onclick="filterCat('todos',this)">Todos</button>
+    <button class="ct active" onclick="filterCat('todos',this)">⚡ Todos</button>
     <button class="ct" onclick="filterCat('combos',this)">🔥 Combos</button>
-    <button class="ct" onclick="filterCat('lanches',this)">&#127828; Lanches</button>
-    <button class="ct" onclick="filterCat('pizzas_tam',this)">&#127829; Pizzas</button>
-    <button class="ct" onclick="filterCat('moda_fael',this)">&#128081; Moda do Fael</button>
+    <button class="ct" onclick="filterCat('lanches',this)">🍔 Lanches</button>
+    <button class="ct" onclick="filterCat('pizzas_tam',this)">🍕 Pizzas</button>
+    <button class="ct" onclick="filterCat('moda_fael',this)">👑 Moda Fael</button>
     <button class="ct" onclick="abrirMetadeMetade();document.querySelectorAll('.ct').forEach(function(b){b.classList.remove('active')})">&#127829; Monte sua Pizza</button>
-    <button class="ct" onclick="filterCat('omelete',this)">&#127859; Omelete</button>
-    <button class="ct" onclick="filterCat('cachorro_quente',this)">&#127789; Cachorro Quente</button>
-    <button class="ct" onclick="filterCat('bebidas',this)">&#129380; Bebidas</button>
-    <button class="ct" onclick="filterCat('porcoes',this)">&#127839; Porcoes</button>
+    <button class="ct" onclick="filterCat('omelete',this)">🍳 Omelete</button>
+    <button class="ct" onclick="filterCat('cachorro_quente',this)">🌭 Cachorro Quente</button>
+    <button class="ct" onclick="filterCat('bebidas',this)">🥤 Bebidas</button>
+    <button class="ct" onclick="filterCat('porcoes',this)">🍟 Porções</button>
   </div>
   <div class="pg" id="product-grid"><div class="loading"><span class="spin">&#9203;</span>Carregando...</div></div>
 </div>
@@ -1441,7 +1493,82 @@ function filterBebidas(tipo) {
   container.innerHTML = html;
 }
 
+function buscarProdutos(q) {
+  var clear = document.getElementById('search-clear');
+  var tabs = document.getElementById('cat-tabs');
+  q = q.trim().toLowerCase();
+
+  if (!q) {
+    if (clear) clear.style.display = 'none';
+    if (tabs) tabs.style.display = '';
+    renderProducts('todos');
+    // Resetar tab ativa para "Todos"
+    var cts = document.querySelectorAll('.ct');
+    for (var i=0; i<cts.length; i++) cts[i].classList.remove('active');
+    if (cts[0]) cts[0].classList.add('active');
+    return;
+  }
+
+  if (clear) clear.style.display = 'block';
+  if (tabs) tabs.style.display = 'none'; // Esconde tabs durante busca
+
+  var op = isOpen();
+  var g = document.getElementById('product-grid');
+  var resultados = allProducts.filter(function(p) {
+    return p.active && (
+      p.name.toLowerCase().indexOf(q) >= 0 ||
+      (p.description && p.description.toLowerCase().indexOf(q) >= 0) ||
+      (p.emoji && p.emoji.indexOf(q) >= 0)
+    );
+  });
+
+  if (!resultados.length) {
+    g.innerHTML = '<div class="search-empty"><div>🔍</div><p>Nenhum produto encontrado para "<strong>' + q + '</strong>"</p></div>';
+    return;
+  }
+
+  var html = '';
+  for (var i=0; i<resultados.length; i++) {
+    var p = resultados[i];
+    var imageUrl = '';
+    if (p.description && p.description.indexOf('##IMG:') >= 0) {
+      var imgMatch = p.description.match(/##IMG:([^#]+)##/);
+      if (imgMatch) imageUrl = imgMatch[1];
+    }
+    var preco = 'R$ ' + parseFloat(p.price).toFixed(2).replace('.',',');
+    html += '<div class="pc">';
+    html += '<div class="pi" style="background:#f5f5f5' + (imageUrl ? ';padding:0' : '') + '">';
+    if (imageUrl) {
+      html += '<img src="' + imageUrl + '" alt="' + p.name + '" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block">';
+    } else {
+      html += '<span style="font-size:3rem">' + (p.emoji||'🍽') + '</span>';
+    }
+    html += '</div>';
+    html += '<div class="pinfo">';
+    html += '<div class="pname">' + p.name + '</div>';
+    if (p.description && p.description.indexOf('##IMG:') < 0 && p.description.trim()) {
+      html += '<div class="pdesc">' + p.description.replace(/##[^#]+##/g,'').trim() + '</div>';
+    }
+    html += '<div class="pfooter"><span class="pprice">' + preco + '</span>';
+    if (op) html += '<button class="abtn" onclick="addCart(' + p.id + ')">+</button>';
+    html += '</div></div></div>';
+  }
+  g.innerHTML = html;
+}
+
+function limparBusca() {
+  var input = document.getElementById('search-input');
+  if (input) { input.value = ''; buscarProdutos(''); input.focus(); }
+}
+
 function filterCat(cat, el) {
+  // Limpar busca ao trocar de categoria
+  var input = document.getElementById('search-input');
+  if (input) input.value = '';
+  var clear = document.getElementById('search-clear');
+  if (clear) clear.style.display = 'none';
+  var tabs2 = document.getElementById('cat-tabs');
+  if (tabs2) tabs2.style.display = '';
   var tabs = document.querySelectorAll('.ct');
   for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
   el.classList.add('active');
