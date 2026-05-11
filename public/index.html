@@ -955,7 +955,8 @@ var produtoParaAdicionar = null, acrSelecionados = [];
 var remocaoIdAtual = null, remocaoAcrescimosAtual = [], remocaoSelecionados = [], remocaoNomeProd = '';
 var lastOrderCheck = 0; // será definido como Date.now() no primeiro check
 var notificationEnabled = localStorage.getItem('fael_notification') !== 'false';
-var autoPrintEnabled = localStorage.getItem('fael_autoprint') === 'true';
+localStorage.removeItem('fael_autoprint'); // Desativa impressão automática definitivamente
+var autoPrintEnabled = false;
 
 function api(method, path, body, auth) {
   var h = {'Content-Type': 'application/json'};
