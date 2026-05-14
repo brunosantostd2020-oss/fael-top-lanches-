@@ -1555,6 +1555,13 @@ function confirmarAcrescimos() {
   var prodId = produtoParaAdicionar;
   var acrs = acrSelecionados.slice();
   fecharModalAcr();
+
+  // Se veio da pizza simples, usar callback próprio
+  if (window._pizzaSimCallback) {
+    _adicionarPizzaSimples(acrs);
+    return;
+  }
+
   // Abrir modal de remoção (se produto tem ingredientes)
   abrirModalRemocao(prodId, acrs);
 }
@@ -1569,6 +1576,8 @@ function cancelarProduto() {
   document.getElementById('modal-acr').classList.remove('open');
   produtoParaAdicionar = null;
   acrSelecionados = [];
+  window._pizzaSimCallback = false;
+  window._pizzaSimPendente = null;
 }
 
 // FUNÇÕES DO MODAL DE ESCOLHA
@@ -1633,7 +1642,7 @@ function selecionarTamPizzaSim(tam, preco) {
 
 function confirmarPizzaSimples() {
   if (!pizzaSimTamanho) { showToast('⚠️ Selecione o tamanho!'); return; }
-  var saborId = document.getElementById('pizza-sim-sabor').value;
+  var saborId = parseInt(document.getElementById('pizza-sim-sabor').value);
   if (!saborId) { showToast('⚠️ Selecione o sabor!'); return; }
   var prod = allProducts.filter(function(p) { return p.id == saborId; })[0];
   if (!prod) return;
@@ -1641,19 +1650,51 @@ function confirmarPizzaSimples() {
   if (pizzaSimTamanho === 'G') tamNome = 'Grande';
   if (pizzaSimTamanho === 'GG') tamNome = 'Gigante';
   if (pizzaSimTamanho === 'GGG') tamNome = 'Tamanho Família';
-  var nomeCompleto = '🍕 Pizza ' + tamNome + ' - ' + prod.name;
+
+  // Salva o contexto da pizza para usar depois dos acréscimos/remoção
+  window._pizzaSimPendente = {
+    prod: prod,
+    tamNome: tamNome,
+    preco: pizzaSimPreco
+  };
+
+  fecharModalPizzaSimples();
+
+  // Passa por acréscimos se houver, usando ID real do produto
+  if (allAcrescimos.length > 0) {
+    // Guarda função de callback pós-acréscimos
+    window._pizzaSimCallback = true;
+    abrirModalAcr(prod.id);
+  } else {
+    _adicionarPizzaSimples([]);
+  }
+}
+
+function _adicionarPizzaSimples(acrescimos) {
+  var ctx = window._pizzaSimPendente;
+  if (!ctx) return;
+  var extra = 0;
+  var nomeAcr = '';
+  if (acrescimos && acrescimos.length > 0) {
+    nomeAcr = acrescimos.map(function(a){ return a.nome; }).join(', ');
+    for (var j = 0; j < acrescimos.length; j++) extra += parseFloat(acrescimos[j].valor);
+  }
+  var nomeCompleto = '🍕 Pizza ' + ctx.tamNome + ' - ' + ctx.prod.name;
+  if (nomeAcr) nomeCompleto += ' (+' + nomeAcr + ')';
+
   cart.push({
-    id: prod.id,
+    id: ctx.prod.id,
     cartId: 'pizzasim_' + Date.now(),
     name: nomeCompleto,
-    price: pizzaSimPreco,
+    price: ctx.preco + extra,
     qty: 1,
     emoji: '🍕',
     category: 'pizzas_tam',
-    acrescimos: []
+    acrescimos: acrescimos || []
   });
+  window._pizzaSimPendente = null;
+  window._pizzaSimCallback = false;
   updateBadge();
-  fecharModalPizzaSimples();
   mostrarModalProdutoAdicionado(nomeCompleto);
 }
 
