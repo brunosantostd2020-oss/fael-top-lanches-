@@ -497,7 +497,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button class="ct active" onclick="filterCat('todos',this)">Todos</button>
     <button class="ct" onclick="filterCat('combos',this)">🔥 Combos</button>
     <button class="ct" onclick="filterCat('lanches',this)">&#127828; Lanches</button>
-    <button class="ct" onclick="filterCat('pizzas_tam',this)">&#127829; Pizzas</button>
+    <button class="ct" onclick="abrirModalPizzaSimples();document.querySelectorAll('.ct').forEach(function(b){b.classList.remove('active')})">&#127829; Pizzas</button>
     <button class="ct" onclick="filterCat('moda_fael',this)">&#128081; Moda do Fael</button>
     <button class="ct" onclick="abrirMetadeMetade();document.querySelectorAll('.ct').forEach(function(b){b.classList.remove('active')})">&#127829; Monte sua Pizza</button>
     <button class="ct" onclick="filterCat('omelete',this)">&#127859; Omelete</button>
@@ -843,6 +843,39 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     </button>
   </div>
 </div>
+<!-- MODAL PIZZA 1 SABOR -->
+<div class="mo" id="modal-pizza-simples">
+  <div class="md" style="max-width:480px">
+    <div style="font-size:48px;margin-bottom:8px">🍕</div>
+    <h2 style="margin-bottom:4px">Monte sua Pizza</h2>
+    <p style="margin-bottom:14px;font-size:.85rem;color:#888">Escolha o tamanho e o sabor</p>
+
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-weight:700;margin-bottom:8px;color:#333">Tamanho:</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <button class="pizza-sim-btn" onclick="selecionarTamPizzaSim('G',65)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">G<br><span style="font-size:.7rem;font-weight:600;color:#666">6 pedaços</span><br>R$ 65</button>
+        <button class="pizza-sim-btn" onclick="selecionarTamPizzaSim('GG',75)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">GG<br><span style="font-size:.7rem;font-weight:600;color:#666">8 pedaços</span><br>R$ 75</button>
+        <button class="pizza-sim-btn" onclick="selecionarTamPizzaSim('GGG',90)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">Família<br><span style="font-size:.7rem;font-weight:600;color:#666">12 pedaços</span><br>R$ 90</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-weight:700;margin-bottom:8px;color:#333">Sabor:</label>
+      <select id="pizza-sim-sabor" style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:.95rem">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:2px solid #f0f0f0;margin-bottom:12px">
+      <span style="font-weight:800;font-size:.9rem">Total:</span>
+      <span id="pizza-sim-total" style="font-weight:900;color:var(--r);font-size:1.2rem">Selecione o tamanho</span>
+    </div>
+
+    <button class="md-btn" onclick="confirmarPizzaSimples()" style="width:100%;padding:13px;font-size:1rem">Adicionar ao Carrinho</button>
+    <button onclick="fecharModalPizzaSimples()" style="width:100%;margin-top:8px;background:#fff;color:#666;border:2px solid #ddd;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+
 <div class="mo" id="modal-metade">
   <div class="md" style="max-width:550px">
     <div style="font-size:48px;margin-bottom:8px">🍕</div>
@@ -1562,6 +1595,73 @@ function continuarComprandoModal() {
 // FUNÇÕES PIZZA METADE/METADE
 var metadeTamanho = null;
 var metadePreco = 0;
+
+// --- MODAL PIZZA SIMPLES (1 sabor) ---
+var pizzaSimTamanho = null;
+var pizzaSimPreco = 0;
+
+function abrirModalPizzaSimples() {
+  if (!isOpen()) { showToast('Estamos fechados!'); return; }
+  var pizzas = allProducts.filter(function(p) {
+    if (p.category !== 'pizzas' || !p.active) return false;
+    return !p.name.toLowerCase().includes('moda do fael');
+  });
+  var html = '<option value="">Selecione...</option>';
+  for (var i = 0; i < pizzas.length; i++) {
+    html += '<option value="' + pizzas[i].id + '">' + (pizzas[i].emoji || '🍕') + ' ' + pizzas[i].name + '</option>';
+  }
+  document.getElementById('pizza-sim-sabor').innerHTML = html;
+  pizzaSimTamanho = null;
+  pizzaSimPreco = 0;
+  document.getElementById('pizza-sim-total').textContent = 'Selecione o tamanho';
+  var btns = document.querySelectorAll('.pizza-sim-btn');
+  for (var j = 0; j < btns.length; j++) { btns[j].style.borderColor='#ddd'; btns[j].style.background='#fff'; btns[j].style.color='#333'; }
+  document.getElementById('pizza-sim-sabor').value = '';
+  document.getElementById('modal-pizza-simples').classList.add('open');
+}
+
+function selecionarTamPizzaSim(tam, preco) {
+  pizzaSimTamanho = tam;
+  pizzaSimPreco = preco;
+  document.getElementById('pizza-sim-total').textContent = 'R$ ' + preco.toFixed(2).replace('.', ',');
+  var btns = document.querySelectorAll('.pizza-sim-btn');
+  for (var i = 0; i < btns.length; i++) { btns[i].style.borderColor='#ddd'; btns[i].style.background='#fff'; btns[i].style.color='#333'; }
+  event.target.style.borderColor = 'var(--r)';
+  event.target.style.background = 'var(--r)';
+  event.target.style.color = '#fff';
+}
+
+function confirmarPizzaSimples() {
+  if (!pizzaSimTamanho) { showToast('⚠️ Selecione o tamanho!'); return; }
+  var saborId = document.getElementById('pizza-sim-sabor').value;
+  if (!saborId) { showToast('⚠️ Selecione o sabor!'); return; }
+  var prod = allProducts.filter(function(p) { return p.id == saborId; })[0];
+  if (!prod) return;
+  var tamNome = pizzaSimTamanho;
+  if (pizzaSimTamanho === 'G') tamNome = 'Grande';
+  if (pizzaSimTamanho === 'GG') tamNome = 'Gigante';
+  if (pizzaSimTamanho === 'GGG') tamNome = 'Tamanho Família';
+  var nomeCompleto = '🍕 Pizza ' + tamNome + ' - ' + prod.name;
+  cart.push({
+    id: prod.id,
+    cartId: 'pizzasim_' + Date.now(),
+    name: nomeCompleto,
+    price: pizzaSimPreco,
+    qty: 1,
+    emoji: '🍕',
+    category: 'pizzas_tam',
+    acrescimos: []
+  });
+  updateBadge();
+  fecharModalPizzaSimples();
+  mostrarModalProdutoAdicionado(nomeCompleto);
+}
+
+function fecharModalPizzaSimples() {
+  document.getElementById('modal-pizza-simples').classList.remove('open');
+  pizzaSimTamanho = null;
+  pizzaSimPreco = 0;
+}
 
 function abrirMetadeMetade() {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
@@ -3694,7 +3794,7 @@ setInterval(function(){
       <div class="footer-col-title">Cardápio</div>
       <ul class="footer-links">
         <li onclick="showPage('cardapio');filterCat('lanches',null)">🍔 Lanches</li>
-        <li onclick="showPage('cardapio');filterCat('pizzas_tam',null)">🍕 Pizzas</li>
+        <li onclick="showPage('cardapio');abrirModalPizzaSimples()">🍕 Pizzas</li>
         <li onclick="showPage('cardapio');filterCat('moda_fael',null)">👑 Moda do Fael</li>
         <li onclick="showPage('cardapio');filterCat('bebidas',null)">🥤 Bebidas</li>
         <li onclick="showPage('cardapio');filterCat('porcoes',null)">🍟 Porções</li>
