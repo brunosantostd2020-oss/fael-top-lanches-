@@ -31,7 +31,6 @@ router.post('/validar', async (req, res) => {
     if (!r.rows.length) return res.status(404).json({ error: 'Cupom inválido' });
     const c = r.rows[0];
     if (!c.ativo) return res.status(400).json({ error: 'Cupom desativado' });
-    // Comparação feita no banco para evitar problemas de timezone na string retornada
     if (new Date() > new Date(c.expira_em)) return res.status(400).json({ error: 'Cupom expirado' });
     if (c.usos_atuais >= c.usos_maximos) return res.status(400).json({ error: 'Cupom esgotado' });
     res.json({

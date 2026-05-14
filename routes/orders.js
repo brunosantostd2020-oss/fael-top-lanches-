@@ -9,28 +9,9 @@ async function getOrderWithItems(id) {
   const order = oRes.rows[0];
   const iRes = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [id]);
   order.items = iRes.rows;
+  // Format date com timezone de Brasília
   order.created_at = new Date(order.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   return order;
-}
-
-// Busca múltiplos pedidos com seus itens em apenas 2 queries (evita N+1)
-async function getOrdersWithItems(orderRows) {
-  if (!orderRows.length) return [];
-  const ids = orderRows.map(o => o.id);
-  const iRes = await pool.query(
-    "SELECT * FROM order_items WHERE order_id = ANY($1::int[])",
-    [ids]
-  );
-  const itemsByOrder = {};
-  for (const item of iRes.rows) {
-    if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
-    itemsByOrder[item.order_id].push(item);
-  }
-  return orderRows.map(o => {
-    o.items = itemsByOrder[o.id] || [];
-    o.created_at = new Date(o.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-    return o;
-  });
 }
 
 // GET all orders (admin)
@@ -45,7 +26,14 @@ router.get('/', requireAdmin, async (req, res) => {
     }
     q += " ORDER BY created_at DESC";
     const result = await pool.query(q, params);
-    const orders = await getOrdersWithItems(result.rows);
+    const orders = result.rows;
+    // attach items
+    for (const o of orders) {
+      const iRes = await pool.query("SELECT * FROM order_items WHERE order_id = $1", [o.id]);
+      o.items = iRes.rows;
+      // Formatar data para horário de Brasília
+      o.created_at = new Date(o.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    }
     res.json(orders);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -137,8 +125,8 @@ router.get('/stats/summary', requireAdmin, async (req, res) => {
       pool.query("SELECT COUNT(*) FROM orders WHERE status = 'pendente'"),
       pool.query("SELECT COUNT(*) FROM orders WHERE status = 'entrega'"),
       pool.query("SELECT COALESCE(SUM(total),0) as s FROM orders WHERE status != 'cancelado'"),
-      pool.query("SELECT COALESCE(SUM(total),0) as s FROM orders WHERE status != 'cancelado' AND DATE(created_at AT TIME ZONE 'America/Sao_Paulo') = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date"),
-      pool.query("SELECT COUNT(*) FROM orders WHERE DATE(created_at AT TIME ZONE 'America/Sao_Paulo') = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')::date"),
+      pool.query("SELECT COALESCE(SUM(total),0) as s FROM orders WHERE status != 'cancelado' AND DATE(created_at) = CURRENT_DATE"),
+      pool.query("SELECT COUNT(*) FROM orders WHERE DATE(created_at) = CURRENT_DATE"),
     ]);
     res.json({
       total_orders: parseInt(tot.rows[0].count),
