@@ -82,7 +82,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .page.active{display:block}
 .sec-title{font-family:'Poppins',Impact,sans-serif;font-size:1.8rem;margin-bottom:1.2rem;color:var(--bk);font-weight:800}
 .sec-title span{color:var(--r)}
-.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem}
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem;position:sticky;top:68px;z-index:90;background:var(--gr);padding:10px 0 8px;margin-left:-1.5rem;margin-right:-1.5rem;padding-left:1.5rem;padding-right:1.5rem;box-shadow:0 4px 12px rgba(0,0,0,.07)}
 .ct{padding:7px 16px;border-radius:30px;border:2px solid #ddd;background:#fff;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;color:#666}
 .ct.active,.ct:hover{background:var(--r);border-color:var(--r);color:#fff}
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.1rem}
@@ -269,7 +269,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   .logo-ic{width:36px;height:36px;font-size:18px}
   .page{padding:.85rem .65rem}
   .sec-title{font-size:1.2rem;margin-bottom:.8rem}
-  .cat-tabs{gap:5px;margin-bottom:.9rem;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;scrollbar-width:none}
+  .cat-tabs{gap:5px;margin-bottom:.9rem;overflow-x:auto;flex-wrap:nowrap;padding-bottom:6px;scrollbar-width:none;position:sticky;top:0;margin-left:-.65rem;margin-right:-.65rem;padding-left:.65rem;padding-right:.65rem}
   .cat-tabs::-webkit-scrollbar{display:none}
   .ct{flex-shrink:0;font-size:11px;padding:6px 12px;white-space:nowrap}
 }
@@ -493,6 +493,14 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 </div>
 <div class="page active" id="page-cardapio">
   <h2 class="sec-title">Nosso <span>Cardapio</span></h2>
+
+  <!-- BARRA DE BUSCA -->
+  <div style="position:relative;margin-bottom:1rem">
+    <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.1rem;pointer-events:none">🔍</span>
+    <input id="busca-cardapio" type="text" placeholder="Buscar no cardápio..." oninput="buscarProdutos(this.value)" style="width:100%;padding:12px 14px 12px 42px;border:2px solid #e5e7eb;border-radius:12px;font-size:.92rem;outline:none;font-family:Inter,sans-serif;background:#fff;transition:border-color .2s" onfocus="this.style.borderColor='var(--r)'" onblur="this.style.borderColor='#e5e7eb'">
+    <button id="busca-limpar" onclick="limparBusca()" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:1.1rem;cursor:pointer;color:#aaa;padding:4px">✕</button>
+  </div>
+
   <div class="cat-tabs" id="cat-tabs">
     <button class="ct active" onclick="filterCat('todos',this)">Todos</button>
     <button class="ct" onclick="filterCat('combos',this)">🔥 Combos</button>
@@ -821,26 +829,22 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button onclick="cancelarProduto()" style="width:100%;margin-top:8px;background:#fff5f5;color:#dc2626;border:2px solid #fca5a5;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">❌ Cancelar</button>
   </div>
 </div>
-<div class="mo" id="modal-escolha">
-  <div class="md" style="max-width:420px">
-    <div style="font-size:48px;margin-bottom:8px">✅</div>
-    <h2 style="margin-bottom:8px">Item Adicionado!</h2>
-    <p style="margin-bottom:20px;font-size:.9rem;color:#666">O que deseja fazer agora?</p>
-    
-    <button onclick="abrirCarrinhoModal()" style="width:100%;padding:15px;margin-bottom:10px;background:#fff;border:2px solid var(--r);color:var(--r);border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px">
-      <span style="font-size:1.3rem">🛒</span>
-      <span>Ver Carrinho</span>
-    </button>
-    
-    <button onclick="finalizarDiretoModal()" style="width:100%;padding:15px;margin-bottom:10px;background:linear-gradient(135deg,var(--r),var(--rd));border:none;color:#fff;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(214,40,40,0.3);display:flex;align-items:center;justify-content:center;gap:8px">
-      <span style="font-size:1.3rem">💰</span>
-      <span>Finalizar Pedido</span>
-    </button>
-    
-    <button onclick="continuarComprandoModal()" style="width:100%;padding:13px;background:#fff;color:#666;border:2px solid #ddd;border-radius:10px;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px">
-      <span style="font-size:1.2rem">🍔</span>
-      <span>Continuar Comprando</span>
-    </button>
+<div id="modal-escolha" style="position:fixed;bottom:-200px;left:0;right:0;z-index:300;transition:bottom .35s cubic-bezier(.4,0,.2,1);pointer-events:none">
+  <div style="background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,.18);padding:16px 20px 24px;pointer-events:all">
+    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 14px"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:1.8rem">✅</span>
+      <div>
+        <div style="font-weight:800;font-size:.95rem;color:#1a1a1a">Item adicionado!</div>
+        <div style="font-size:.78rem;color:#888" id="modal-escolha-nome">Produto no carrinho</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="cancelarUltimoProduto()" style="padding:12px;background:#fff5f5;color:#dc2626;border:2px solid #fca5a5;border-radius:10px;font-weight:700;font-size:.82rem;cursor:pointer">❌</button>
+      <button onclick="continuarComprandoModal()" style="flex:1;padding:12px;background:#f5f5f5;color:#444;border:none;border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer">Continuar</button>
+      <button onclick="abrirCarrinhoModal()" style="flex:1;padding:12px;background:#fff;color:var(--r);border:2px solid var(--r);border-radius:10px;font-weight:700;font-size:.85rem;cursor:pointer">Ver Carrinho</button>
+      <button onclick="finalizarDiretoModal()" style="flex:1;padding:12px;background:var(--r);color:#fff;border:none;border-radius:10px;font-weight:800;font-size:.85rem;cursor:pointer">Finalizar 💰</button>
+    </div>
   </div>
 </div>
 <!-- MODAL PIZZA 1 SABOR -->
@@ -1582,12 +1586,12 @@ function cancelarProduto() {
 
 // FUNÇÕES DO MODAL DE ESCOLHA
 function abrirCarrinhoModal() {
-  document.getElementById('modal-escolha').classList.remove('open');
+  var _me=document.getElementById('modal-escolha');_me.style.bottom='-200px';_me.style.pointerEvents='none';
   showPage('carrinho');
 }
 
 function finalizarDiretoModal() {
-  document.getElementById('modal-escolha').classList.remove('open');
+  var _me=document.getElementById('modal-escolha');_me.style.bottom='-200px';_me.style.pointerEvents='none';
   showPage('carrinho');
   // Scroll até o formulário de finalização
   setTimeout(function() {
@@ -1597,7 +1601,7 @@ function finalizarDiretoModal() {
 }
 
 function continuarComprandoModal() {
-  document.getElementById('modal-escolha').classList.remove('open');
+  var _me=document.getElementById('modal-escolha');_me.style.bottom='-200px';_me.style.pointerEvents='none';
   showPage('cardapio');
 }
 
@@ -1820,8 +1824,18 @@ function fecharModalMetade() {
 
 // FUNÇÕES MODAL PRODUTO ADICIONADO
 function mostrarModalProdutoAdicionado(nomeProduto) {
-  document.getElementById('produto-add-nome').textContent = nomeProduto;
-  document.getElementById('modal-produto-adicionado').classList.add('open');
+  // Usa a barrinha flutuante inferior
+  var nomeEl = document.getElementById('modal-escolha-nome');
+  if (nomeEl) nomeEl.textContent = nomeProduto;
+  var _me = document.getElementById('modal-escolha');
+  _me.style.bottom = '0';
+  _me.style.pointerEvents = 'all';
+  // Fecha automaticamente após 5 segundos se não interagir
+  clearTimeout(window._barrinhaTimer);
+  window._barrinhaTimer = setTimeout(function() {
+    _me.style.bottom = '-200px';
+    _me.style.pointerEvents = 'none';
+  }, 5000);
 }
 
 function irParaCarrinho() {
@@ -1858,7 +1872,10 @@ function cancelarUltimoProduto() {
     updateBadge();
     showToast('Produto removido do carrinho');
   }
-  document.getElementById('modal-produto-adicionado').classList.remove('open');
+  var _me = document.getElementById('modal-escolha');
+  _me.style.bottom = '-200px';
+  _me.style.pointerEvents = 'none';
+  clearTimeout(window._barrinhaTimer);
 }
 
 // FUNÇÕES REMOÇÃO DE INGREDIENTES
@@ -1945,7 +1962,7 @@ function confirmarRemocao() {
   addCartDiretoComRemocao(remocaoIdAtual, remocaoAcrescimosAtual, remocaoSelecionados.slice());
   remocaoIdAtual = null; remocaoAcrescimosAtual = []; remocaoSelecionados = [];
   setTimeout(function() {
-    document.getElementById('modal-escolha').classList.add('open');
+    var _me=document.getElementById('modal-escolha');_me.style.bottom='0';_me.style.pointerEvents='all';
   }, 300);
 }
 
@@ -1954,7 +1971,7 @@ function semRemocao() {
   addCartDiretoComRemocao(remocaoIdAtual, remocaoAcrescimosAtual, []);
   remocaoIdAtual = null; remocaoAcrescimosAtual = []; remocaoSelecionados = [];
   setTimeout(function() {
-    document.getElementById('modal-escolha').classList.add('open');
+    var _me=document.getElementById('modal-escolha');_me.style.bottom='0';_me.style.pointerEvents='all';
   }, 300);
 }
 
@@ -2046,6 +2063,61 @@ function addCartDireto(id, acrescimos) {
   mostrarModalProdutoAdicionado((p.emoji||'') + ' ' + nome);
 }
 
+// ── BUSCA NO CARDÁPIO ──────────────────────────────
+function buscarProdutos(termo) {
+  var limpar = document.getElementById('busca-limpar');
+  if (limpar) limpar.style.display = termo ? 'block' : 'none';
+
+  if (!termo || termo.trim() === '') {
+    // Volta ao estado normal — sem interferir em nada
+    var tabs = document.getElementById('cat-tabs');
+    if (tabs) tabs.style.display = '';
+    var ctAtivo = document.querySelector('.ct.active');
+    if (ctAtivo) ctAtivo.click();
+    else filterCat('todos', document.querySelector('.ct'));
+    return;
+  }
+
+  // Esconde as abas enquanto busca
+  var tabs = document.getElementById('cat-tabs');
+  if (tabs) tabs.style.display = 'none';
+
+  var t = termo.toLowerCase().trim();
+  var resultados = allProducts.filter(function(p) {
+    if (!p.active) return false;
+    return (p.name && p.name.toLowerCase().includes(t)) ||
+           (p.description && p.description.toLowerCase().includes(t));
+  });
+
+  var g = document.getElementById('product-grid');
+  if (!g) return;
+
+  if (!resultados.length) {
+    g.innerHTML = '<div style="text-align:center;padding:3rem;color:#aaa"><div style="font-size:3rem;margin-bottom:12px">🔍</div><div style="font-weight:800;font-size:1rem">Nenhum produto encontrado</div><div style="font-size:.85rem;margin-top:6px">Tente outro nome</div></div>';
+    return;
+  }
+
+  var op = isOpen();
+  var html = '';
+  for (var i = 0; i < resultados.length; i++) {
+        var p = resultados[i];
+    var img = p.image_url ? '<img src="'+p.image_url+'" alt="'+p.name+'" style="width:100%;height:100%;object-fit:cover">' : (p.emoji || '🍔');
+    html += '<div class="pc"><div class="pi">' + img + '</div><div class="pinfo"><div class="pname">' + (p.emoji||'') + ' ' + p.name + '</div>';
+    if (p.description) html += '<div class="pdesc">' + p.description + '</div>';
+    html += '<div class="pfooter"><span class="pprice">R$ ' + parseFloat(p.price).toFixed(2).replace('.',',') + '</span>';
+    html += '<button class="abtn" onclick="addCart('+p.id+')" '+(op?'':'disabled')+'>'+(op?'+ Adicionar':'Fechado')+'</button>';
+    html += '</div></div></div>';
+  }
+  g.className = 'pg';
+  g.innerHTML = html;
+}
+
+function limparBusca() {
+  var input = document.getElementById('busca-cardapio');
+  if (input) { input.value = ''; buscarProdutos(''); input.focus(); }
+}
+// ───────────────────────────────────────────────────
+
 function updateBadge() {
   var total = 0;
   for (var i=0; i<cart.length; i++) total += cart[i].qty;
@@ -2070,7 +2142,15 @@ function renderCart() {
     html += '<div class="qc">';
     html += '<button class="qb" onclick="chgQty(\'' + item.cartId + '\',-1)">-</button>';
     html += '<span class="qn">' + item.qty + '</span>';
-    html += '<button class="qb" onclick="chgQty(\'' + item.cartId + '\',1)">+</button>';
+    // Botão + só permite incrementar se não tiver personalização (remoções/acréscimos)
+    var temPersonalizacao = (item.remocoes && item.remocoes.length > 0) || (item.acrescimos && item.acrescimos.length > 0);
+    if (!item.isCombo && (temPersonalizacao || item.category === 'pizzas_tam')) {
+      // Item personalizado: + reabre fluxo de personalização
+      html += '<button class="qb" onclick="addCartPeloCarrinho(\'' + item.id + '\',\'' + item.category + '\')" title="Adicionar outro (pode personalizar diferente)">+</button>';
+    } else {
+      // Combo ou item sem personalização: incrementa normalmente
+      html += '<button class="qb" onclick="chgQty(\'' + item.cartId + '\',1)">+</button>';
+    }
     html += '</div>';
     html += '<button class="rb" onclick="rmItem(\'' + item.cartId + '\')">x</button>';
     html += '</div>';
@@ -2089,6 +2169,14 @@ function chgQty(cid, d) {
     }
   }
   updateBadge(); renderCart();
+}
+
+// Adicionar mais um pelo carrinho — reabre fluxo de personalização
+function addCartPeloCarrinho(prodId, categoria) {
+  showPage('cardapio');
+  setTimeout(function() {
+    addCart(parseInt(prodId));
+  }, 150);
 }
 
 function rmItem(cid) {
@@ -3766,6 +3854,11 @@ function showPage(pg) {
   if (m[pg]!==undefined && navBtns[m[pg]]) navBtns[m[pg]].classList.add('active');
   if (pg==='carrinho') renderCart();
   if (pg==='admin') { renderAdmin(); if (navBtns[3]) navBtns[3].classList.add('active'); }
+  // Limpa busca ao sair do cardápio
+  if (pg !== 'cardapio') {
+    var input = document.getElementById('busca-cardapio');
+    if (input && input.value) { input.value = ''; limparBusca(); }
+  }
 }
 
 function showToast(msg) {
