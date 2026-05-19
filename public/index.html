@@ -6,7 +6,9 @@
 <title>Fael Top Lanches e Pizzaria</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
+<!-- Fonte carregada de forma não-bloqueante -->
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{--r:#D62828;--rd:#9B1B1B;--y:#F7B731;--yd:#C47D00;--bk:#1A1A1A;--gr:#f5f5f5;--sh:0 4px 20px rgba(0,0,0,.12);--rad:14px}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -32,7 +34,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .hero-desktop{display:block;background:linear-gradient(135deg,#0d0d0d 0%,#1a0800 40%,#0d0d0d 100%);position:relative;overflow:hidden;min-height:360px}
 .hero-desktop::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(214,40,40,.12) 0%,transparent 65%)}
 .hd-particles{position:absolute;inset:0;pointer-events:none}
-.hd-p{position:absolute;background:var(--y);border-radius:50%;opacity:.5;animation:hdfloat 4s ease-in-out infinite alternate}
+.hd-p{position:absolute;background:var(--y);border-radius:50%;opacity:.5;animation:hdfloat 4s ease-in-out infinite alternate;will-change:transform,opacity}
 @keyframes hdfloat{0%{transform:translateY(0) scale(1);opacity:.3}100%{transform:translateY(-18px) scale(1.3);opacity:.7}}
 .hd-inner{max-width:1100px;margin:0 auto;padding:40px 3rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;position:relative;z-index:2}
 .hd-left{flex:1;max-width:520px}
@@ -233,6 +235,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .loading{text-align:center;padding:3rem;color:#aaa}
 .spin{font-size:36px;animation:spin 1s linear infinite;display:block;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes skeleton-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--bk);color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:.82rem;transform:translateY(70px);opacity:0;transition:all .3s;z-index:500;border-left:4px solid var(--y);max-width:280px}
 #toast.show{transform:translateY(0);opacity:1}
 @media print{
@@ -385,6 +388,22 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 @media(max-width:768px){
   .footer-inner{grid-template-columns:1fr;gap:1.5rem;padding:2rem 1.2rem 1rem}
   .footer-bottom{flex-direction:column;text-align:center;padding:1rem 1.2rem;gap:.4rem}
+}
+
+/* PERFORMANCE MOBILE — desativa animações pesadas em telas pequenas */
+@media(max-width:600px){
+  .hd-p{animation:none!important;opacity:.2!important}
+  .hd-particles{display:none!important}
+  .combo-card::before{animation:none!important;display:none!important}
+  .combo-emoji{animation:none!important}
+  .combo-fire-icon{animation:none!important}
+  .combo-badge{animation:combo-badge-pop .4s ease!important}
+  *{-webkit-overflow-scrolling:touch}
+}
+
+/* Reduz transições gerais no mobile para não travar */
+@media(max-width:600px){
+  .pc,.ct,.abtn,.md-btn,.qb{transition:none!important}
 }
 </style>
 </head>
@@ -1061,7 +1080,21 @@ function loadConfigs() {
 
 function loadProducts() {
   var g = document.getElementById('product-grid');
-  g.innerHTML = '<div class="loading"><span class="spin">&#9203;</span>Carregando...</div>';
+  // Skeleton loading estilo iFood
+  var sk = '';
+  for (var s=0; s<6; s++) {
+    sk += '<div class="pc" style="pointer-events:none">';
+    sk += '<div class="pi" style="background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-shimmer 1.2s infinite"></div>';
+    sk += '<div class="pinfo">';
+    sk += '<div style="height:14px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-shimmer 1.2s infinite;border-radius:6px;margin-bottom:8px;width:80%"></div>';
+    sk += '<div style="height:10px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-shimmer 1.2s infinite;border-radius:6px;margin-bottom:12px;width:60%"></div>';
+    sk += '<div style="display:flex;justify-content:space-between;align-items:center">';
+    sk += '<div style="height:14px;width:60px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-shimmer 1.2s infinite;border-radius:6px"></div>';
+    sk += '<div style="height:30px;width:80px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:skeleton-shimmer 1.2s infinite;border-radius:8px"></div>';
+    sk += '</div></div></div>';
+  }
+  g.className = 'pg';
+  g.innerHTML = sk;
   fetch('/api/products')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -1177,7 +1210,7 @@ function renderProducts(cat, subcat) {
         var imgUrlP = imgMatchP ? imgMatchP[1].trim() : null;
         html += '<div class="pc">';
         if (imgUrlP) {
-          html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="'+imgUrlP+'" alt="'+pizza.name+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block"></div>';
+          html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="'+imgUrlP+'" alt="'+pizza.name+'" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block"></div>';
         } else {
           html += '<div class="pi" style="background:linear-gradient(135deg,#e8f5f3,#c5e8e4);font-size:52px">'+( pizza.emoji||'🍕')+'</div>';
         }
@@ -1216,7 +1249,7 @@ function renderProducts(cat, subcat) {
       var imgUrlM = imgMatchM ? imgMatchM[1].trim() : null;
       html += '<div class="pc">';
       if (imgUrlM) {
-        html += '<div class="pi" style="background:#fffbe6;padding:0"><img src="'+imgUrlM+'" alt="'+pizza.name+'" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block"></div>';
+        html += '<div class="pi" style="background:#fffbe6;padding:0"><img src="'+imgUrlM+'" alt="'+pizza.name+'" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block"></div>';
       } else {
         html += '<div class="pi" style="background:linear-gradient(135deg,#fffbe6,#fff3c4);font-size:52px">'+(pizza.emoji||'👑')+'</div>';
       }
@@ -1328,7 +1361,7 @@ function renderProducts(cat, subcat) {
       if (imageUrl) cleanDesc = cleanDesc.replace(/##IMG:[^#]+##/gi,'').trim();
       html += '<div class="pc">';
       if (imageUrl) {
-        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.style.fontSize=\'65px\';this.parentElement.textContent=\'' + (pr.emoji||'🍽') + '\'"></div>';
+        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" loading="lazy" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.style.fontSize=\'65px\';this.parentElement.textContent=\'' + (pr.emoji||'🍽') + '\'"></div>';
       } else {
         html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
       }
@@ -1361,7 +1394,7 @@ function renderProducts(cat, subcat) {
     html += '<div class="pc">';
     // Se tem imagem, usa imagem; senão usa emoji
     if (imageUrl) {
-      html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
+      html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" loading="lazy" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
     } else {
       html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
     }
@@ -1434,7 +1467,7 @@ function filterBebidas(tipo) {
       html += '<div class="pc">';
       // Se tem imagem, usa imagem; senão usa emoji
       if (imageUrl) {
-        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
+        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" loading="lazy" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
       } else {
         html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
       }
@@ -2135,24 +2168,29 @@ function renderCart() {
   var html = '';
   for (var i=0; i<cart.length; i++) {
     var item = cart[i];
-    html += '<div class="ci">';
+    html += '<div class="ci" style="flex-direction:column;align-items:stretch;gap:0">';
+    html += '<div style="display:flex;align-items:center;gap:10px">';
     html += '<div class="cie">' + (item.emoji||'&#127869;') + '</div>';
     html += '<div class="cii"><div class="cin">' + item.name + '</div>';
     html += '<div class="cip">R$ ' + (item.price*item.qty).toFixed(2).replace('.',',') + '</div></div>';
     html += '<div class="qc">';
     html += '<button class="qb" onclick="chgQty(\'' + item.cartId + '\',-1)">-</button>';
     html += '<span class="qn">' + item.qty + '</span>';
-    // Botão + só permite incrementar se não tiver personalização (remoções/acréscimos)
     var temPersonalizacao = (item.remocoes && item.remocoes.length > 0) || (item.acrescimos && item.acrescimos.length > 0);
     if (!item.isCombo && (temPersonalizacao || item.category === 'pizzas_tam')) {
-      // Item personalizado: + reabre fluxo de personalização
       html += '<button class="qb" onclick="addCartPeloCarrinho(\'' + item.id + '\',\'' + item.category + '\')" title="Adicionar outro (pode personalizar diferente)">+</button>';
     } else {
-      // Combo ou item sem personalização: incrementa normalmente
       html += '<button class="qb" onclick="chgQty(\'' + item.cartId + '\',1)">+</button>';
     }
     html += '</div>';
     html += '<button class="rb" onclick="rmItem(\'' + item.cartId + '\')">x</button>';
+    html += '</div>';
+    // Campo de observação por item
+    html += '<input type="text" placeholder="&#128172; Alguma observação? (ex: sem gelo, ponto da carne...)" maxlength="100"';
+    html += ' value="' + (item.obs || '').replace(/"/g, '&quot;') + '"';
+    html += ' oninput="setItemObs(\'' + item.cartId + '\', this.value)"';
+    html += ' style="width:100%;margin-top:6px;padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.78rem;font-family:Inter,sans-serif;outline:none;color:#555;background:#fafafa"';
+    html += ' onfocus="this.style.borderColor=\'var(--r)\'" onblur="this.style.borderColor=\'#e5e7eb\'">';
     html += '</div>';
   }
   el.innerHTML = html;
