@@ -225,7 +225,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .login-err{color:var(--r);font-size:.8rem;font-weight:700;margin-bottom:6px;display:none}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
 .mo.open{opacity:1;pointer-events:all}
-.md{background:#fff;border-radius:var(--rad);padding:2rem;max-width:420px;width:90%;transform:scale(.95);transition:transform .3s;text-align:center}
+.md{background:#fff;border-radius:var(--rad);padding:2rem;max-width:420px;width:90%;transform:scale(.95);transition:transform .3s;text-align:center;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .mo.open .md{transform:scale(1)}
 .md-ic{font-size:64px;margin-bottom:12px}
 .md h2{font-family:Impact,sans-serif;font-size:1.8rem;margin-bottom:5px}
@@ -274,7 +274,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   .sec-title{font-size:1.2rem;margin-bottom:.8rem}
   .cat-tabs{gap:5px;margin-bottom:.9rem;overflow-x:auto;flex-wrap:nowrap;padding-bottom:6px;scrollbar-width:none;position:sticky;top:0;margin-left:-.65rem;margin-right:-.65rem;padding-left:.65rem;padding-right:.65rem}
   .cat-tabs::-webkit-scrollbar{display:none}
-  .ct{flex-shrink:0;font-size:11px;padding:6px 12px;white-space:nowrap}
+  .md{width:95%;padding:1.2rem;max-height:85vh}
 }
 #print-area{display:none}
 /* Subcategorias de lanches */
