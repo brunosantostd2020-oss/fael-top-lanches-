@@ -532,6 +532,21 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
     <button class="ct" onclick="filterCat('bebidas',this)">&#129380; Bebidas</button>
     <button class="ct" onclick="filterCat('porcoes',this)">&#127839; Porcoes</button>
   </div>
+  <!-- Card produto mais pedido -->
+  <div id="mais-pedido-box" style="display:none;margin-bottom:1rem;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1a0800,#2d0a00);border:2px solid var(--r);box-shadow:0 4px 20px rgba(214,40,40,0.25)">
+    <div style="padding:12px 16px;display:flex;align-items:center;gap:12px">
+      <div style="background:var(--r);border-radius:10px;padding:8px 12px;font-size:1.8rem;flex-shrink:0" id="mais-pedido-emoji">🍔</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <span style="background:var(--r);color:#fff;font-size:.65rem;font-weight:900;padding:2px 8px;border-radius:20px;letter-spacing:.5px">🔥 MAIS PEDIDO</span>
+        </div>
+        <div id="mais-pedido-nome" style="font-weight:900;font-size:.95rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        <div id="mais-pedido-preco" style="font-weight:800;color:var(--y);font-size:.88rem;margin-top:1px"></div>
+      </div>
+      <button id="mais-pedido-btn" onclick="" style="background:var(--r);color:#fff;border:none;padding:10px 16px;border-radius:10px;font-weight:900;font-size:.85rem;cursor:pointer;flex-shrink:0;white-space:nowrap">+ Pedir</button>
+    </div>
+  </div>
+
   <div class="pg" id="product-grid"><div class="loading"><span class="spin">&#9203;</span>Carregando...</div></div>
 </div>
 <div class="page" id="page-carrinho">
@@ -1077,6 +1092,28 @@ function loadConfigs() {
       });
   }
 }
+
+// ── PRODUTO MAIS PEDIDO ─────────────────────────────
+function loadMaisPedido() {
+  fetch('/api/products/mais-pedido/top')
+    .then(function(r) { return r.json(); })
+    .then(function(p) {
+      if (!p || !p.id) return;
+      var box = document.getElementById('mais-pedido-box');
+      var emoji = document.getElementById('mais-pedido-emoji');
+      var nome = document.getElementById('mais-pedido-nome');
+      var preco = document.getElementById('mais-pedido-preco');
+      var btn = document.getElementById('mais-pedido-btn');
+      if (!box) return;
+      emoji.textContent = p.emoji || '🍔';
+      nome.textContent = p.name;
+      preco.textContent = 'R$ ' + parseFloat(p.price).toFixed(2).replace('.', ',') + ' • Pedido ' + p.total_pedidos + 'x';
+      btn.setAttribute('onclick', 'addCart(' + p.id + ')');
+      box.style.display = 'block';
+    })
+    .catch(function() {}); // silencioso — não quebra nada se falhar
+}
+// ────────────────────────────────────────────────────
 
 function loadProducts() {
   var g = document.getElementById('product-grid');
@@ -1628,7 +1665,7 @@ function finalizarDiretoModal() {
   showPage('carrinho');
   // Scroll até o formulário de finalização
   setTimeout(function() {
-    var form = document.getElementById('checkout-form');
+    var form = document.getElementById('c-name');
     if (form) form.scrollIntoView({behavior: 'smooth', block: 'start'});
   }, 300);
 }
@@ -2157,6 +2194,8 @@ function updateBadge() {
   document.getElementById('cart-badge').textContent = total;
   // Atualizar valor PIX se estiver selecionado
   if (curPay === 'pix') atualizarValorPix();
+  // Salva carrinho no localStorage para não perder ao sair do site
+  try { localStorage.setItem('fael_cart', JSON.stringify(cart)); } catch(e) {}
 }
 
 function renderCart() {
@@ -2215,6 +2254,16 @@ function addCartPeloCarrinho(prodId, categoria) {
   setTimeout(function() {
     addCart(parseInt(prodId));
   }, 150);
+}
+
+function setItemObs(cartId, valor) {
+  for (var i = 0; i < cart.length; i++) {
+    if (cart[i].cartId === cartId) {
+      cart[i].obs = valor;
+      try { localStorage.setItem('fael_cart', JSON.stringify(cart)); } catch(e) {}
+      break;
+    }
+  }
 }
 
 function rmItem(cid) {
@@ -2486,7 +2535,9 @@ function sendWA() {
     change_for: (curPay==='dinheiro' && trocov) ? parseFloat(trocov) : null,
     observations: d.obs,
     items: cart.map(function(item) {
-      return {id:item.id, name:item.name, emoji:item.emoji||'', quantity:item.qty, unit_price:item.price};
+      var nomeComObs = item.name;
+      if (item.obs && item.obs.trim()) nomeComObs += ' [Obs: ' + item.obs.trim() + ']';
+      return {id:item.id, name:nomeComObs, emoji:item.emoji||'', quantity:item.qty, unit_price:item.price};
     })
   };
   console.log('Enviando pedido:', body);  // Debug
@@ -2511,6 +2562,7 @@ function sendWA() {
       if (d.obs) msg += 'Obs: ' + d.obs + '\n';
       msg += new Date().toLocaleString('pt-BR');
       cart = []; updateBadge();
+      try { localStorage.removeItem('fael_cart'); } catch(e) {}
       document.getElementById('m-onum').textContent = order.id;
       document.getElementById('m-msg').textContent = 'Pedido registrado! WhatsApp abrindo...';
       document.getElementById('modal').classList.add('open');
@@ -3917,6 +3969,19 @@ loadAcrescimos();
 loadConfigs();
 loadStatusManual();
 updateStatus();
+loadMaisPedido();
+
+// Restaura carrinho salvo (caso cliente tenha saído para pagar no PIX e voltado)
+try {
+  var _cartSalvo = localStorage.getItem('fael_cart');
+  if (_cartSalvo) {
+    var _cartParsed = JSON.parse(_cartSalvo);
+    if (Array.isArray(_cartParsed) && _cartParsed.length > 0) {
+      cart = _cartParsed;
+      updateBadge();
+    }
+  }
+} catch(e) {}
 
 // Função para atualizar timestamp
 function updateAdminTimestamp() {

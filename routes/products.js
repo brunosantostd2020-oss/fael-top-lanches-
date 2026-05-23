@@ -21,6 +21,27 @@ router.get('/all', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// GET mais pedido — DEVE ficar ANTES de /:id para não ser capturado
+router.get('/mais-pedido/top', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT oi.product_id, oi.product_name, oi.product_emoji, COUNT(*) as total
+      FROM order_items oi
+      INNER JOIN orders o ON o.id = oi.order_id
+      WHERE oi.product_id IS NOT NULL
+        AND o.created_at >= NOW() - INTERVAL '30 days'
+      GROUP BY oi.product_id, oi.product_name, oi.product_emoji
+      ORDER BY total DESC
+      LIMIT 1
+    `);
+    if (!result.rows.length) return res.json(null);
+    const top = result.rows[0];
+    const prod = await pool.query('SELECT * FROM products WHERE id = $1 AND active = true', [top.product_id]);
+    if (!prod.rows.length) return res.json(null);
+    res.json({ ...prod.rows[0], total_pedidos: parseInt(top.total) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // POST create product
 router.post('/', requireAdmin, async (req, res) => {
   const { name, category, price, emoji, description } = req.body;
@@ -69,7 +90,6 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const cur = await pool.query("SELECT active FROM products WHERE id = $1", [id]);
     if (!cur.rows.length) return res.status(404).json({ error: 'Produto não encontrado' });
-    // Toggle: if active → deactivate, if inactive → reactivate
     const newActive = !cur.rows[0].active;
     await pool.query("UPDATE products SET active = $1 WHERE id = $2", [newActive, id]);
     res.json({ success: true, active: newActive });
