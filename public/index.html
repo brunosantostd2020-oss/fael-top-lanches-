@@ -3972,37 +3972,76 @@ loadStatusManual();
 updateStatus();
 loadMaisPedido();
 
-// ── CARRINHO PERSISTENTE — funciona em qualquer navegador ──
-// Salva em localStorage (principal) + sessionStorage (fallback)
+// ── CARRINHO PERSISTENTE NO SERVIDOR ───────────────
+var _carrinhoCode = null;
+var _carrinhoSaveTimer = null;
+
 function salvarCarrinho() {
   var dados = JSON.stringify(cart);
   try { localStorage.setItem('fael_cart', dados); } catch(e) {}
   try { sessionStorage.setItem('fael_cart', dados); } catch(e) {}
+  clearTimeout(_carrinhoSaveTimer);
+  _carrinhoSaveTimer = setTimeout(function() {
+    if (!cart.length) return;
+    fetch('/api/carrinho', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codigo: _carrinhoCode, dados: cart })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res && res.codigo) {
+        _carrinhoCode = res.codigo;
+        try { localStorage.setItem('fael_cart_code', res.codigo); } catch(e) {}
+        try { sessionStorage.setItem('fael_cart_code', res.codigo); } catch(e) {}
+      }
+    })
+    .catch(function() {});
+  }, 800);
 }
 
 function restaurarCarrinho() {
+  var code = null;
+  try { code = localStorage.getItem('fael_cart_code'); } catch(e) {}
+  if (!code) { try { code = sessionStorage.getItem('fael_cart_code'); } catch(e) {} }
+  if (code) {
+    fetch('/api/carrinho/' + code)
+      .then(function(r) { return r.json(); })
+      .then(function(dados) {
+        if (Array.isArray(dados) && dados.length > 0) {
+          cart = dados;
+          _carrinhoCode = code;
+          updateBadge();
+        } else { _restaurarLocal(); }
+      })
+      .catch(function() { _restaurarLocal(); });
+  } else { _restaurarLocal(); }
+}
+
+function _restaurarLocal() {
   var dados = null;
-  // Tenta localStorage primeiro
   try { dados = localStorage.getItem('fael_cart'); } catch(e) {}
-  // Fallback: sessionStorage (Safari privado, navegadores restritos)
   if (!dados) { try { dados = sessionStorage.getItem('fael_cart'); } catch(e) {} }
   if (!dados) return;
   try {
     var parsed = JSON.parse(dados);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      cart = parsed;
-      updateBadge();
-    }
+    if (Array.isArray(parsed) && parsed.length > 0) { cart = parsed; updateBadge(); }
   } catch(e) {}
 }
 
 function limparCarrinho() {
-  limparCarrinho();
+  try { localStorage.removeItem('fael_cart'); } catch(e) {}
+  try { localStorage.removeItem('fael_cart_code'); } catch(e) {}
   try { sessionStorage.removeItem('fael_cart'); } catch(e) {}
+  try { sessionStorage.removeItem('fael_cart_code'); } catch(e) {}
+  if (_carrinhoCode) {
+    fetch('/api/carrinho/' + _carrinhoCode, { method: 'DELETE' }).catch(function() {});
+    _carrinhoCode = null;
+  }
 }
 
 restaurarCarrinho();
-// ──────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────
 
 // Função para atualizar timestamp
 function updateAdminTimestamp() {

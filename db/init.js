@@ -121,6 +121,18 @@ async function initDB() {
     await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC(10,2) DEFAULT NULL`);
     await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee_override NUMERIC(10,2) DEFAULT NULL`);
 
+    // Tabela de carrinhos salvos (persistência cross-browser)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS carrinhos (
+        codigo TEXT PRIMARY KEY,
+        dados TEXT NOT NULL,
+        criado_em TIMESTAMP DEFAULT NOW(),
+        atualizado_em TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    // Limpa carrinhos com mais de 24h automaticamente
+    await client.query(`DELETE FROM carrinhos WHERE atualizado_em < NOW() - INTERVAL '24 hours'`);
+
     // Configurações padrão da loja
     const configKeys = [
       ['whatsapp', '5532998204435'],
