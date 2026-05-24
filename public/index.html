@@ -977,10 +977,11 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
       <p style="margin:0;font-size:.82rem;opacity:.9" id="remocao-prod-nome"></p>
     </div>
     <div style="padding:16px 20px 20px">
-      <p style="margin:0 0 12px;font-size:.83rem;color:#888;font-weight:600">Toque para retirar um ingrediente:</p>
-      <div id="remocao-lista" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;max-height:260px;overflow-y:auto"></div>
+      <p style="margin:0 0 10px;font-size:.83rem;color:#888;font-weight:600">Escreva o que deseja retirar ou observar:</p>
+      <textarea id="remocao-obs-text" rows="3" maxlength="200" placeholder="Ex: sem cebola, sem salada, ponto bem passado..." style="width:100%;padding:12px;border:2px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:Inter,sans-serif;resize:none;outline:none;transition:border-color .2s;box-sizing:border-box" onfocus="this.style.borderColor='var(--r)'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
+      <p style="margin:4px 0 16px;font-size:.75rem;color:#bbb;text-align:right" id="remocao-count">0/200</p>
       <button class="md-btn" onclick="confirmarRemocao()" style="width:100%;padding:14px;font-size:1rem;margin-bottom:8px;border-radius:10px">Confirmar</button>
-      <button onclick="semRemocao()" style="width:100%;background:#fff;color:#666;border:2px solid #e5e7eb;padding:12px;border-radius:10px;font-weight:700;font-size:.9rem;cursor:pointer">Sem retiradas — do jeito que vem! 👍</button>
+      <button onclick="semRemocao()" style="width:100%;background:#fff;color:#666;border:2px solid #e5e7eb;padding:12px;border-radius:10px;font-weight:700;font-size:.9rem;cursor:pointer">Sem observações — do jeito que vem! 👍</button>
     </div>
   </div>
 </div>
@@ -1970,70 +1971,33 @@ function parsearIngredientes(descricao) {
 
 function abrirModalRemocao(prodId, acrescimos) {
   var p = allProducts.filter(function(x){return x.id===prodId;})[0];
-  
-  // Se não tem produto (ex: pizza) ou não é categoria com remoção, vai direto
   if (!p || categoriasComRemocao.indexOf(p.category) < 0) {
-    if (p) {
-      addCartDireto(prodId, acrescimos || []);
-    }
+    if (p) { addCartDireto(prodId, acrescimos || []); }
     return;
   }
-  
-  var ingredientes = parsearIngredientes(p.description || '');
-  
-  // Se não tem ingredientes na description, vai direto
-  if (ingredientes.length === 0) {
-    addCartDireto(prodId, acrescimos || []);
-    return;
-  }
-  
   remocaoIdAtual = prodId;
   remocaoAcrescimosAtual = acrescimos || [];
   remocaoSelecionados = [];
   remocaoNomeProd = (p.emoji || '') + ' ' + p.name;
-  
   document.getElementById('remocao-prod-nome').textContent = remocaoNomeProd;
-  
-  var lista = document.getElementById('remocao-lista');
-  var html = '';
-  for (var i = 0; i < ingredientes.length; i++) {
-    var ing = ingredientes[i];
-    html += '<div class="rem-item" id="rem-' + i + '" data-ing="' + ing + '" onclick="toggleRemocao(' + i + ', \'' + ing.replace(/'/g, "\\'") + '\')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid #e5e7eb;border-radius:20px;cursor:pointer;transition:all .2s;background:#f9f9f9;font-size:.85rem;font-weight:700;color:#555">';
-    html += '<span style="font-size:1.1rem">🚫</span>';
-    html += '<span>' + ing + '</span>';
-    html += '</div>';
-  }
-  lista.innerHTML = html;
-  
+  var txt = document.getElementById('remocao-obs-text');
+  var cnt = document.getElementById('remocao-count');
+  if (txt) { txt.value = ''; txt.oninput = function() { if (cnt) cnt.textContent = txt.value.length + '/200'; }; }
+  if (cnt) cnt.textContent = '0/200';
   document.getElementById('modal-remocao').classList.add('open');
-}
-
-function toggleRemocao(idx, ingrediente) {
-  var el = document.getElementById('rem-' + idx);
-  var pos = remocaoSelecionados.indexOf(ingrediente);
-  if (pos >= 0) {
-    remocaoSelecionados.splice(pos, 1);
-    el.style.border = '1.5px solid #e5e7eb';
-    el.style.background = '#f9f9f9';
-    el.style.color = '#555';
-    el.style.textDecoration = 'none';
-    el.style.opacity = '1';
-  } else {
-    remocaoSelecionados.push(ingrediente);
-    el.style.border = '1.5px solid #dc2626';
-    el.style.background = '#fff5f5';
-    el.style.color = '#dc2626';
-    el.style.textDecoration = 'line-through';
-    el.style.opacity = '.8';
-  }
+  setTimeout(function() { if (txt) txt.focus(); }, 300);
 }
 
 function confirmarRemocao() {
+  var txt = document.getElementById('remocao-obs-text');
+  var obs = txt ? txt.value.trim() : '';
   document.getElementById('modal-remocao').classList.remove('open');
-  addCartDiretoComRemocao(remocaoIdAtual, remocaoAcrescimosAtual, remocaoSelecionados.slice());
+  var remocoes = obs ? [obs] : [];
+  addCartDiretoComRemocao(remocaoIdAtual, remocaoAcrescimosAtual, remocoes);
   remocaoIdAtual = null; remocaoAcrescimosAtual = []; remocaoSelecionados = [];
   setTimeout(function() {
-    var _me=document.getElementById('modal-escolha');_me.style.bottom='0';_me.style.pointerEvents='all';
+    var _me = document.getElementById('modal-escolha');
+    _me.style.bottom = '0'; _me.style.pointerEvents = 'all';
   }, 300);
 }
 
@@ -2042,7 +2006,8 @@ function semRemocao() {
   addCartDiretoComRemocao(remocaoIdAtual, remocaoAcrescimosAtual, []);
   remocaoIdAtual = null; remocaoAcrescimosAtual = []; remocaoSelecionados = [];
   setTimeout(function() {
-    var _me=document.getElementById('modal-escolha');_me.style.bottom='0';_me.style.pointerEvents='all';
+    var _me = document.getElementById('modal-escolha');
+    _me.style.bottom = '0'; _me.style.pointerEvents = 'all';
   }, 300);
 }
 
