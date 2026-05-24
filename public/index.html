@@ -790,6 +790,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
           <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Guido Marliere</div>
           <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Meia Pataca</div>
           <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Miguel</div>
+          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Thomé</div>
         </div>
       </div>
     </div>
@@ -993,7 +994,7 @@ var PIX_CIDADE = 'CATAGUASES';
 var OPEN_DAYS = [0,1,3,4,5,6];
 var BAIRROS_GRATIS = ['TAQUARA PRETA','SAO MARCOS','SAO CRISTOVAO'];
 var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','CIDADE NOVA','AVENIDA DAS INDUSTRIAS','AV DAS INDUSTRIAS','AVENIDA MANOEL INACIO PEIXOTO','AV MANOEL INACIO PEIXOTO','PONTE SABIA','PONTE DA SABIA','BEIRA RIO'];
-var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE','VILA DOMINGOS LOPES','VILA TEREZA','AV ASTOLFO DUTRA','AV GUIDO MARLIERE','AV MEIA PATACA','MIGUEL'];
+var BAIRROS_TAXA7 = ['CENTRO','VILA REIS','SAO VICENTE','JUSTINO','JOAO RIGUETE','LEONARDO','IME FARAGEM','ISABEL TAVARES','GUANABARA','SAO DINIZ','MAROTE','PAMPULHA','BAIRRO DE FATIMA','BAIRRO HAIDE','SEBASTIAO ADOLFO','MENEZES','BANDEIRANTES','INDEPENDENCIA','COLINAS','GRANJARIA','SOL NASCENTE','POUSA ALEGRE','VILA DOMINGOS LOPES','VILA TEREZA','AV ASTOLFO DUTRA','AV GUIDO MARLIERE','AV MEIA PATACA','MIGUEL','THOME'];
 var adminToken = localStorage.getItem('fael_token') || null;
 var gerenciamentoToken = localStorage.getItem('fael_gerenciamento_token') || null;
 var allProducts = [], allAcrescimos = [], cart = [];
@@ -2195,7 +2196,7 @@ function updateBadge() {
   // Atualizar valor PIX se estiver selecionado
   if (curPay === 'pix') atualizarValorPix();
   // Salva carrinho no localStorage para não perder ao sair do site
-  try { localStorage.setItem('fael_cart', JSON.stringify(cart)); } catch(e) {}
+  salvarCarrinho();
 }
 
 function renderCart() {
@@ -2260,7 +2261,7 @@ function setItemObs(cartId, valor) {
   for (var i = 0; i < cart.length; i++) {
     if (cart[i].cartId === cartId) {
       cart[i].obs = valor;
-      try { localStorage.setItem('fael_cart', JSON.stringify(cart)); } catch(e) {}
+      salvarCarrinho();
       break;
     }
   }
@@ -2562,7 +2563,7 @@ function sendWA() {
       if (d.obs) msg += 'Obs: ' + d.obs + '\n';
       msg += new Date().toLocaleString('pt-BR');
       cart = []; updateBadge();
-      try { localStorage.removeItem('fael_cart'); } catch(e) {}
+      limparCarrinho();
       document.getElementById('m-onum').textContent = order.id;
       document.getElementById('m-msg').textContent = 'Pedido registrado! WhatsApp abrindo...';
       document.getElementById('modal').classList.add('open');
@@ -3971,17 +3972,37 @@ loadStatusManual();
 updateStatus();
 loadMaisPedido();
 
-// Restaura carrinho salvo (caso cliente tenha saído para pagar no PIX e voltado)
-try {
-  var _cartSalvo = localStorage.getItem('fael_cart');
-  if (_cartSalvo) {
-    var _cartParsed = JSON.parse(_cartSalvo);
-    if (Array.isArray(_cartParsed) && _cartParsed.length > 0) {
-      cart = _cartParsed;
+// ── CARRINHO PERSISTENTE — funciona em qualquer navegador ──
+// Salva em localStorage (principal) + sessionStorage (fallback)
+function salvarCarrinho() {
+  var dados = JSON.stringify(cart);
+  try { localStorage.setItem('fael_cart', dados); } catch(e) {}
+  try { sessionStorage.setItem('fael_cart', dados); } catch(e) {}
+}
+
+function restaurarCarrinho() {
+  var dados = null;
+  // Tenta localStorage primeiro
+  try { dados = localStorage.getItem('fael_cart'); } catch(e) {}
+  // Fallback: sessionStorage (Safari privado, navegadores restritos)
+  if (!dados) { try { dados = sessionStorage.getItem('fael_cart'); } catch(e) {} }
+  if (!dados) return;
+  try {
+    var parsed = JSON.parse(dados);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      cart = parsed;
       updateBadge();
     }
-  }
-} catch(e) {}
+  } catch(e) {}
+}
+
+function limparCarrinho() {
+  limparCarrinho();
+  try { sessionStorage.removeItem('fael_cart'); } catch(e) {}
+}
+
+restaurarCarrinho();
+// ──────────────────────────────────────────────────────────
 
 // Função para atualizar timestamp
 function updateAdminTimestamp() {
