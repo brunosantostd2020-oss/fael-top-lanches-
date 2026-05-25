@@ -410,7 +410,8 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 <body>
 <div id="closed-banner">Estamos <span>fechados</span> agora</div>
 <div id="login-screen" style="display:none">
-  <div class="login-box">
+  <div class="login-box" style="position:relative">
+    <button onclick="document.getElementById('login-screen').style.display='none'" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#aaa;line-height:1;padding:4px 8px;border-radius:6px;width:auto" title="Fechar">&#10005;</button>
     <div class="li">&#128274;</div>
     <h2>Painel Admin</h2>
     <p>Digite a senha para acessar</p>
@@ -420,7 +421,8 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
   </div>
 </div>
 <div id="login-gerenciamento-screen" style="display:none">
-  <div class="login-box">
+  <div class="login-box" style="position:relative">
+    <button onclick="document.getElementById('login-gerenciamento-screen').style.display='none'" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#aaa;line-height:1;padding:4px 8px;border-radius:6px;width:auto" title="Fechar">&#10005;</button>
     <div class="li">&#128200;</div>
     <h2>Gerenciamento</h2>
     <p>Digite a senha do gerente</p>
