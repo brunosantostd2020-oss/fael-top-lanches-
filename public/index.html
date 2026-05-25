@@ -3940,11 +3940,50 @@ loadMaisPedido();
 // ── CARRINHO PERSISTENTE NO SERVIDOR ───────────────
 var _carrinhoCode = null;
 var _carrinhoSaveTimer = null;
+var _CARRINHO_EXPIRACAO_MS = 3 * 60 * 1000; // 3 minutos
+var _carrinhoExpiracaoTimer = null;
+
+function _salvarTimestamp() {
+  var ts = Date.now().toString();
+  try { localStorage.setItem('fael_cart_ts', ts); } catch(e) {}
+  try { sessionStorage.setItem('fael_cart_ts', ts); } catch(e) {}
+}
+
+function _carrinhoExpirado() {
+  var ts = null;
+  try { ts = localStorage.getItem('fael_cart_ts'); } catch(e) {}
+  if (!ts) { try { ts = sessionStorage.getItem('fael_cart_ts'); } catch(e) {} }
+  if (!ts) return true;
+  return (Date.now() - parseInt(ts, 10)) > _CARRINHO_EXPIRACAO_MS;
+}
+
+function _agendarLimpezaAutomatica() {
+  clearTimeout(_carrinhoExpiracaoTimer);
+  if (!cart.length) return;
+  var ts = null;
+  try { ts = localStorage.getItem('fael_cart_ts'); } catch(e) {}
+  if (!ts) { try { ts = sessionStorage.getItem('fael_cart_ts'); } catch(e) {} }
+  var restante = ts ? (_CARRINHO_EXPIRACAO_MS - (Date.now() - parseInt(ts, 10))) : _CARRINHO_EXPIRACAO_MS;
+  if (restante <= 0) { _executarLimpezaExpirada(); return; }
+  _carrinhoExpiracaoTimer = setTimeout(function() {
+    _executarLimpezaExpirada();
+  }, restante);
+}
+
+function _executarLimpezaExpirada() {
+  if (!cart.length) return;
+  cart = [];
+  limparCarrinho();
+  updateBadge();
+  showToast('🕐 Carrinho limpo por inatividade (3 min)');
+}
 
 function salvarCarrinho() {
   var dados = JSON.stringify(cart);
+  _salvarTimestamp();
   try { localStorage.setItem('fael_cart', dados); } catch(e) {}
   try { sessionStorage.setItem('fael_cart', dados); } catch(e) {}
+  _agendarLimpezaAutomatica();
   clearTimeout(_carrinhoSaveTimer);
   _carrinhoSaveTimer = setTimeout(function() {
     if (!cart.length) return;
@@ -3966,6 +4005,16 @@ function salvarCarrinho() {
 }
 
 function restaurarCarrinho() {
+  if (_carrinhoExpirado()) {
+    // Carrinho expirou enquanto estava fora — limpa sem aviso
+    try { localStorage.removeItem('fael_cart'); } catch(e) {}
+    try { localStorage.removeItem('fael_cart_code'); } catch(e) {}
+    try { localStorage.removeItem('fael_cart_ts'); } catch(e) {}
+    try { sessionStorage.removeItem('fael_cart'); } catch(e) {}
+    try { sessionStorage.removeItem('fael_cart_code'); } catch(e) {}
+    try { sessionStorage.removeItem('fael_cart_ts'); } catch(e) {}
+    return;
+  }
   var code = null;
   try { code = localStorage.getItem('fael_cart_code'); } catch(e) {}
   if (!code) { try { code = sessionStorage.getItem('fael_cart_code'); } catch(e) {} }
@@ -3977,6 +4026,7 @@ function restaurarCarrinho() {
           cart = dados;
           _carrinhoCode = code;
           updateBadge();
+          _agendarLimpezaAutomatica();
         } else { _restaurarLocal(); }
       })
       .catch(function() { _restaurarLocal(); });
@@ -3990,15 +4040,22 @@ function _restaurarLocal() {
   if (!dados) return;
   try {
     var parsed = JSON.parse(dados);
-    if (Array.isArray(parsed) && parsed.length > 0) { cart = parsed; updateBadge(); }
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      cart = parsed;
+      updateBadge();
+      _agendarLimpezaAutomatica();
+    }
   } catch(e) {}
 }
 
 function limparCarrinho() {
+  clearTimeout(_carrinhoExpiracaoTimer);
   try { localStorage.removeItem('fael_cart'); } catch(e) {}
   try { localStorage.removeItem('fael_cart_code'); } catch(e) {}
+  try { localStorage.removeItem('fael_cart_ts'); } catch(e) {}
   try { sessionStorage.removeItem('fael_cart'); } catch(e) {}
   try { sessionStorage.removeItem('fael_cart_code'); } catch(e) {}
+  try { sessionStorage.removeItem('fael_cart_ts'); } catch(e) {}
   if (_carrinhoCode) {
     fetch('/api/carrinho/' + _carrinhoCode, { method: 'DELETE' }).catch(function() {});
     _carrinhoCode = null;
