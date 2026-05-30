@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Fael Top Lanches e Pizzaria</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -405,10 +405,106 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 @media(max-width:600px){
   .pc,.ct,.abtn,.md-btn,.qb{transition:none!important}
 }
+
+/* ===== UPGRADES MOBILE ===== */
+
+/* Safe-area para iPhone com notch/dynamic island */
+header{padding-left:max(1.5rem, env(safe-area-inset-left));padding-right:max(1.5rem, env(safe-area-inset-right))}
+.site-footer{padding-bottom:env(safe-area-inset-bottom)}
+
+/* Inputs maiores no mobile — evita zoom automático do iOS (font-size >= 16px) */
+@media(max-width:600px){
+  .ds input,.ds select,.fg input,.fg select,
+  input[type="text"],input[type="tel"],input[type="number"],
+  input[type="password"],input[type="email"],select,textarea{
+    font-size:16px!important;
+    min-height:48px;
+    padding:12px 14px!important;
+    border-radius:10px;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  /* Botões de ação maiores para toque */
+  .abtn,.qb,.wabtn,.do,.po{
+    min-height:44px;
+  }
+  /* Espaçamento maior entre opções de entrega */
+  .dtype{gap:10px;margin-top:8px}
+  .do{padding:14px 8px}
+  /* Grid de pagamento 2 col */
+  .pays{grid-template-columns:1fr 1fr;gap:10px}
+  .po{padding:14px 8px;min-height:72px}
+  /* Resumo do pedido não fica espremido */
+  .osb{padding:1rem}
+  .osum{border-radius:14px}
+  /* Carrinho: padding melhor */
+  #page-carrinho{padding:.7rem .5rem}
+  /* Seção total sticky no mobile */
+  .stot{position:sticky;bottom:0;z-index:10;margin-left:-.1rem;margin-right:-.1rem;border-radius:0 0 14px 14px}
+}
+
+/* Botão flutuante do carrinho no mobile */
+#fab-carrinho{
+  display:none;
+  position:fixed;
+  bottom:calc(20px + env(safe-area-inset-bottom));
+  right:16px;
+  z-index:200;
+  background:linear-gradient(135deg,var(--r),#a00);
+  color:#fff;
+  border:none;
+  border-radius:28px;
+  padding:13px 20px;
+  font-family:'Poppins',Impact,sans-serif;
+  font-size:.95rem;
+  font-weight:900;
+  letter-spacing:.5px;
+  cursor:pointer;
+  box-shadow:0 6px 24px rgba(214,40,40,0.45);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  transition:transform .2s,box-shadow .2s;
+}
+#fab-carrinho:active{transform:scale(.95)}
+#fab-badge{
+  background:#fff;
+  color:var(--r);
+  border-radius:50%;
+  width:22px;height:22px;
+  font-size:.75rem;
+  font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+@media(min-width:601px){
+  #fab-carrinho{display:none!important}
+}
+@media(max-width:600px){
+  #fab-carrinho{display:flex}
+  /* Garante que o conteúdo não fique atrás do FAB */
+  body{padding-bottom:80px}
+}
+
+/* Melhora o scroll do modal no iOS */
+.md{-webkit-overflow-scrolling:touch}
+
+/* Garante que imagens não estourem no mobile */
+img{max-width:100%;height:auto}
+
+/* Melhor tap highlight */
+a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
+/* ===== FIM UPGRADES MOBILE ===== */
 </style>
 </head>
 <body>
 <div id="closed-banner">Estamos <span>fechados</span> agora</div>
+
+<!-- Botão flutuante do carrinho (mobile) -->
+<button id="fab-carrinho" onclick="showPage('carrinho')" aria-label="Ver carrinho" style="display:none">
+  🛒 <span id="fab-label">Carrinho</span>
+  <span id="fab-badge">0</span>
+</button>
 <div id="login-screen" style="display:none">
   <div class="login-box" style="position:relative">
     <button onclick="document.getElementById('login-screen').style.display='none'" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#aaa;line-height:1;padding:4px 8px;border-radius:6px;width:auto" title="Fechar">&#10005;</button>
@@ -737,62 +833,49 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
       </div>
       <div style="padding:1.3rem">
         <div style="font-weight:900;margin-bottom:1rem;color:#666;font-size:.92rem;text-align:center">Bairros atendidos:</div>
-        <div style="display:flex;flex-direction:column;gap:.6rem">
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Paraíso</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Bom Pastor</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Dico Leite</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">São Pedro</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Primavera</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Meca</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Santa Clara</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Ibraim</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Cidade Nova</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Avenida das Indústrias</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Avenida Manoel Inácio Peixoto</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Ponte Sabiá</div>
-          <div style="padding:.6rem;background:#eff6ff;border-radius:8px;font-size:.88rem;font-weight:700;color:#1e40af;text-align:center">Beira Rio</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Entrega R$ 7,00 -->
-    <div style="background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden">
-      <div style="background:var(--y);color:var(--bk);padding:1.2rem;text-align:center">
-        <div style="font-size:2.2rem;font-weight:900;font-family:Impact,sans-serif">R$ 7,00</div>
-        <div style="font-size:.9rem;font-weight:700;opacity:.85">Taxa de Entrega</div>
-      </div>
-      <div style="padding:1.3rem">
-        <div style="font-weight:900;margin-bottom:1rem;color:#666;font-size:.92rem;text-align:center">Bairros atendidos:</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Centro</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Vila Reis</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">São Vicente</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Justino</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">João Riguete</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Leonardo</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Ime Faragem</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Isabel Tavares</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Guanabara</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">São Diniz</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Marote</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Pampulha</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Bairro de Fátima</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Bairro Haide</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Sebastião Adolfo</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Menezes</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Bandeirantes</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Independência</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Colinas</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Granjaria</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Sol Nascente</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Pousa Alegre</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Vila Domingos Lopes</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Vila Tereza</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Astolfo Dutra</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Guido Marliere</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Av Meia Pataca</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Miguel</div>
-          <div style="padding:.55rem;background:#fffbe6;border-radius:8px;font-size:.84rem;font-weight:700;color:#c47d00;text-align:center">Thomé</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Paraíso</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Bom Pastor</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Dico Leite</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">São Pedro</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Primavera</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Meca</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Santa Clara</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Ibraim</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Cidade Nova</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Av. das Indústrias</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Av. Manoel Inácio</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Ponte Sabiá</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Beira Rio</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Centro</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Vila Reis</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">São Vicente</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Justino</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">João Riguete</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Leonardo</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Ime Faragem</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Isabel Tavares</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Guanabara</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">São Diniz</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Marote</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Pampulha</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Bairro de Fátima</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Bairro Haide</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Sebastião Adolfo</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Menezes</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Bandeirantes</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Independência</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Colinas</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Granjaria</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Sol Nascente</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Pousa Alegre</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Vila Domingos Lopes</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Vila Tereza</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Av Astolfo Dutra</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Av Guido Marliere</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Av Meia Pataca</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Miguel</div>
+          <div style="padding:.55rem;background:#eff6ff;border-radius:8px;font-size:.84rem;font-weight:700;color:#1e40af;text-align:center">Thomé</div>
         </div>
       </div>
     </div>
@@ -2164,6 +2247,19 @@ function updateBadge() {
   if (curPay === 'pix') atualizarValorPix();
   // Salva carrinho no localStorage para não perder ao sair do site
   salvarCarrinho();
+  // Atualizar FAB mobile
+  var fab = document.getElementById('fab-carrinho');
+  var fabBadge = document.getElementById('fab-badge');
+  var fabLabel = document.getElementById('fab-label');
+  if (fab && fabBadge) {
+    fabBadge.textContent = total;
+    if (total > 0) {
+      fab.style.display = 'flex';
+      if (fabLabel) fabLabel.textContent = 'Ver Carrinho';
+    } else {
+      fab.style.display = 'none';
+    }
+  }
 }
 
 function renderCart() {
@@ -2372,22 +2468,17 @@ function verificarTaxa() {
     if (disp) { disp.textContent='--'; row.style.color='#999'; }
     calcSum(); return;
   }
-  var isG = false, isT5 = false, isT7 = false;
+  var isG = false, isTaxada = false;
   for (var i=0; i<BAIRROS_GRATIS.length; i++) { if (bn.indexOf(BAIRROS_GRATIS[i])>=0 || BAIRROS_GRATIS[i].indexOf(bn)>=0) { isG=true; break; } }
-  if (!isG) for (var j=0; j<BAIRROS_TAXA5.length; j++) { if (bn.indexOf(BAIRROS_TAXA5[j])>=0 || BAIRROS_TAXA5[j].indexOf(bn)>=0) { isT5=true; break; } }
-  if (!isG && !isT5) for (var k=0; k<BAIRROS_TAXA7.length; k++) { if (bn.indexOf(BAIRROS_TAXA7[k])>=0 || BAIRROS_TAXA7[k].indexOf(bn)>=0) { isT7=true; break; } }
+  if (!isG) { var todosTaxados = BAIRROS_TAXA5.concat(BAIRROS_TAXA7); for (var j=0; j<todosTaxados.length; j++) { if (bn.indexOf(todosTaxados[j])>=0 || todosTaxados[j].indexOf(bn)>=0) { isTaxada=true; break; } } }
   if (isG) {
     taxaAtual=0; bairroOk=true;
     if (info) { info.style.display='block'; info.style.background='#f0fdf4'; info.style.border='2px solid #22c55e'; info.style.color='#15803d'; info.textContent='Entrega GRATIS para este bairro!'; }
     if (disp) { disp.textContent='GRATIS'; row.style.color='#22c55e'; }
-  } else if (isT5) {
+  } else if (isTaxada) {
     taxaAtual=5; bairroOk=true;
     if (info) { info.style.display='block'; info.style.background='#f0fdf4'; info.style.border='2px solid #22c55e'; info.style.color='#15803d'; info.textContent='Taxa de entrega: R$ 5,00'; }
     if (disp) { disp.textContent='R$ 5,00'; row.style.color='#15803d'; }
-  } else if (isT7) {
-    taxaAtual=7; bairroOk=true;
-    if (info) { info.style.display='block'; info.style.background='#fffbe6'; info.style.border='2px solid #F7B731'; info.style.color='#C47D00'; info.textContent='Taxa de entrega: R$ 7,00'; }
-    if (disp) { disp.textContent='R$ 7,00'; row.style.color='#C47D00'; }
   } else {
     taxaAtual=0; bairroOk=false;
     if (info) { info.style.display='block'; info.style.background='#fff5f5'; info.style.border='2px solid #EF4444'; info.style.color='#991B1B'; info.textContent='Nao entregamos neste bairro ainda. Entre em contato pelo WhatsApp.'; }
@@ -3917,6 +4008,14 @@ function showPage(pg) {
     var input = document.getElementById('busca-cardapio');
     if (input && input.value) { input.value = ''; limparBusca(); }
   }
+  // FAB: esconde na página do carrinho, mostra no resto (se tiver itens)
+  var fab = document.getElementById('fab-carrinho');
+  if (fab) {
+    var qtd = 0; for (var k=0; k<cart.length; k++) qtd += cart[k].qty;
+    fab.style.display = (pg === 'carrinho' || qtd === 0) ? 'none' : 'flex';
+  }
+  // Scroll ao topo ao trocar de página
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 function showToast(msg) {
