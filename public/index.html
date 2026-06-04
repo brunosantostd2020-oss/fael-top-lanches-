@@ -909,6 +909,17 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 </div>
 <div class="page" id="page-admin">
   <h2 class="sec-title">Painel <span>Admin</span></h2>
+
+  <!-- BOTÃO ATIVAR SOM — deve ser clicado uma vez ao abrir o painel -->
+  <div id="som-aviso" style="background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <div style="font-size:.85rem;color:#856404;font-weight:700">
+      🔇 Som desativado — clique para ativar notificações de novos pedidos
+    </div>
+    <button onclick="ativarSomAdmin()" style="background:#ffc107;color:#1a1a1a;border:none;padding:10px 18px;border-radius:10px;font-weight:900;font-size:.85rem;cursor:pointer;white-space:nowrap;flex-shrink:0">
+      🔔 Ativar Som
+    </button>
+  </div>
+
   <div style="text-align:center;margin-bottom:8px">
     <span id="admin-last-update" style="font-size:.7rem;color:#888;font-weight:600"></span>
   </div>
@@ -2680,6 +2691,51 @@ function openAdmin() {
   document.getElementById('login-pwd').value = '';
   document.getElementById('login-err').style.display = 'none';
   setTimeout(function(){ document.getElementById('login-pwd').focus(); }, 100);
+}
+
+function ativarSomAdmin() {
+  // Cria e toca áudio silencioso para desbloquear o contexto
+  if (!window._notifAudio) {
+    window._notifAudio = new Audio('/notification.mp3');
+    window._notifAudio.volume = 1.0;
+    window._notifAudio.load();
+  }
+  window._notifAudio.play().then(function() {
+    window._notifAudio.pause();
+    window._notifAudio.currentTime = 0;
+    window._audioDesbloqueado = true;
+    // Esconde o aviso e mostra confirmação
+    var aviso = document.getElementById('som-aviso');
+    if (aviso) {
+      aviso.style.background = '#f0fdf4';
+      aviso.style.borderColor = '#22c55e';
+      aviso.innerHTML = '<div style="font-size:.85rem;color:#15803d;font-weight:700">🔔 Som ativado! Você será notificado quando chegar um novo pedido.</div>';
+      setTimeout(function() { aviso.style.display = 'none'; }, 3000);
+    }
+    // Toca o som de teste para confirmar
+    setTimeout(function() {
+      window._notifAudio.currentTime = 0;
+      window._notifAudio.play().catch(function() {});
+    }, 300);
+  }).catch(function() {
+    // Tenta via AudioContext
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      ctx.resume().then(function() {
+        window._audioDesbloqueado = true;
+        var aviso = document.getElementById('som-aviso');
+        if (aviso) {
+          aviso.style.background = '#f0fdf4';
+          aviso.style.borderColor = '#22c55e';
+          aviso.innerHTML = '<div style="font-size:.85rem;color:#15803d;font-weight:700">🔔 Som ativado via sintetizador!</div>';
+          setTimeout(function() { aviso.style.display = 'none'; }, 3000);
+        }
+        playSynthSound();
+      });
+    } catch(e) {
+      showToast('Erro ao ativar som. Verifique as permissões do navegador.');
+    }
+  });
 }
 
 function doLogin() {
