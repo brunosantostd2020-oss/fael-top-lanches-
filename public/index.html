@@ -236,6 +236,7 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .spin{font-size:36px;animation:spin 1s linear infinite;display:block;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes skeleton-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--bk);color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:.82rem;transform:translateY(70px);opacity:0;transition:all .3s;z-index:500;border-left:4px solid var(--y);max-width:280px}
 #toast.show{transform:translateY(0);opacity:1}
 @media print{
@@ -684,6 +685,14 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
               <label>Número da Mesa</label><input type="number" id="c-mesa" placeholder="Ex: 5" min="1" style="font-size:1.1rem;font-weight:800">
             </div>
             <label>Pagamento</label>
+            <!-- Aviso profissional -->
+            <div style="display:flex;align-items:center;gap:10px;background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;margin-bottom:12px">
+              <span style="font-size:1.5rem;flex-shrink:0">📋</span>
+              <div style="font-size:.82rem;color:#92400e;line-height:1.6">
+                <div style="font-weight:900;margin-bottom:2px">Envie o pedido antes de pagar!</div>
+                <div>Clique em <strong>"Enviar via WhatsApp"</strong> abaixo, depois realize o pagamento.</div>
+              </div>
+            </div>
             <div class="pays">
               <div class="po" onclick="setPay('dinheiro',this)"><span class="pyi">💵</span>Dinheiro</div>
               <div class="po" onclick="setPay('pix',this)"><span class="pyi">⚡</span>PIX</div>
@@ -799,7 +808,9 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
             <div class="srow" id="taxa-row" style="color:#22c55e;font-weight:800"><span>Entrega</span><span id="taxa-display">GRATIS</span></div>
             <div class="stot"><span>TOTAL</span><span id="tot-val">R$ 0,00</span></div>
           </div>
-          <div id="bebida-aviso" style="display:none;background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:12px 14px;margin-bottom:12px;text-align:center"><div style="font-size:1.2rem;margin-bottom:4px">🚫🥤</div><div style="font-weight:800;color:#856404;font-size:.88rem;margin-bottom:4px">Pedido mínimo de 2 bebidas</div><div style="color:#6d5103;font-size:.78rem">Adicione mais 1 bebida, ou inclua um lanche/pizza/combo para continuar.</div></div><button class="wabtn" id="wa-btn" onclick="sendWA()">ENVIAR VIA WHATSAPP</button>
+          <div id="bebida-aviso" style="display:none;background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:12px 14px;margin-bottom:12px;text-align:center"><div style="font-size:1.2rem;margin-bottom:4px">🚫🥤</div><div style="font-weight:800;color:#856404;font-size:.88rem;margin-bottom:4px">Pedido mínimo de 2 bebidas</div><div style="color:#6d5103;font-size:.78rem">Adicione mais 1 bebida, ou inclua um lanche/pizza/combo para continuar.</div></div>
+
+          <button class="wabtn" id="wa-btn" onclick="sendWA()">ENVIAR VIA WHATSAPP</button>
         </div>
       </div>
     </div>
@@ -1072,6 +1083,25 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 </div>
 <div id="print-area"></div>
 <div id="toast"></div>
+
+<!-- MODAL CARRINHO ANTERIOR -->
+<div id="modal-carrinho-anterior" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:none;align-items:flex-end;justify-content:center">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;box-shadow:0 -4px 30px rgba(0,0,0,.15);animation:slideUp .3s ease">
+    <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 20px"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <span style="font-size:2.2rem">🛒</span>
+      <div>
+        <div style="font-weight:900;font-size:1rem;color:#1a1a1a">Você tem itens salvos!</div>
+        <div style="font-size:.82rem;color:#888;margin-top:2px">Encontramos um pedido anterior no seu dispositivo.</div>
+      </div>
+    </div>
+    <div id="modal-carrinho-anterior-itens" style="background:#f9f9f9;border-radius:12px;padding:12px 14px;margin-bottom:16px;max-height:160px;overflow-y:auto;font-size:.83rem;color:#444;line-height:1.8"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="descartarCarrinhoAnterior()" style="flex:1;padding:13px;background:#fff;color:#ef4444;border:2px solid #ef4444;border-radius:12px;font-weight:800;font-size:.88rem;cursor:pointer">🗑️ Limpar</button>
+      <button onclick="manterCarrinhoAnterior()" style="flex:2;padding:13px;background:var(--r);color:#fff;border:none;border-radius:12px;font-weight:800;font-size:.88rem;cursor:pointer">✅ Manter pedido</button>
+    </div>
+  </div>
+</div>
 <script>
 var WA = '5532998204435';
 var PIX_CHAVE = '32999754142';
@@ -4041,7 +4071,7 @@ loadMaisPedido();
 // ── CARRINHO PERSISTENTE NO SERVIDOR ───────────────
 var _carrinhoCode = null;
 var _carrinhoSaveTimer = null;
-var _CARRINHO_EXPIRACAO_MS = 3 * 60 * 1000; // 3 minutos
+var _CARRINHO_EXPIRACAO_MS = 24 * 60 * 60 * 1000; // 24 horas
 var _carrinhoExpiracaoTimer = null;
 
 function _salvarTimestamp() {
@@ -4107,7 +4137,6 @@ function salvarCarrinho() {
 
 function restaurarCarrinho() {
   if (_carrinhoExpirado()) {
-    // Carrinho expirou enquanto estava fora — limpa sem aviso
     try { localStorage.removeItem('fael_cart'); } catch(e) {}
     try { localStorage.removeItem('fael_cart_code'); } catch(e) {}
     try { localStorage.removeItem('fael_cart_ts'); } catch(e) {}
@@ -4116,9 +4145,16 @@ function restaurarCarrinho() {
     try { sessionStorage.removeItem('fael_cart_ts'); } catch(e) {}
     return;
   }
+
+  // Detecta se é sessão NOVA (fechou o site e voltou)
+  // sessionStorage some ao fechar o aba/browser, localStorage persiste
+  var sessaoAtiva = false;
+  try { sessaoAtiva = !!sessionStorage.getItem('fael_sessao_ativa'); } catch(e) {}
+
   var code = null;
   try { code = localStorage.getItem('fael_cart_code'); } catch(e) {}
   if (!code) { try { code = sessionStorage.getItem('fael_cart_code'); } catch(e) {} }
+
   if (code) {
     fetch('/api/carrinho/' + code)
       .then(function(r) { return r.json(); })
@@ -4128,13 +4164,18 @@ function restaurarCarrinho() {
           _carrinhoCode = code;
           updateBadge();
           _agendarLimpezaAutomatica();
-        } else { _restaurarLocal(); }
+          // Se sessão nova, mostra aviso
+          if (!sessaoAtiva) _mostrarAvisoCarrinhoAnterior();
+        } else { _restaurarLocal(sessaoAtiva); }
       })
-      .catch(function() { _restaurarLocal(); });
-  } else { _restaurarLocal(); }
+      .catch(function() { _restaurarLocal(sessaoAtiva); });
+  } else { _restaurarLocal(sessaoAtiva); }
+
+  // Marca sessão como ativa
+  try { sessionStorage.setItem('fael_sessao_ativa', '1'); } catch(e) {}
 }
 
-function _restaurarLocal() {
+function _restaurarLocal(sessaoAtiva) {
   var dados = null;
   try { dados = localStorage.getItem('fael_cart'); } catch(e) {}
   if (!dados) { try { dados = sessionStorage.getItem('fael_cart'); } catch(e) {} }
@@ -4145,8 +4186,35 @@ function _restaurarLocal() {
       cart = parsed;
       updateBadge();
       _agendarLimpezaAutomatica();
+      if (!sessaoAtiva) _mostrarAvisoCarrinhoAnterior();
     }
   } catch(e) {}
+}
+
+function _mostrarAvisoCarrinhoAnterior() {
+  if (!cart.length) return;
+  // Monta lista de itens
+  var itens = cart.map(function(item) {
+    return '• ' + item.qty + 'x ' + item.name;
+  }).join('\n');
+  var el = document.getElementById('modal-carrinho-anterior-itens');
+  if (el) el.innerText = itens;
+  var modal = document.getElementById('modal-carrinho-anterior');
+  if (modal) modal.style.display = 'flex';
+}
+
+function manterCarrinhoAnterior() {
+  var modal = document.getElementById('modal-carrinho-anterior');
+  if (modal) modal.style.display = 'none';
+}
+
+function descartarCarrinhoAnterior() {
+  var modal = document.getElementById('modal-carrinho-anterior');
+  if (modal) modal.style.display = 'none';
+  cart = [];
+  limparCarrinho();
+  updateBadge();
+  showToast('Carrinho limpo! Monte um novo pedido 😊');
 }
 
 function limparCarrinho() {
