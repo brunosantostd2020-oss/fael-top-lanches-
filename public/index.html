@@ -2650,8 +2650,9 @@ function sendWA() {
       if (curPay==='pix' && window._pixCod) { msg += '====================\nCODIGO PIX:\n' + window._pixCod + '\nApos pagar envie o comprovante!\n'; }
       if (d.obs) msg += 'Obs: ' + d.obs + '\n';
       msg += new Date().toLocaleString('pt-BR');
-      cart = []; updateBadge();
-      limparCarrinho();
+      // NÃO zera o carrinho imediatamente — agenda limpeza em 60 minutos
+      // assim o cliente pode ir pagar no PIX e voltar sem perder o pedido
+      _agendarLimpezaPosPedido();
       document.getElementById('m-onum').textContent = order.id;
       document.getElementById('m-msg').textContent = 'Pedido registrado! WhatsApp abrindo...';
       document.getElementById('modal').classList.add('open');
@@ -2688,10 +2689,23 @@ function doLogin() {
       localStorage.setItem('fael_token', adminToken);
       document.getElementById('login-screen').style.display = 'none';
       loadConfigs();
-      // Pré-carregar o som de notificação
+      // Pré-carregar e DESBLOQUEAR o som aproveitando o clique do login
+      // (navegadores só permitem áudio após interação do usuário)
       window._notifAudio = new Audio('/notification.mp3');
       window._notifAudio.volume = 1.0;
       window._notifAudio.load();
+      // Toca silenciosamente para desbloquear o contexto de áudio
+      window._notifAudio.play().then(function() {
+        window._notifAudio.pause();
+        window._notifAudio.currentTime = 0;
+        window._audioDesbloqueado = true;
+      }).catch(function() {
+        // Tenta desbloquear via AudioContext também
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          ctx.resume().then(function() { window._audioDesbloqueado = true; });
+        } catch(e) {}
+      });
       showPage('admin');
     })
     .catch(function() {
@@ -2782,16 +2796,27 @@ function playNotificationSound(count) {
     }, 8000);
   }
 
-  // Som — usa pré-carregado se disponível, senão sintetizado
-  try {
+  // Som — tenta múltiplas estratégias
+  function tentarTocar() {
+    // Estratégia 1: áudio pré-carregado
     if (window._notifAudio && window._notifAudio.readyState >= 2) {
       window._notifAudio.currentTime = 0;
-      window._notifAudio.play().catch(function(){ playSynthSound(); });
-    } else {
-      var audio = new Audio('/notification.mp3');
-      audio.volume = 1.0;
-      audio.play().catch(function(){ playSynthSound(); });
+      window._notifAudio.volume = 1.0;
+      return window._notifAudio.play();
     }
+    // Estratégia 2: novo objeto Audio
+    var audio = new Audio('/notification.mp3');
+    audio.volume = 1.0;
+    return audio.play();
+  }
+
+  try {
+    tentarTocar()
+      .then(function() { window._audioDesbloqueado = true; })
+      .catch(function() {
+        // Estratégia 3: som sintetizado via AudioContext
+        playSynthSound();
+      });
   } catch(e) {
     playSynthSound();
   }
@@ -4060,6 +4085,22 @@ if (adminToken) {
   window._notifAudio = new Audio('/notification.mp3');
   window._notifAudio.volume = 1.0;
   window._notifAudio.load();
+  // Tenta desbloquear no primeiro clique do usuário na página
+  document.addEventListener('click', function _desbloqueiaAudio() {
+    if (window._audioDesbloqueado) return;
+    if (window._notifAudio) {
+      window._notifAudio.play().then(function() {
+        window._notifAudio.pause();
+        window._notifAudio.currentTime = 0;
+        window._audioDesbloqueado = true;
+      }).catch(function() {});
+    }
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      ctx.resume().then(function() { window._audioDesbloqueado = true; });
+    } catch(e) {}
+    document.removeEventListener('click', _desbloqueiaAudio);
+  }, { once: false });
 }
 loadProducts();
 loadAcrescimos();
@@ -4071,8 +4112,10 @@ loadMaisPedido();
 // ── CARRINHO PERSISTENTE NO SERVIDOR ───────────────
 var _carrinhoCode = null;
 var _carrinhoSaveTimer = null;
-var _CARRINHO_EXPIRACAO_MS = 24 * 60 * 60 * 1000; // 24 horas
+var _CARRINHO_EXPIRACAO_MS = 60 * 60 * 1000; // 60 minutos
+var _CARRINHO_POS_PEDIDO_MS = 60 * 60 * 1000; // 60 minutos após pedido enviado
 var _carrinhoExpiracaoTimer = null;
+var _carrinhoPosPedidoTimer = null;
 
 function _salvarTimestamp() {
   var ts = Date.now().toString();
@@ -4140,14 +4183,31 @@ function restaurarCarrinho() {
     try { localStorage.removeItem('fael_cart'); } catch(e) {}
     try { localStorage.removeItem('fael_cart_code'); } catch(e) {}
     try { localStorage.removeItem('fael_cart_ts'); } catch(e) {}
+    try { localStorage.removeItem('fael_cart_pedido_ts'); } catch(e) {}
     try { sessionStorage.removeItem('fael_cart'); } catch(e) {}
     try { sessionStorage.removeItem('fael_cart_code'); } catch(e) {}
     try { sessionStorage.removeItem('fael_cart_ts'); } catch(e) {}
     return;
   }
 
-  // Detecta se é sessão NOVA (fechou o site e voltou)
-  // sessionStorage some ao fechar o aba/browser, localStorage persiste
+  // Verifica se pedido já foi enviado e reagenda timer de limpeza
+  var pedidoTs = null;
+  try { pedidoTs = localStorage.getItem('fael_cart_pedido_ts'); } catch(e) {}
+  if (pedidoTs) {
+    var elapsed = Date.now() - parseInt(pedidoTs, 10);
+    var restante = _CARRINHO_POS_PEDIDO_MS - elapsed;
+    if (restante <= 0) {
+      // 60 min já passou desde o pedido — limpa
+      cart = []; limparCarrinho(); updateBadge(); return;
+    } else {
+      // Reagenda limpeza pelo tempo restante
+      clearTimeout(_carrinhoPosPedidoTimer);
+      _carrinhoPosPedidoTimer = setTimeout(function() {
+        cart = []; updateBadge(); limparCarrinho();
+      }, restante);
+    }
+  }
+
   var sessaoAtiva = false;
   try { sessaoAtiva = !!sessionStorage.getItem('fael_sessao_ativa'); } catch(e) {}
 
@@ -4164,18 +4224,16 @@ function restaurarCarrinho() {
           _carrinhoCode = code;
           updateBadge();
           _agendarLimpezaAutomatica();
-          // Se sessão nova, mostra aviso
-          if (!sessaoAtiva) _mostrarAvisoCarrinhoAnterior();
-        } else { _restaurarLocal(sessaoAtiva); }
+          if (!sessaoAtiva) _mostrarAvisoCarrinhoAnterior(!!pedidoTs);
+        } else { _restaurarLocal(sessaoAtiva, !!pedidoTs); }
       })
-      .catch(function() { _restaurarLocal(sessaoAtiva); });
-  } else { _restaurarLocal(sessaoAtiva); }
+      .catch(function() { _restaurarLocal(sessaoAtiva, !!pedidoTs); });
+  } else { _restaurarLocal(sessaoAtiva, !!pedidoTs); }
 
-  // Marca sessão como ativa
   try { sessionStorage.setItem('fael_sessao_ativa', '1'); } catch(e) {}
 }
 
-function _restaurarLocal(sessaoAtiva) {
+function _restaurarLocal(sessaoAtiva, pedidoEnviado) {
   var dados = null;
   try { dados = localStorage.getItem('fael_cart'); } catch(e) {}
   if (!dados) { try { dados = sessionStorage.getItem('fael_cart'); } catch(e) {} }
@@ -4186,19 +4244,27 @@ function _restaurarLocal(sessaoAtiva) {
       cart = parsed;
       updateBadge();
       _agendarLimpezaAutomatica();
-      if (!sessaoAtiva) _mostrarAvisoCarrinhoAnterior();
+      if (!sessaoAtiva) _mostrarAvisoCarrinhoAnterior(pedidoEnviado);
     }
   } catch(e) {}
 }
 
-function _mostrarAvisoCarrinhoAnterior() {
+function _mostrarAvisoCarrinhoAnterior(pedidoJaEnviado) {
   if (!cart.length) return;
-  // Monta lista de itens
   var itens = cart.map(function(item) {
     return '• ' + item.qty + 'x ' + item.name;
   }).join('\n');
   var el = document.getElementById('modal-carrinho-anterior-itens');
   if (el) el.innerText = itens;
+
+  // Muda o título se pedido já foi enviado
+  var titulo = document.querySelector('#modal-carrinho-anterior [style*="font-weight:900"]');
+  var subtitulo = document.querySelector('#modal-carrinho-anterior [style*="font-size:.82rem"]');
+  if (pedidoJaEnviado && titulo && subtitulo) {
+    titulo.textContent = 'Seu pedido foi enviado!';
+    subtitulo.textContent = 'Estes itens continuam salvos por 60 minutos.';
+  }
+
   var modal = document.getElementById('modal-carrinho-anterior');
   if (modal) modal.style.display = 'flex';
 }
@@ -4219,16 +4285,35 @@ function descartarCarrinhoAnterior() {
 
 function limparCarrinho() {
   clearTimeout(_carrinhoExpiracaoTimer);
+  clearTimeout(_carrinhoPosPedidoTimer);
   try { localStorage.removeItem('fael_cart'); } catch(e) {}
   try { localStorage.removeItem('fael_cart_code'); } catch(e) {}
   try { localStorage.removeItem('fael_cart_ts'); } catch(e) {}
+  try { localStorage.removeItem('fael_cart_pedido_ts'); } catch(e) {}
   try { sessionStorage.removeItem('fael_cart'); } catch(e) {}
   try { sessionStorage.removeItem('fael_cart_code'); } catch(e) {}
   try { sessionStorage.removeItem('fael_cart_ts'); } catch(e) {}
+  try { sessionStorage.removeItem('fael_cart_pedido_ts'); } catch(e) {}
   if (_carrinhoCode) {
     fetch('/api/carrinho/' + _carrinhoCode, { method: 'DELETE' }).catch(function() {});
     _carrinhoCode = null;
   }
+}
+
+// Agenda limpeza 60min após envio do pedido
+// O cliente pode sair para pagar no PIX e voltar sem perder o pedido
+function _agendarLimpezaPosPedido() {
+  // Salva timestamp do pedido
+  var ts = Date.now().toString();
+  try { localStorage.setItem('fael_cart_pedido_ts', ts); } catch(e) {}
+  try { sessionStorage.setItem('fael_cart_pedido_ts', ts); } catch(e) {}
+  // Agenda limpeza local em 60 minutos
+  clearTimeout(_carrinhoPosPedidoTimer);
+  _carrinhoPosPedidoTimer = setTimeout(function() {
+    cart = [];
+    updateBadge();
+    limparCarrinho();
+  }, _CARRINHO_POS_PEDIDO_MS);
 }
 
 restaurarCarrinho();
