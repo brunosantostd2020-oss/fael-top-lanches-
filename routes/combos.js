@@ -3,11 +3,34 @@ const router = express.Router();
 const { pool } = require('../db/init');
 const { requireAdmin } = require('./auth');
 
+// Substitui imagem base64 da descrição por URL leve (mesma técnica de products.js)
+function leveinar(row) {
+  if (row.description && /##IMG:[^#]+##/.test(row.description)) {
+    row.image_url = `/api/combos/${row.id}/image`;
+    row.description = row.description.replace(/##IMG:[^#]+##/gi, '').trim();
+  }
+  return row;
+}
+
 // GET combos ativos (público)
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM combos WHERE active = true ORDER BY name");
-    res.json(result.rows);
+    res.json(result.rows.map(leveinar));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET imagem do combo (extraída da descrição)
+router.get('/:id/image', async (req, res) => {
+  try {
+    const r = await pool.query("SELECT description FROM combos WHERE id = $1", [parseInt(req.params.id)]);
+    if (!r.rows.length) return res.status(404).json({ error: 'Combo não encontrado' });
+    const m = (r.rows[0].description || '').match(/##IMG:data:(image\/[a-z+]+);base64,([^#]+)##/i);
+    if (!m) return res.status(404).json({ error: 'Sem imagem' });
+    const buf = Buffer.from(m[2], 'base64');
+    res.set('Content-Type', m[1]);
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(buf);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

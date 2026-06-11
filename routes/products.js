@@ -3,13 +3,42 @@ const router = express.Router();
 const { pool } = require('../db/init');
 const { requireAdmin } = require('./auth');
 
+// Substitui a imagem base64 embutida na descrição por uma URL leve.
+// Reduz drasticamente o tamanho do JSON do cardápio (performance no celular).
+function leveinar(row, tipo) {
+  if (row.description && /##IMG:[^#]+##/.test(row.description)) {
+    row.image_url = `/api/${tipo}/${row.id}/image`;
+    row.description = row.description.replace(/##IMG:[^#]+##/gi, '').trim();
+  }
+  return row;
+}
+
+// Extrai e envia a imagem base64 de uma descrição como imagem real (com cache)
+function enviarImagem(res, description) {
+  const m = (description || '').match(/##IMG:data:(image\/[a-z+]+);base64,([^#]+)##/i);
+  if (!m) return res.status(404).json({ error: 'Sem imagem' });
+  const buf = Buffer.from(m[2], 'base64');
+  res.set('Content-Type', m[1]);
+  res.set('Cache-Control', 'public, max-age=86400'); // 1 dia de cache
+  res.send(buf);
+}
+
 // GET active products (public)
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM products WHERE active = true ORDER BY category, name"
     );
-    res.json(result.rows);
+    res.json(result.rows.map(r => leveinar(r, 'products')));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET imagem do produto (extraída da descrição)
+router.get('/:id/image', async (req, res) => {
+  try {
+    const r = await pool.query("SELECT description FROM products WHERE id = $1", [parseInt(req.params.id)]);
+    if (!r.rows.length) return res.status(404).json({ error: 'Produto não encontrado' });
+    enviarImagem(res, r.rows[0].description);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -38,7 +67,7 @@ router.get('/mais-pedido/top', async (req, res) => {
     const top = result.rows[0];
     const prod = await pool.query('SELECT * FROM products WHERE id = $1 AND active = true', [top.product_id]);
     if (!prod.rows.length) return res.json(null);
-    res.json({ ...prod.rows[0], total_pedidos: parseInt(top.total) });
+    res.json({ ...leveinar(prod.rows[0], 'products'), total_pedidos: parseInt(top.total) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

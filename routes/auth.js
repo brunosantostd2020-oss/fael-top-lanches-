@@ -110,14 +110,21 @@ router.get('/public-settings', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// Horário atual de Brasília (dia da semana + minutos do dia)
+function horarioBrasilia() {
+  const brt = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  return { server_day: brt.getDay(), server_minutes: brt.getHours() * 60 + brt.getMinutes() };
+}
+
 // GET manual status (public - sem autenticação)
+// Envia também o horário do servidor para o site não depender do relógio do celular do cliente
 router.get('/status', async (req, res) => {
   try {
     const result = await pool.query("SELECT value FROM settings WHERE key = 'manual_status'");
     const manual_status = result.rows.length ? result.rows[0].value : 'auto';
-    res.json({ manual_status });
-  } catch(e) { 
-    res.json({ manual_status: 'auto' }); 
+    res.json({ manual_status, ...horarioBrasilia() });
+  } catch(e) {
+    res.json({ manual_status: 'auto', ...horarioBrasilia() });
   }
 });
 
