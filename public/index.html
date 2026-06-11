@@ -673,8 +673,6 @@ document.addEventListener('click', function(e) {
   }
 });
 </script>
-<!-- Biblioteca de QR Code (para o PIX com valor embutido) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <div id="login-screen" style="display:none">
   <div class="login-box" style="position:relative">
     <button onclick="document.getElementById('login-screen').style.display='none'" style="position:absolute;top:10px;right:10px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#aaa;line-height:1;padding:4px 8px;border-radius:6px;width:auto" title="Fechar">&#10005;</button>
@@ -901,24 +899,10 @@ document.addEventListener('click', function(e) {
                     <div id="pix-valor-display" style="font-size:1.6rem;font-weight:900;color:#00957a;font-family:'Poppins',Impact,sans-serif">R$ --,--</div>
                   </div>
 
-                  <!-- QR Code PIX com valor embutido -->
-                  <div id="pix-qr-wrap" style="text-align:center;margin-bottom:14px;display:none">
-                    <div style="font-size:.78rem;font-weight:800;color:#444;margin-bottom:8px">📱 Escaneie o QR Code no app do seu banco</div>
-                    <div id="pix-qr" style="display:inline-block;background:#fff;padding:10px;border:2px solid #d0f0ea;border-radius:12px;line-height:0"></div>
-                    <div style="font-size:.7rem;color:#00957a;font-weight:700;margin-top:6px">✓ O valor já vai preenchido automaticamente</div>
-                  </div>
-
-                  <!-- Divider OU -->
-                  <div style="display:flex;align-items:center;gap:10px;margin:0 0 10px">
-                    <div style="flex:1;height:1px;background:#e8e8e8"></div>
-                    <div style="font-size:.72rem;color:#999;font-weight:700">OU COPIE O CÓDIGO</div>
-                    <div style="flex:1;height:1px;background:#e8e8e8"></div>
-                  </div>
-
                   <!-- Chave PIX label -->
                   <div style="font-size:.78rem;font-weight:800;color:#444;margin-bottom:6px;display:flex;align-items:center;gap:6px">
                     <span style="display:inline-block;width:18px;height:18px;background:#00c6a2;border-radius:50%;color:#fff;font-size:.6rem;text-align:center;line-height:18px;font-weight:900">✓</span>
-                    PIX Copia e Cola (já com o valor)
+                    Chave PIX (Copia e Cola)
                   </div>
 
                   <!-- Campo da chave -->
@@ -929,7 +913,7 @@ document.addEventListener('click', function(e) {
 
                   <!-- Botão copiar -->
                   <button id="btn-copiar-pix" onclick="copiarPixBtn(this)" style="width:100%;padding:14px;background:linear-gradient(135deg,#00c6a2,#00957a);color:#fff;border:none;border-radius:12px;font-weight:900;font-size:.95rem;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 14px rgba(0,180,155,0.3);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px">
-                    <span style="font-size:1.1rem">📋</span> COPIAR CÓDIGO PIX
+                    <span style="font-size:1.1rem">📋</span> COPIAR CHAVE PIX
                   </button>
 
                   <!-- Divider -->
@@ -2765,45 +2749,10 @@ function pixCRC(str) {
   while (h.length < 4) h = '0' + h;
   return h;
 }
-// Monta o código PIX padrão Banco Central (BR Code EMV) com o VALOR embutido —
-// o cliente cola no banco e o valor já vem preenchido, sem risco de errar
-function montarPixEMV(chave, nome, cidade, valor) {
-  function limpa(s, max) {
-    s = (s || '').toUpperCase();
-    try { s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch(e) {}
-    return s.replace(/[^A-Z0-9 ]/g, '').trim().substring(0, max);
-  }
-  var nomeL = limpa(nome, 25) || 'FAEL TOP LANCHES';
-  var cidadeL = limpa(cidade, 15) || 'CATAGUASES';
-  var mai = pixF('00', 'BR.GOV.BCB.PIX') + pixF('01', chave);
-  var payload = pixF('00', '01') + pixF('26', mai) + pixF('52', '0000') + pixF('53', '986');
-  if (valor && valor > 0) payload += pixF('54', valor.toFixed(2));
-  payload += pixF('58', 'BR') + pixF('59', nomeL) + pixF('60', cidadeL) + pixF('62', pixF('05', '***'));
-  payload += '6304';
-  return payload + pixCRC(payload);
-}
-
 function gerarPix(valor) {
-  var codigo;
-  if (PIX_CHAVE && valor && valor > 0) {
-    try { codigo = montarPixEMV(PIX_CHAVE, PIX_NOME, PIX_CIDADE, valor); }
-    catch(e) { codigo = PIX_CHAVE; } // fallback: chave simples
-  } else {
-    codigo = PIX_CHAVE;
-  }
-  window._pixCod = codigo;
+  window._pixCod = PIX_CHAVE;
   var el = document.getElementById('pix-codigo');
-  if (el) el.textContent = codigo;
-  // QR Code com o mesmo código
-  var wrap = document.getElementById('pix-qr-wrap');
-  var qbox = document.getElementById('pix-qr');
-  if (wrap && qbox && window.QRCode && codigo) {
-    qbox.innerHTML = '';
-    try {
-      new QRCode(qbox, { text: codigo, width: 170, height: 170, correctLevel: QRCode.CorrectLevel.M });
-      wrap.style.display = 'block';
-    } catch(e) { wrap.style.display = 'none'; }
-  }
+  if (el) el.textContent = PIX_CHAVE;
 }
 function copiarPixBtn(btn) {
   copiarPix();
