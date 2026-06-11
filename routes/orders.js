@@ -50,8 +50,8 @@ router.get('/new-since/:ts', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// GET single order
-router.get('/:id', async (req, res) => {
+// GET single order (admin — protege dados pessoais dos clientes)
+router.get('/:id', requireAdmin, async (req, res) => {
   try {
     const order = await getOrderWithItems(parseInt(req.params.id));
     if (!order) return res.status(404).json({ error: 'Pedido não encontrado' });
@@ -64,6 +64,15 @@ router.post('/', async (req, res) => {
   const { client_name, client_phone, address, complement, delivery_type, payment, change_for, items, observations, delivery_fee_override } = req.body;
   if (!client_name || !client_phone || !items?.length)
     return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
+
+  // Validação dos itens — evita totais NaN ou valores absurdos
+  for (const i of items) {
+    const qty = parseInt(i.quantity);
+    const price = parseFloat(i.unit_price);
+    if (!i.name || isNaN(qty) || qty < 1 || qty > 100 || isNaN(price) || price < 0) {
+      return res.status(400).json({ error: 'Item do pedido inválido' });
+    }
+  }
 
   const client = await pool.connect();
   try {

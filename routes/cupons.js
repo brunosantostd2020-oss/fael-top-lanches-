@@ -80,11 +80,11 @@ router.post('/gerar', requireAdmin, async (req, res) => {
     let cod = 'FAEL-';
     for (let i = 0; i < 6; i++) cod += chars[Math.floor(Math.random() * chars.length)];
     try {
-      await pool.query(
+      const r = await pool.query(
         "INSERT INTO cupons (codigo, desconto_percent, usos_maximos, expira_em) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING",
         [cod, desc, usos, expira]
       );
-      gerados.push(cod);
+      if (r.rowCount > 0) gerados.push(cod); // só conta se realmente inseriu
     } catch (e) { /* skip duplicates */ }
   }
 

@@ -5,6 +5,10 @@ const jwt = require('jsonwebtoken');
 const { pool } = require('../db/init');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fael-top-lanches-jwt-secret-2024';
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.warn('⚠️  AVISO DE SEGURANÇA: JWT_SECRET não está definido nas variáveis de ambiente!');
+  console.warn('⚠️  Usando segredo padrão (público no GitHub). Defina JWT_SECRET no Railway!');
+}
 
 function requireAdmin(req, res, next) {
   const auth = req.headers.authorization;

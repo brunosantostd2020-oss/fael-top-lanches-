@@ -7,9 +7,25 @@ const { initDB } = require('./db/init');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Compressão gzip — reduz muito o tamanho das respostas (cardápio com imagens base64)
+let compression = null;
+try { compression = require('compression'); } catch (e) { /* opcional em dev */ }
+if (compression) app.use(compression());
+
 app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Limite maior para permitir upload de imagens de produtos (base64) pelo admin
+app.use(express.json({ limit: '5mb' }));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (/\.(png|jpg|jpeg|webp|gif|svg|mp3|ico)$/i.test(filePath)) {
+      // Imagens e sons podem ficar em cache por 7 dias
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    } else if (/\.html$/i.test(filePath)) {
+      // HTML sempre atualizado após cada deploy
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  }
+}));
 
 app.use('/api/auth',     require('./routes/auth').router);
 app.use('/api/acrescimos', require('./routes/acrescimos'));
