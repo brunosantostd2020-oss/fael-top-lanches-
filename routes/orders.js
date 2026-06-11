@@ -41,10 +41,16 @@ router.get('/', requireAdmin, async (req, res) => {
 // GET novos pedidos desde um timestamp (para notificação em tempo real)
 router.get('/new-since/:ts', requireAdmin, async (req, res) => {
   try {
-    const ts = new Date(parseInt(req.params.ts));
+    const tsMs = parseInt(req.params.ts);
+    if (isNaN(tsMs)) return res.status(400).json({ error: 'Timestamp inválido' });
+    // Converte o timestamp do navegador (epoch UTC) para o horário de Brasília
+    // gravado no banco — independente do fuso do servidor. Corrige notificações atrasadas em 3h.
     const result = await pool.query(
-      "SELECT id, client_name, total FROM orders WHERE created_at > $1 AND status = 'pendente' ORDER BY created_at ASC",
-      [ts]
+      `SELECT id, client_name, total FROM orders
+       WHERE created_at > (to_timestamp($1 / 1000.0) AT TIME ZONE 'America/Sao_Paulo')
+         AND status = 'pendente'
+       ORDER BY created_at ASC`,
+      [tsMs]
     );
     res.json(result.rows);
   } catch (e) { res.status(500).json({ error: e.message }); }

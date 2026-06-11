@@ -1,3 +1,7 @@
+// Fuso horário do processo — DEVE ser a primeira linha!
+// Sem isso, o Railway roda em UTC e os horários dos pedidos/notificações ficam 3h errados
+process.env.TZ = process.env.TZ || 'America/Sao_Paulo';
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
