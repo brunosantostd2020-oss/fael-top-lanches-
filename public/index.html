@@ -567,50 +567,59 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 #wa-balloon .wb-opt .wb-sub{display:block;font-weight:500;font-size:.72rem;color:#777;margin-top:2px}
 /* ===== FIM BALÃO WHATSAPP ===== */
 
-/* ===== CARDS DE NOVO PEDIDO (admin) ===== */
+/* ===== CARDS DE NOVO PEDIDO (admin) — lateral direita, estilo profissional ===== */
 #order-notifs{
   position:fixed;
   bottom:calc(20px + env(safe-area-inset-bottom));
-  left:50%;
-  transform:translateX(-50%);
+  right:16px;
   z-index:500;
   display:flex;
   flex-direction:column;
-  gap:8px;
-  align-items:center;
-  width:max-content;
-  max-width:calc(100vw - 24px);
+  gap:10px;
+  align-items:flex-end;
+  width:340px;
+  max-width:calc(100vw - 32px);
   pointer-events:none;
 }
 .order-notif{
   pointer-events:auto;
-  background:linear-gradient(135deg,#16a34a,#15803d);
-  color:#fff;
-  padding:14px 20px;
-  border-radius:14px;
+  background:#fff;
+  color:#1f2937;
+  border-left:4px solid #16a34a;
+  padding:12px 14px;
+  border-radius:12px;
   font-family:Inter,sans-serif;
-  font-size:.92rem;
-  font-weight:800;
-  box-shadow:0 10px 32px rgba(0,0,0,.35);
+  box-shadow:0 8px 28px rgba(0,0,0,.18);
   cursor:pointer;
   display:flex;
   align-items:center;
-  gap:10px;
-  max-width:100%;
-  animation:notif-in .35s ease;
-  transition:opacity .5s,transform .5s;
+  gap:12px;
+  width:100%;
+  animation:notif-in .3s ease;
+  transition:opacity .45s,transform .45s;
 }
+.order-notif .on-ico{
+  width:38px;height:38px;
+  border-radius:50%;
+  background:#f0fdf4;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;flex-shrink:0;
+}
+.order-notif .on-tit{font-size:.85rem;font-weight:800;color:#111}
+.order-notif .on-sub{font-size:.76rem;color:#6b7280;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-notif .on-body{flex:1;min-width:0}
 .order-notif .on-x{
-  background:rgba(255,255,255,.25);
-  border:none;color:#fff;
+  background:#f3f4f6;
+  border:none;color:#9ca3af;
   border-radius:50%;
   width:22px;height:22px;
-  font-size:.7rem;font-weight:900;
+  font-size:.65rem;font-weight:900;
   cursor:pointer;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
 }
-.order-notif.hide{opacity:0;transform:translateY(14px)}
-@keyframes notif-in{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.order-notif .on-x:hover{background:#e5e7eb;color:#374151}
+.order-notif.hide{opacity:0;transform:translateX(24px)}
+@keyframes notif-in{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
 /* ===== FIM CARDS NOVO PEDIDO ===== */
 </style>
 </head>
@@ -1292,7 +1301,8 @@ var produtoParaAdicionar = null, acrSelecionados = [];
 var remocaoIdAtual = null, remocaoAcrescimosAtual = [], remocaoSelecionados = [], remocaoNomeProd = '';
 var lastOrderCheck = 0; // será definido como Date.now() no primeiro check
 var notificationEnabled = localStorage.getItem('fael_notification') !== 'false';
-var autoPrintEnabled = localStorage.getItem('fael_autoprint') !== 'false';
+// Impressão automática DESLIGADA por padrão — pode ser ativada em Admin → Config
+var autoPrintEnabled = localStorage.getItem('fael_autoprint') === 'true';
 
 function api(method, path, body, auth) {
   var h = {'Content-Type': 'application/json'};
@@ -1828,7 +1838,11 @@ function filterCat(cat, el) {
 // ACRESCIMOS
 function addCart(id) {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
-  
+
+  // Proteção contra toque duplo no celular (evita abrir o fluxo 2x ou adicionar em dobro)
+  if (window._addLock && Date.now() - window._addLock < 600) return;
+  window._addLock = Date.now();
+
   // Buscar o produto para verificar a categoria
   var p = allProducts.filter(function(x){return x.id===id;})[0];
   if (!p) return;
@@ -1848,6 +1862,8 @@ function addCart(id) {
 
 function addCartTam(id, tam, preco) {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
+  if (window._addLock && Date.now() - window._addLock < 600) return;
+  window._addLock = Date.now();
   var p = allProducts.filter(function(x){return x.id===id;})[0];
   if (!p) return;
   
@@ -1933,8 +1949,11 @@ function confirmarAcrescimos() {
     return;
   }
 
-  // Abrir modal de remoção (se produto tem ingredientes)
-  abrirModalRemocao(prodId, acrs);
+  // Pequena pausa entre um modal e outro — evita que o toque "vaze"
+  // para o próximo modal no celular e dá tempo do cliente perceber a troca
+  setTimeout(function() {
+    abrirModalRemocao(prodId, acrs);
+  }, 280);
 }
 
 function fecharModalAcr() {
@@ -2196,13 +2215,16 @@ function mostrarModalProdutoAdicionado(nomeProduto) {
   if (nomeEl) nomeEl.textContent = nomeProduto;
   var _me = document.getElementById('modal-escolha');
   _me.style.bottom = '0';
-  _me.style.pointerEvents = 'all';
-  // Fecha automaticamente após 5 segundos se não interagir
+  // Ignora toques nos primeiros 400ms (evita clique fantasma em "Finalizar"
+  // logo após confirmar o modal anterior — mandava o cliente para o carrinho sem querer)
+  _me.style.pointerEvents = 'none';
+  setTimeout(function() { _me.style.pointerEvents = 'all'; }, 400);
+  // Fecha automaticamente após 9 segundos se não interagir (5s era rápido demais)
   clearTimeout(window._barrinhaTimer);
   window._barrinhaTimer = setTimeout(function() {
     _me.style.bottom = '-200px';
     _me.style.pointerEvents = 'none';
-  }, 5000);
+  }, 9000);
 }
 
 function irParaCarrinho() {
@@ -2216,6 +2238,8 @@ function continuarComprando() {
 
 function addComboToCart(id, nome, preco) {
   if (!id || !preco) { showToast('Erro ao adicionar combo!'); return; }
+  if (window._addLock && Date.now() - window._addLock < 600) return;
+  window._addLock = Date.now();
   var cartId = 'combo_' + id + '_' + Date.now();
   cart.push({
     id: null,          // product_id null — combo não é produto
@@ -2279,8 +2303,15 @@ function abrirModalRemocao(prodId, acrescimos) {
   var cnt = document.getElementById('remocao-count');
   if (txt) { txt.value = ''; txt.oninput = function() { if (cnt) cnt.textContent = txt.value.length + '/200'; }; }
   if (cnt) cnt.textContent = '0/200';
-  document.getElementById('modal-remocao').classList.add('open');
-  setTimeout(function() { if (txt) txt.focus(); }, 300);
+  var modalR = document.getElementById('modal-remocao');
+  modalR.classList.add('open');
+  // Ignora toques nos primeiros 350ms (evita clique fantasma vindo do modal anterior)
+  modalR.style.pointerEvents = 'none';
+  setTimeout(function() { modalR.style.pointerEvents = ''; }, 350);
+  // Auto-focus só no computador — no celular o teclado abria sozinho e atrapalhava
+  if (window.innerWidth > 600) {
+    setTimeout(function() { if (txt) txt.focus(); }, 400);
+  }
 }
 
 function confirmarRemocao() {
@@ -2290,20 +2321,14 @@ function confirmarRemocao() {
   var remocoes = obs ? [obs] : [];
   addCartDiretoComRemocao(remocaoIdAtual, remocaoAcrescimosAtual, remocoes);
   remocaoIdAtual = null; remocaoAcrescimosAtual = []; remocaoSelecionados = [];
-  setTimeout(function() {
-    var _me = document.getElementById('modal-escolha');
-    _me.style.bottom = '0'; _me.style.pointerEvents = 'all';
-  }, 300);
+  // (a barrinha "Item adicionado" já é aberta por addCartDiretoComRemocao)
 }
 
 function semRemocao() {
   document.getElementById('modal-remocao').classList.remove('open');
   addCartDiretoComRemocao(remocaoIdAtual, remocaoAcrescimosAtual, []);
   remocaoIdAtual = null; remocaoAcrescimosAtual = []; remocaoSelecionados = [];
-  setTimeout(function() {
-    var _me = document.getElementById('modal-escolha');
-    _me.style.bottom = '0'; _me.style.pointerEvents = 'all';
-  }, 300);
+  // (a barrinha "Item adicionado" já é aberta por addCartDiretoComRemocao)
 }
 
 function addCartDiretoComRemocao(id, acrescimos, remocoes) {
@@ -3003,6 +3028,12 @@ function _marcarNotificados(ids) {
 
 function checkNewOrders() {
   if (!adminToken) return;
+  // Só notifica com a tela ADMIN aberta (pedido do dono)
+  var pAdmin = document.getElementById('page-admin');
+  if (!pAdmin || !pAdmin.classList.contains('active')) {
+    lastOrderCheck = 0; // ao voltar para o admin, reavalia os últimos 10 minutos
+    return;
+  }
   // Na primeira chamada, olha os últimos 10 minutos — assim pedidos feitos
   // logo antes de abrir o painel também geram aviso (sem repetir os já vistos)
   if (lastOrderCheck === 0) {
@@ -3108,14 +3139,27 @@ function showOrderNotif(o) {
   var el = document.createElement('div');
   el.className = 'order-notif';
   var total = parseFloat(o.total || 0).toFixed(2).replace('.', ',');
-  // textContent protege contra HTML no nome do cliente
-  var txt = document.createElement('span');
-  txt.textContent = '🛎️ Pedido #' + o.id + ' — ' + (o.client_name || 'Cliente') + ' — R$ ' + total;
+  // Ícone
+  var ico = document.createElement('div');
+  ico.className = 'on-ico';
+  ico.textContent = '🛎️';
+  // Texto (textContent protege contra HTML no nome do cliente)
+  var body = document.createElement('div');
+  body.className = 'on-body';
+  var tit = document.createElement('div');
+  tit.className = 'on-tit';
+  tit.textContent = 'Novo pedido #' + o.id;
+  var sub = document.createElement('div');
+  sub.className = 'on-sub';
+  sub.textContent = (o.client_name || 'Cliente') + ' • R$ ' + total;
+  body.appendChild(tit);
+  body.appendChild(sub);
   var x = document.createElement('button');
   x.className = 'on-x';
   x.textContent = '✕';
   x.onclick = function(ev) { ev.stopPropagation(); el.remove(); };
-  el.appendChild(txt);
+  el.appendChild(ico);
+  el.appendChild(body);
   el.appendChild(x);
   // Clicar no card abre os pedidos pendentes no admin
   el.onclick = function() {
@@ -4683,6 +4727,20 @@ setInterval(function(){
   if (!adminToken) return;
   checkNewOrders();
 }, 3000); // A cada 3 segundos — notificação quase imediata
+
+// Atualização automática do painel ADMIN a cada 30s (permanece na tela admin)
+// Só atualiza as abas de pedidos — nunca Produtos/Config/Combos/Acréscimos,
+// para não apagar o que estiver sendo digitado
+setInterval(function(){
+  if (!adminToken) return;
+  var pAdmin = document.getElementById('page-admin');
+  if (!pAdmin || !pAdmin.classList.contains('active')) return;
+  var abasEdicao = ['produtos', 'config', 'combos', 'acrescimos'];
+  if (abasEdicao.indexOf(curATab) >= 0) return;
+  loadAdmStats();
+  loadAdmContent(curATab);
+  updateAdminTimestamp();
+}, 30000);
 </script>
 
 <footer class="site-footer">
