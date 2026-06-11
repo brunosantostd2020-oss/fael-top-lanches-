@@ -2990,16 +2990,31 @@ function loadAdmStats() {
     .catch(function(e) { if (e.message.indexOf('Token')>=0) { adminToken=null; localStorage.removeItem('fael_token'); } });
 }
 
+// Memória dos pedidos já notificados (não repete aviso após recarregar a página)
+function _pedidosJaNotificados() {
+  try { return JSON.parse(localStorage.getItem('fael_notif_ids') || '[]'); } catch(e) { return []; }
+}
+function _marcarNotificados(ids) {
+  try {
+    var v = _pedidosJaNotificados().concat(ids);
+    localStorage.setItem('fael_notif_ids', JSON.stringify(v.slice(-100)));
+  } catch(e) {}
+}
+
 function checkNewOrders() {
   if (!adminToken) return;
-  // Inicializa com timestamp atual na primeira chamada
+  // Na primeira chamada, olha os últimos 10 minutos — assim pedidos feitos
+  // logo antes de abrir o painel também geram aviso (sem repetir os já vistos)
   if (lastOrderCheck === 0) {
-    lastOrderCheck = Date.now();
-    return;
+    lastOrderCheck = Date.now() - 10 * 60 * 1000;
   }
   api('GET', '/orders/new-since/' + lastOrderCheck, null, true)
-    .then(function(newOrders) {
+    .then(function(todos) {
+      // Filtra os que já foram notificados antes (evita duplicar ao recarregar)
+      var vistos = _pedidosJaNotificados();
+      var newOrders = (todos || []).filter(function(o) { return vistos.indexOf(o.id) < 0; });
       if (newOrders && newOrders.length > 0) {
+        _marcarNotificados(newOrders.map(function(o) { return o.id; }));
         // Atualiza timestamp para agora
         lastOrderCheck = Date.now();
         // Toca som e mostra notificação para cada novo pedido
