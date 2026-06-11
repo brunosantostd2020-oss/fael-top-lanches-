@@ -205,4 +205,17 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ── AUTO-FINALIZAÇÃO DE PEDIDOS ──────────────────────────────
+// Se o estabelecimento esquecer de marcar como entregue, o sistema marca sozinho:
+// pedidos não finalizados (pendente/preparo/entrega) há mais de 3 horas viram 'entregue'.
+// Roda a cada 10 minutos. Pedidos cancelados nunca são alterados.
+setInterval(async () => {
+  try {
+    const r = await pool.query(
+      "UPDATE orders SET status = 'entregue' WHERE status IN ('pendente','preparo','entrega') AND created_at < NOW() - INTERVAL '3 hours'"
+    );
+    if (r.rowCount > 0) console.log(`✅ Auto-finalização: ${r.rowCount} pedido(s) antigos marcados como entregues`);
+  } catch (e) { console.error('Erro na auto-finalização:', e.message); }
+}, 10 * 60 * 1000);
+
 module.exports = router;

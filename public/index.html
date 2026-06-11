@@ -566,6 +566,52 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 #wa-balloon .wb-opt .wb-ico{font-size:1.4rem;flex-shrink:0}
 #wa-balloon .wb-opt .wb-sub{display:block;font-weight:500;font-size:.72rem;color:#777;margin-top:2px}
 /* ===== FIM BALÃO WHATSAPP ===== */
+
+/* ===== CARDS DE NOVO PEDIDO (admin) ===== */
+#order-notifs{
+  position:fixed;
+  bottom:calc(20px + env(safe-area-inset-bottom));
+  left:50%;
+  transform:translateX(-50%);
+  z-index:500;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:center;
+  width:max-content;
+  max-width:calc(100vw - 24px);
+  pointer-events:none;
+}
+.order-notif{
+  pointer-events:auto;
+  background:linear-gradient(135deg,#16a34a,#15803d);
+  color:#fff;
+  padding:14px 20px;
+  border-radius:14px;
+  font-family:Inter,sans-serif;
+  font-size:.92rem;
+  font-weight:800;
+  box-shadow:0 10px 32px rgba(0,0,0,.35);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  max-width:100%;
+  animation:notif-in .35s ease;
+  transition:opacity .5s,transform .5s;
+}
+.order-notif .on-x{
+  background:rgba(255,255,255,.25);
+  border:none;color:#fff;
+  border-radius:50%;
+  width:22px;height:22px;
+  font-size:.7rem;font-weight:900;
+  cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.order-notif.hide{opacity:0;transform:translateY(14px)}
+@keyframes notif-in{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+/* ===== FIM CARDS NOVO PEDIDO ===== */
 </style>
 </head>
 <body>
@@ -2833,6 +2879,12 @@ function openAdmin() {
 }
 
 function ativarSomAdmin() {
+  // Pede permissão para notificações do sistema também
+  try {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  } catch(e) {}
   // Cria e toca áudio silencioso para desbloquear o contexto
   if (!window._notifAudio) {
     window._notifAudio = new Audio('/notification.mp3');
@@ -2889,6 +2941,12 @@ function doLogin() {
       window._notifAudio = new Audio('/notification.mp3');
       window._notifAudio.volume = 1.0;
       window._notifAudio.load();
+      // Pede permissão para notificações do sistema (aparece mesmo com aba em 2º plano)
+      try {
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission();
+        }
+      } catch(e) {}
       // Toca silenciosamente para desbloquear o contexto de áudio
       window._notifAudio.play().then(function() {
         window._notifAudio.pause();
@@ -2946,6 +3004,8 @@ function checkNewOrders() {
         lastOrderCheck = Date.now();
         // Toca som e mostra notificação para cada novo pedido
         playNotificationSound(newOrders.length);
+        // Card visual na parte de baixo da tela para cada pedido
+        for (var ni = 0; ni < newOrders.length; ni++) showOrderNotif(newOrders[ni]);
         if (autoPrintEnabled) {
           for (var i = 0; i < newOrders.length; i++) {
             (function(ordId){ setTimeout(function(){ printOrd(ordId); }, 600 * (i+1)); })(newOrders[i].id);
@@ -3015,6 +3075,58 @@ function playNotificationSound(count) {
   } catch(e) {
     playSynthSound();
   }
+
+  // Toca uma 2ª vez após 2,5s para garantir que o estabelecimento ouça
+  setTimeout(function() {
+    try { tentarTocar().catch(function(){ playSynthSound(); }); } catch(e) { playSynthSound(); }
+  }, 2500);
+}
+
+// ── CARD DE NOVO PEDIDO (aparece embaixo e some sozinho) ──
+function showOrderNotif(o) {
+  var c = document.getElementById('order-notifs');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'order-notifs';
+    document.body.appendChild(c);
+  }
+  var el = document.createElement('div');
+  el.className = 'order-notif';
+  var total = parseFloat(o.total || 0).toFixed(2).replace('.', ',');
+  // textContent protege contra HTML no nome do cliente
+  var txt = document.createElement('span');
+  txt.textContent = '🛎️ Pedido #' + o.id + ' — ' + (o.client_name || 'Cliente') + ' — R$ ' + total;
+  var x = document.createElement('button');
+  x.className = 'on-x';
+  x.textContent = '✕';
+  x.onclick = function(ev) { ev.stopPropagation(); el.remove(); };
+  el.appendChild(txt);
+  el.appendChild(x);
+  // Clicar no card abre os pedidos pendentes no admin
+  el.onclick = function() {
+    el.remove();
+    showPage('admin');
+    var tabBtn = document.querySelector('.atab[onclick*="pend"]');
+    aTab('pend', tabBtn);
+  };
+  c.appendChild(el);
+  // Some sozinho após 12 segundos
+  setTimeout(function() {
+    el.classList.add('hide');
+    setTimeout(function() { el.remove(); }, 600);
+  }, 12000);
+  // Notificação do sistema operacional (se permitida e aba em segundo plano)
+  try {
+    if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+      new Notification('🍔 Novo pedido #' + o.id, {
+        body: (o.client_name || 'Cliente') + ' — R$ ' + total,
+        icon: '/logo-fael.webp',
+        tag: 'pedido-' + o.id
+      });
+    }
+  } catch (e) { /* alguns celulares não suportam */ }
+  // Vibração no celular
+  try { if (navigator.vibrate) navigator.vibrate([300, 120, 300]); } catch (e) {}
 }
 
 function playSynthSound() {
@@ -4286,23 +4398,34 @@ if (adminToken) {
   window._notifAudio = new Audio('/notification.mp3');
   window._notifAudio.volume = 1.0;
   window._notifAudio.load();
-  // Tenta desbloquear no primeiro clique do usuário na página
-  document.addEventListener('click', function _desbloqueiaAudio() {
-    if (window._audioDesbloqueado) return;
-    if (window._notifAudio) {
-      window._notifAudio.play().then(function() {
-        window._notifAudio.pause();
-        window._notifAudio.currentTime = 0;
-        window._audioDesbloqueado = true;
-      }).catch(function() {});
-    }
-    try {
-      var ctx = new (window.AudioContext || window.webkitAudioContext)();
-      ctx.resume().then(function() { window._audioDesbloqueado = true; });
-    } catch(e) {}
-    document.removeEventListener('click', _desbloqueiaAudio);
-  }, { once: false });
 }
+// Desbloqueio de áudio em QUALQUER clique/toque enquanto for admin
+// (funciona mesmo se o login acontecer depois da página carregar)
+function _tentaDesbloquearAudio() {
+  if (!adminToken || window._audioDesbloqueado) return;
+  if (!window._notifAudio) {
+    window._notifAudio = new Audio('/notification.mp3');
+    window._notifAudio.volume = 1.0;
+    window._notifAudio.load();
+  }
+  window._notifAudio.play().then(function() {
+    window._notifAudio.pause();
+    window._notifAudio.currentTime = 0;
+    window._audioDesbloqueado = true;
+  }).catch(function() {});
+  try {
+    if (!window._audioCtx) window._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    window._audioCtx.resume();
+  } catch(e) {}
+}
+document.addEventListener('click', _tentaDesbloquearAudio);
+document.addEventListener('touchstart', _tentaDesbloquearAudio);
+// Reativa o áudio quando o admin volta para a aba (celular costuma suspender)
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && adminToken && window._audioCtx) {
+    try { window._audioCtx.resume(); } catch(e) {}
+  }
+});
 loadProducts();
 loadAcrescimos();
 loadConfigs();
