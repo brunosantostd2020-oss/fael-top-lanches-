@@ -46,7 +46,9 @@ router.get('/new-since/:ts', requireAdmin, async (req, res) => {
     // Converte o timestamp do navegador (epoch UTC) para o horário de Brasília
     // gravado no banco — independente do fuso do servidor. Corrige notificações atrasadas em 3h.
     const result = await pool.query(
-      `SELECT id, client_name, total, address, delivery_type FROM orders
+      `SELECT id, client_name, client_phone, total, address, complement,
+              delivery_type, payment, change_for, observations
+       FROM orders
        WHERE created_at > (to_timestamp($1 / 1000.0) AT TIME ZONE 'America/Sao_Paulo')
          AND status = 'pendente'
        ORDER BY created_at ASC`,

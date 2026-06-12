@@ -720,8 +720,8 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 <div class="mo" id="modal-meupedido">
   <div class="md" style="max-width:400px">
     <div style="font-size:44px;margin-bottom:6px">📦</div>
-    <h2 style="margin-bottom:2px">Meu Pedido <span id="mp-numero" style="color:var(--r)"></span></h2>
-    <p style="margin-bottom:16px;font-size:.82rem;color:#888">Acompanhe em tempo real</p>
+    <h2 style="margin-bottom:2px">Meu Pedido</h2>
+    <p style="margin-bottom:16px;font-size:.82rem;color:#888">Acompanhe em tempo real<span id="mp-hora"></span></p>
     <div id="mp-timeline" style="text-align:left;margin-bottom:16px"></div>
     <button onclick="fecharMeuPedido()" style="width:100%;background:#fff;color:#666;border:2px solid #ddd;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">Fechar</button>
   </div>
@@ -3305,33 +3305,62 @@ function _exibirProximaNotif() {
   num.textContent = '#' + o.id;
   top.appendChild(num);
 
-  // Nome do cliente (textContent protege contra HTML)
+  // Nome + telefone do cliente (textContent protege contra HTML)
   var nome = document.createElement('div');
   nome.className = 'on-nome';
-  nome.textContent = o.client_name || 'Cliente';
+  nome.textContent = (o.client_name || 'Cliente') + (o.client_phone ? '  •  📞 ' + o.client_phone : '');
 
-  // Itens do pedido (até 3 linhas + contador)
+  // Itens do pedido — lista completa, um por linha (até 6 + contador)
   var itens = document.createElement('div');
   itens.className = 'on-itens';
+  itens.style.whiteSpace = 'pre-line';
   var lista = (o.items || []).map(function(i) { return i.quantity + 'x ' + i.product_name; });
-  itens.textContent = lista.slice(0, 3).join(' • ') + (lista.length > 3 ? ' • +' + (lista.length - 3) + ' itens' : '');
+  itens.textContent = lista.slice(0, 6).join('\n') + (lista.length > 6 ? '\n+' + (lista.length - 6) + ' itens...' : '');
 
-  // Endereço / retirada / mesa
+  // Endereço / retirada / mesa (com complemento)
   var end = document.createElement('div');
   end.className = 'on-end';
-  end.textContent = '📍 ' + (o.address || (o.delivery_type === 'retirada' ? 'Retirada na loja' : 'Sem endereço'));
+  var endTxt = o.address || (o.delivery_type === 'retirada' ? 'Retirada na loja' : 'Sem endereço');
+  if (o.complement) endTxt += ' (' + o.complement + ')';
+  end.textContent = '📍 ' + endTxt;
 
-  // Rodapé: total + botão
+  // Forma de pagamento (com troco, se houver)
+  var pag = document.createElement('div');
+  pag.className = 'on-end';
+  var PMAPA = { dinheiro: '💵 Dinheiro', pix: '⚡ PIX', credito: '💳 Cartão de Crédito', debito: '🏧 Cartão de Débito' };
+  var pagTxt = PMAPA[o.payment] || ('💰 ' + (o.payment || ''));
+  if (o.payment === 'dinheiro' && o.change_for) pagTxt += ' • Troco p/ R$ ' + parseFloat(o.change_for).toFixed(2).replace('.', ',');
+  pag.textContent = pagTxt;
+
+  // Observações do cliente (se houver)
+  var obs = null;
+  if (o.observations) {
+    obs = document.createElement('div');
+    obs.className = 'on-end';
+    obs.textContent = '📝 ' + o.observations;
+  }
+
+  // Rodapé: total + botões ACEITAR e VER
   var rodape = document.createElement('div');
   rodape.className = 'on-rodape';
   var tot = document.createElement('span');
   tot.className = 'on-total';
   tot.textContent = 'Total: R$ ' + total;
+  var botoes = document.createElement('span');
+  botoes.style.display = 'flex';
+  botoes.style.gap = '6px';
+  var aceitar = document.createElement('button');
+  aceitar.className = 'on-ver';
+  aceitar.style.background = '#16a34a';
+  aceitar.style.color = '#fff';
+  aceitar.textContent = '✅ ACEITAR';
   var ver = document.createElement('button');
   ver.className = 'on-ver';
-  ver.textContent = 'VER PEDIDO';
+  ver.textContent = 'VER';
+  botoes.appendChild(aceitar);
+  botoes.appendChild(ver);
   rodape.appendChild(tot);
-  rodape.appendChild(ver);
+  rodape.appendChild(botoes);
 
   var x = document.createElement('button');
   x.className = 'on-x';
@@ -3341,8 +3370,29 @@ function _exibirProximaNotif() {
   el.appendChild(nome);
   if (lista.length) el.appendChild(itens);
   el.appendChild(end);
+  el.appendChild(pag);
+  if (obs) el.appendChild(obs);
   el.appendChild(rodape);
   el.appendChild(x);
+
+  // ACEITAR direto do card: marca "Em preparo" sem precisar abrir o painel
+  aceitar.onclick = function(ev) {
+    ev.stopPropagation();
+    aceitar.disabled = true;
+    aceitar.textContent = '...';
+    api('PATCH', '/orders/' + o.id + '/status', { status: 'preparo' }, true)
+      .then(function() {
+        showToast('✅ Pedido #' + o.id + ' aceito — Em preparo!');
+        fecharCard();
+        var pAdm = document.getElementById('page-admin');
+        if (pAdm && pAdm.classList.contains('active')) { loadAdmStats(); loadAdmContent(curATab); }
+      })
+      .catch(function(e) {
+        aceitar.disabled = false;
+        aceitar.textContent = '✅ ACEITAR';
+        showToast('Erro ao aceitar: ' + e.message);
+      });
+  };
 
   // Mostra quantos ainda estão na fila (evita flood de cards)
   if (_filaNotifs.length > 0) {
@@ -3353,6 +3403,7 @@ function _exibirProximaNotif() {
   }
 
   function fecharCard() {
+    clearTimeout(hideTimer);
     el.classList.add('hide');
     setTimeout(function() {
       el.remove();
@@ -3371,8 +3422,10 @@ function _exibirProximaNotif() {
   };
 
   c.appendChild(el);
-  // Some sozinho após 15 segundos
-  setTimeout(fecharCard, 15000);
+  // Some sozinho após 15 segundos — mas espera enquanto o mouse estiver em cima
+  var hideTimer = setTimeout(fecharCard, 15000);
+  el.onmouseenter = function() { clearTimeout(hideTimer); };
+  el.onmouseleave = function() { clearTimeout(hideTimer); hideTimer = setTimeout(fecharCard, 6000); };
 
   // Notificação do sistema operacional (se permitida e aba em segundo plano)
   try {
@@ -4647,7 +4700,9 @@ function showPage(pg) {
     fab.style.display = (pg === 'carrinho' || qtd === 0) ? 'none' : 'flex';
   }
   // Scroll ao topo ao trocar de página
-  window.scrollTo({top:0, behavior:'smooth'});
+  // (instantâneo para admin/gerenciamento — abre o painel direto, sem rolagem lenta)
+  var instantaneo = (pg === 'admin' || pg === 'gerenciamento');
+  window.scrollTo({top: 0, behavior: instantaneo ? 'auto' : 'smooth'});
 }
 
 function showToast(msg) {
@@ -4818,7 +4873,11 @@ function _buscarStatusPedido() {
 function abrirMeuPedido() {
   var p = _pedidoSalvo();
   if (!p) return;
-  document.getElementById('mp-numero').textContent = '#' + p.id;
+  // Cliente não vê o número do pedido — mostra só a hora em que foi feito
+  var h = new Date(p.ts);
+  var hTxt = ('0' + h.getHours()).slice(-2) + 'h' + ('0' + h.getMinutes()).slice(-2);
+  var hEl = document.getElementById('mp-hora');
+  if (hEl) hEl.textContent = ' • feito às ' + hTxt;
   renderTimelinePedido('pendente'); // estado inicial enquanto carrega
   document.getElementById('modal-meupedido').classList.add('open');
   _buscarStatusPedido();
