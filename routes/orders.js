@@ -56,6 +56,16 @@ router.get('/new-since/:ts', requireAdmin, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// GET status público do pedido — retorna SÓ id e status (sem dados pessoais),
+// para o cliente acompanhar o pedido na tela "Meu pedido"
+router.get('/:id/status', async (req, res) => {
+  try {
+    const r = await pool.query("SELECT id, status FROM orders WHERE id = $1", [parseInt(req.params.id)]);
+    if (!r.rows.length) return res.status(404).json({ error: 'Pedido não encontrado' });
+    res.json(r.rows[0]);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // GET single order (admin — protege dados pessoais dos clientes)
 router.get('/:id', requireAdmin, async (req, res) => {
   try {
