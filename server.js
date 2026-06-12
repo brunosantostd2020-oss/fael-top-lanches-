@@ -24,8 +24,8 @@ app.use(express.static(path.join(__dirname, 'public'), {
     if (/\.(png|jpg|jpeg|webp|gif|svg|mp3|ico)$/i.test(filePath)) {
       // Imagens e sons podem ficar em cache por 7 dias
       res.setHeader('Cache-Control', 'public, max-age=604800');
-    } else if (/\.html$/i.test(filePath)) {
-      // HTML sempre atualizado após cada deploy
+    } else if (/\.html$/i.test(filePath) || /sw\.js$|manifest\.json$/i.test(filePath)) {
+      // HTML, service worker e manifest sempre atualizados após cada deploy
       res.setHeader('Cache-Control', 'no-cache');
     }
   }

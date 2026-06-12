@@ -46,12 +46,20 @@ router.get('/new-since/:ts', requireAdmin, async (req, res) => {
     // Converte o timestamp do navegador (epoch UTC) para o horário de Brasília
     // gravado no banco — independente do fuso do servidor. Corrige notificações atrasadas em 3h.
     const result = await pool.query(
-      `SELECT id, client_name, total FROM orders
+      `SELECT id, client_name, total, address, delivery_type FROM orders
        WHERE created_at > (to_timestamp($1 / 1000.0) AT TIME ZONE 'America/Sao_Paulo')
          AND status = 'pendente'
        ORDER BY created_at ASC`,
       [tsMs]
     );
+    // Anexa os itens de cada pedido (para o card de notificação do admin)
+    for (const o of result.rows) {
+      const it = await pool.query(
+        "SELECT product_name, quantity FROM order_items WHERE order_id = $1",
+        [o.id]
+      );
+      o.items = it.rows;
+    }
     res.json(result.rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

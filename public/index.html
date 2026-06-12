@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Fael Top Lanches e Pizzaria</title>
+<!-- PWA: instalável como aplicativo -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#d62828">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fael Lanches">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Fonte carregada de forma não-bloqueante -->
@@ -583,41 +592,38 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 }
 .order-notif{
   pointer-events:auto;
-  background:#fff;
-  color:#1f2937;
-  border-left:4px solid #16a34a;
-  padding:12px 14px;
-  border-radius:12px;
+  background:linear-gradient(150deg,#d62828,#9e0d0d);
+  color:#fff;
+  padding:14px 16px;
+  border-radius:14px;
   font-family:Inter,sans-serif;
-  box-shadow:0 8px 28px rgba(0,0,0,.18);
+  box-shadow:0 12px 36px rgba(158,13,13,.45);
   cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:12px;
   width:100%;
   animation:notif-in .3s ease;
   transition:opacity .45s,transform .45s;
+  text-align:left;
 }
-.order-notif .on-ico{
-  width:38px;height:38px;
-  border-radius:50%;
-  background:#f0fdf4;
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.15rem;flex-shrink:0;
-}
-.order-notif .on-tit{font-size:.85rem;font-weight:800;color:#111}
-.order-notif .on-sub{font-size:.76rem;color:#6b7280;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.order-notif .on-body{flex:1;min-width:0}
+.order-notif .on-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.order-notif .on-tag{font-size:.68rem;font-weight:900;letter-spacing:1px;background:rgba(255,255,255,.18);padding:3px 8px;border-radius:6px}
+.order-notif .on-num{font-size:1.15rem;font-weight:900;font-family:'Poppins',Impact,sans-serif}
+.order-notif .on-nome{font-size:.95rem;font-weight:800;margin-bottom:4px}
+.order-notif .on-itens{font-size:.78rem;opacity:.92;line-height:1.45;margin-bottom:4px}
+.order-notif .on-end{font-size:.74rem;opacity:.85;margin-bottom:8px}
+.order-notif .on-rodape{display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,.22);padding-top:8px}
+.order-notif .on-total{font-size:.95rem;font-weight:900}
+.order-notif .on-ver{background:#fff;color:#b91c1c;border:none;padding:6px 14px;border-radius:8px;font-size:.74rem;font-weight:900;cursor:pointer}
+.order-notif .on-fila{font-size:.68rem;opacity:.8;margin-top:6px;text-align:center}
 .order-notif .on-x{
-  background:#f3f4f6;
-  border:none;color:#9ca3af;
+  position:absolute;top:8px;right:8px;
+  background:rgba(255,255,255,.2);
+  border:none;color:#fff;
   border-radius:50%;
   width:22px;height:22px;
   font-size:.65rem;font-weight:900;
-  cursor:pointer;flex-shrink:0;
+  cursor:pointer;
   display:flex;align-items:center;justify-content:center;
 }
-.order-notif .on-x:hover{background:#e5e7eb;color:#374151}
 .order-notif.hide{opacity:0;transform:translateX(24px)}
 @keyframes notif-in{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
 /* ===== FIM CARDS NOVO PEDIDO ===== */
@@ -865,6 +871,16 @@ document.addEventListener('click', function(e) {
 </div>
 <div class="page active" id="page-cardapio">
   <h2 class="sec-title">Nosso <span>Cardapio</span></h2>
+
+  <!-- PEDIR DE NOVO (aparece para quem já pediu antes) -->
+  <button id="pedir-denovo-bar" onclick="pedirDeNovo()" style="display:none;width:100%;margin-bottom:1rem;background:linear-gradient(135deg,#1a1a1a,#333);color:#fff;border:none;border-radius:14px;padding:14px 16px;cursor:pointer;font-family:Inter,sans-serif;text-align:left;align-items:center;gap:12px;box-shadow:0 4px 16px rgba(0,0,0,.15)">
+    <span style="font-size:1.6rem">🔁</span>
+    <span style="flex:1">
+      <span style="display:block;font-weight:900;font-size:.92rem">Pedir de novo</span>
+      <span style="display:block;font-size:.74rem;opacity:.75;margin-top:2px" id="pedir-denovo-resumo">Seu último pedido em 1 toque</span>
+    </span>
+    <span style="background:var(--r);padding:8px 14px;border-radius:10px;font-weight:900;font-size:.78rem">REPETIR</span>
+  </button>
 
   <!-- BARRA DE BUSCA -->
   <div style="position:relative;margin-bottom:1rem">
@@ -3003,6 +3019,9 @@ function sendWA() {
       // Guarda o pedido para o cliente acompanhar na tela "Meu pedido"
       try { localStorage.setItem('fael_ultimo_pedido', JSON.stringify({ id: order.id, ts: Date.now() })); } catch(e) {}
       if (typeof atualizarChipPedido === 'function') atualizarChipPedido();
+      // Guarda os itens para o botão "Pedir de novo"
+      try { localStorage.setItem('fael_ultimo_carrinho', JSON.stringify(cart)); } catch(e) {}
+      if (typeof atualizarPedirDeNovo === 'function') atualizarPedirDeNovo();
       document.getElementById('m-onum').textContent = order.id;
       document.getElementById('m-msg').textContent = 'Pedido registrado! WhatsApp abrindo...';
       document.getElementById('modal').classList.add('open');
@@ -3157,14 +3176,9 @@ function _marcarNotificados(ids) {
 
 function checkNewOrders() {
   if (!adminToken) return;
-  // Só notifica com a tela ADMIN aberta (pedido do dono)
-  var pAdmin = document.getElementById('page-admin');
-  if (!pAdmin || !pAdmin.classList.contains('active')) {
-    lastOrderCheck = 0; // ao voltar para o admin, reavalia os últimos 10 minutos
-    return;
-  }
+  // Avisa em QUALQUER página do site enquanto estiver logado como admin
   // Na primeira chamada, olha os últimos 10 minutos — assim pedidos feitos
-  // logo antes de abrir o painel também geram aviso (sem repetir os já vistos)
+  // logo antes de abrir o site também geram aviso (sem repetir os já vistos)
   if (lastOrderCheck === 0) {
     lastOrderCheck = Date.now() - 10 * 60 * 1000;
   }
@@ -3257,8 +3271,20 @@ function playNotificationSound(count) {
   }, 2500);
 }
 
-// ── CARD DE NOVO PEDIDO (aparece embaixo e some sozinho) ──
+// ── CARD DE NOVO PEDIDO (lado direito, um por vez, some em 15s) ──
+var _filaNotifs = [];
+var _notifVisivel = false;
+
 function showOrderNotif(o) {
+  _filaNotifs.push(o);
+  _exibirProximaNotif();
+}
+
+function _exibirProximaNotif() {
+  if (_notifVisivel || !_filaNotifs.length) return;
+  var o = _filaNotifs.shift();
+  _notifVisivel = true;
+
   var c = document.getElementById('order-notifs');
   if (!c) {
     c = document.createElement('div');
@@ -3267,42 +3293,87 @@ function showOrderNotif(o) {
   }
   var el = document.createElement('div');
   el.className = 'order-notif';
+  el.style.position = 'relative';
   var total = parseFloat(o.total || 0).toFixed(2).replace('.', ',');
-  // Ícone
-  var ico = document.createElement('div');
-  ico.className = 'on-ico';
-  ico.textContent = '🛎️';
-  // Texto (textContent protege contra HTML no nome do cliente)
-  var body = document.createElement('div');
-  body.className = 'on-body';
-  var tit = document.createElement('div');
-  tit.className = 'on-tit';
-  tit.textContent = 'Novo pedido #' + o.id;
-  var sub = document.createElement('div');
-  sub.className = 'on-sub';
-  sub.textContent = (o.client_name || 'Cliente') + ' • R$ ' + total;
-  body.appendChild(tit);
-  body.appendChild(sub);
+
+  // Linha de cima: etiqueta + número do pedido
+  var top = document.createElement('div');
+  top.className = 'on-top';
+  top.innerHTML = '<span class="on-tag">🛎️ NOVO PEDIDO</span>';
+  var num = document.createElement('span');
+  num.className = 'on-num';
+  num.textContent = '#' + o.id;
+  top.appendChild(num);
+
+  // Nome do cliente (textContent protege contra HTML)
+  var nome = document.createElement('div');
+  nome.className = 'on-nome';
+  nome.textContent = o.client_name || 'Cliente';
+
+  // Itens do pedido (até 3 linhas + contador)
+  var itens = document.createElement('div');
+  itens.className = 'on-itens';
+  var lista = (o.items || []).map(function(i) { return i.quantity + 'x ' + i.product_name; });
+  itens.textContent = lista.slice(0, 3).join(' • ') + (lista.length > 3 ? ' • +' + (lista.length - 3) + ' itens' : '');
+
+  // Endereço / retirada / mesa
+  var end = document.createElement('div');
+  end.className = 'on-end';
+  end.textContent = '📍 ' + (o.address || (o.delivery_type === 'retirada' ? 'Retirada na loja' : 'Sem endereço'));
+
+  // Rodapé: total + botão
+  var rodape = document.createElement('div');
+  rodape.className = 'on-rodape';
+  var tot = document.createElement('span');
+  tot.className = 'on-total';
+  tot.textContent = 'Total: R$ ' + total;
+  var ver = document.createElement('button');
+  ver.className = 'on-ver';
+  ver.textContent = 'VER PEDIDO';
+  rodape.appendChild(tot);
+  rodape.appendChild(ver);
+
   var x = document.createElement('button');
   x.className = 'on-x';
   x.textContent = '✕';
-  x.onclick = function(ev) { ev.stopPropagation(); el.remove(); };
-  el.appendChild(ico);
-  el.appendChild(body);
+
+  el.appendChild(top);
+  el.appendChild(nome);
+  if (lista.length) el.appendChild(itens);
+  el.appendChild(end);
+  el.appendChild(rodape);
   el.appendChild(x);
-  // Clicar no card abre os pedidos pendentes no admin
-  el.onclick = function() {
-    el.remove();
+
+  // Mostra quantos ainda estão na fila (evita flood de cards)
+  if (_filaNotifs.length > 0) {
+    var fila = document.createElement('div');
+    fila.className = 'on-fila';
+    fila.textContent = '+' + _filaNotifs.length + ' pedido(s) aguardando';
+    el.appendChild(fila);
+  }
+
+  function fecharCard() {
+    el.classList.add('hide');
+    setTimeout(function() {
+      el.remove();
+      _notifVisivel = false;
+      _exibirProximaNotif(); // mostra o próximo da fila, se houver
+    }, 450);
+  }
+
+  x.onclick = function(ev) { ev.stopPropagation(); fecharCard(); };
+  el.onclick = ver.onclick = function(ev) {
+    if (ev) ev.stopPropagation();
+    fecharCard();
     showPage('admin');
     var tabBtn = document.querySelector('.atab[onclick*="pend"]');
     aTab('pend', tabBtn);
   };
+
   c.appendChild(el);
-  // Some sozinho após 12 segundos
-  setTimeout(function() {
-    el.classList.add('hide');
-    setTimeout(function() { el.remove(); }, 600);
-  }, 12000);
+  // Some sozinho após 15 segundos
+  setTimeout(fecharCard, 15000);
+
   // Notificação do sistema operacional (se permitida e aba em segundo plano)
   try {
     if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
@@ -4760,6 +4831,51 @@ function fecharMeuPedido() {
   clearInterval(_mpTimer);
 }
 atualizarChipPedido();
+
+// ── PEDIR DE NOVO (repete o último pedido em 1 toque) ──
+function _ultimoCarrinho() {
+  try { return JSON.parse(localStorage.getItem('fael_ultimo_carrinho') || 'null'); } catch(e) { return null; }
+}
+
+function atualizarPedirDeNovo() {
+  var bar = document.getElementById('pedir-denovo-bar');
+  if (!bar) return;
+  var itens = _ultimoCarrinho();
+  if (itens && itens.length) {
+    var resumo = itens.slice(0, 3).map(function(i) { return i.qty + 'x ' + i.name; }).join(' • ');
+    if (itens.length > 3) resumo += ' …';
+    var el = document.getElementById('pedir-denovo-resumo');
+    if (el) el.textContent = resumo.substring(0, 90);
+    bar.style.display = 'flex';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function pedirDeNovo() {
+  if (!isOpen()) { showToast('Estamos fechados agora!'); return; }
+  var itens = _ultimoCarrinho();
+  if (!itens || !itens.length) return;
+  itens.forEach(function(item) {
+    // Atualiza o preço pelo cardápio atual (produtos simples, sem acréscimos)
+    if (item.id && (!item.acrescimos || !item.acrescimos.length) && !item.isCombo && item.category !== 'pizzas_tam') {
+      var p = allProducts.filter(function(x) { return x.id === item.id && x.active; })[0];
+      if (p) item.price = parseFloat(p.price);
+    }
+    // Novo cartId para não conflitar
+    item.cartId = (item.id || 'rep') + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+  });
+  cart = itens;
+  updateBadge();
+  showPage('carrinho');
+  showToast('🔁 Último pedido restaurado!');
+}
+atualizarPedirDeNovo();
+
+// ── PWA: registra o service worker (instalável como app) ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(function() {});
+}
 
 // ── CARRINHO PERSISTENTE NO SERVIDOR ───────────────
 var _carrinhoCode = null;
