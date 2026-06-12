@@ -3165,6 +3165,46 @@ function loadAdmStats() {
     .catch(function(e) { if (e.message.indexOf('Token')>=0) { adminToken=null; localStorage.removeItem('fael_token'); } });
 }
 
+// ── FILA DE IMPRESSÃO ──────────────────────────────
+// Imprime UM pedido por vez, em sequência — mesmo que cheguem 5 juntos,
+// nada embola: cada cupom espera o anterior terminar
+var _printQueue = [];
+var _printing = false;
+
+function enqueuePrint(id) {
+  _printQueue.push(id);
+  _processPrintQueue();
+}
+
+function _processPrintQueue() {
+  if (_printing || !_printQueue.length) return;
+  _printing = true;
+  var id = _printQueue.shift();
+  function proximo() {
+    setTimeout(function() { _printing = false; _processPrintQueue(); }, 2500);
+  }
+  // Garante os dados completos do pedido antes de imprimir
+  var tem = false;
+  if (window._admOrd) {
+    for (var i = 0; i < window._admOrd.length; i++) {
+      if (window._admOrd[i].id === id) { tem = true; break; }
+    }
+  }
+  if (tem) {
+    try { printOrd(id); } catch(e) {}
+    proximo();
+    return;
+  }
+  api('GET', '/orders/' + id, null, true)
+    .then(function(o) {
+      window._admOrd = window._admOrd || [];
+      window._admOrd.push(o);
+      try { printOrd(id); } catch(e) {}
+      proximo();
+    })
+    .catch(function() { proximo(); });
+}
+
 // Memória dos pedidos já notificados (não repete aviso após recarregar a página)
 function _pedidosJaNotificados() {
   try { return JSON.parse(localStorage.getItem('fael_notif_ids') || '[]'); } catch(e) { return []; }
@@ -3198,9 +3238,8 @@ function checkNewOrders() {
         // Card visual na parte de baixo da tela para cada pedido
         for (var ni = 0; ni < newOrders.length; ni++) showOrderNotif(newOrders[ni]);
         if (autoPrintEnabled) {
-          for (var i = 0; i < newOrders.length; i++) {
-            (function(ordId){ setTimeout(function(){ printOrd(ordId); }, 600 * (i+1)); })(newOrders[i].id);
-          }
+          // Fila de impressão: um cupom por vez, sem flood
+          for (var i = 0; i < newOrders.length; i++) enqueuePrint(newOrders[i].id);
         }
         // Atualiza painel se estiver aberto
         if (document.getElementById('page-admin').classList.contains('active')) {
