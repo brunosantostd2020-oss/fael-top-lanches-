@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db/init');
 const { requireAdmin } = require('./auth');
+const { notificarStatus } = require('../zapi');
 
 async function getOrderWithItems(id) {
   const oRes = await pool.query("SELECT * FROM orders WHERE id = $1", [id]);
@@ -131,6 +132,9 @@ router.post('/', async (req, res) => {
 
     await client.query('COMMIT');
 
+    // WhatsApp automático: "recebemos seu pedido" (só se a Z-API estiver configurada)
+    notificarStatus('recebido', order);
+
     const fullOrder = await getOrderWithItems(order.id);
     res.status(201).json(fullOrder);
   } catch (e) {
@@ -147,7 +151,12 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
   const valid = ['pendente','preparo','entrega','entregue','cancelado'];
   if (!valid.includes(status)) return res.status(400).json({ error: 'Status inválido' });
   try {
-    await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [status, parseInt(req.params.id)]);
+    const r = await pool.query(
+      "UPDATE orders SET status = $1 WHERE id = $2 RETURNING id, client_name, client_phone, delivery_type, status",
+      [status, parseInt(req.params.id)]
+    );
+    // WhatsApp automático para o cliente sobre a nova etapa (se Z-API configurada)
+    if (r.rows.length) notificarStatus(status, r.rows[0]);
     res.json({ success: true, status });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

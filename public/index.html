@@ -710,6 +710,7 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 <div id="bottom-nav">
   <button id="bn-cardapio" class="bn-on" onclick="showPage('cardapio')"><span class="bn-ico">🍔</span>Cardápio</button>
   <button id="bn-carrinho" onclick="showPage('carrinho')" style="position:relative"><span class="bn-ico">🛒</span>Carrinho<span id="bnav-badge" style="display:none">0</span></button>
+  <button id="bn-pedidos" onclick="showPage('pedidos')"><span class="bn-ico">🧾</span>Pedidos</button>
   <button id="bn-entregas" onclick="showPage('entregas')"><span class="bn-ico">🛵</span>Entregas</button>
 </div>
 
@@ -798,6 +799,7 @@ document.addEventListener('click', function(e) {
   <nav>
     <button class="active" onclick="showPage('cardapio')">&#127828; Cardapio</button>
     <button onclick="showPage('carrinho')" class="cbtn">&#128722; Carrinho<span class="cbadge" id="cart-badge">0</span></button>
+    <button onclick="showPage('pedidos')">&#129534; Pedidos</button>
     <button onclick="showPage('entregas')">&#128666; Entregas</button>
   </nav>
 </header>
@@ -1085,6 +1087,10 @@ document.addEventListener('click', function(e) {
       </div>
     </div>
   </div>
+</div>
+<div class="page" id="page-pedidos">
+  <h2 class="sec-title">Meus <span>Pedidos</span></h2>
+  <div id="pedidos-lista"></div>
 </div>
 <div class="page" id="page-entregas">
   <h2 class="sec-title">Valores de <span>Entrega</span></h2>
@@ -3022,6 +3028,8 @@ function sendWA() {
       // Guarda os itens para o botão "Pedir de novo"
       try { localStorage.setItem('fael_ultimo_carrinho', JSON.stringify(cart)); } catch(e) {}
       if (typeof atualizarPedirDeNovo === 'function') atualizarPedirDeNovo();
+      // Adiciona ao histórico "Meus Pedidos" (fica salvo no aparelho do cliente)
+      if (typeof salvarNoHistorico === 'function') salvarNoHistorico(order.id, cart, tot);
       document.getElementById('m-onum').textContent = order.id;
       document.getElementById('m-msg').textContent = 'Pedido registrado! WhatsApp abrindo...';
       document.getElementById('modal').classList.add('open');
@@ -4720,14 +4728,15 @@ function showPage(pg) {
   var navBtns = document.querySelectorAll('nav button');
   for (var j=0; j<navBtns.length; j++) navBtns[j].classList.remove('active');
   document.getElementById('page-'+pg).classList.add('active');
-  var m = {cardapio:0, carrinho:1, entregas:2};
+  var m = {cardapio:0, carrinho:1, pedidos:2, entregas:3};
   if (m[pg]!==undefined && navBtns[m[pg]]) navBtns[m[pg]].classList.add('active');
   // Barra inferior mobile: marca o botão da página atual
-  ['cardapio','carrinho','entregas'].forEach(function(k) {
+  ['cardapio','carrinho','pedidos','entregas'].forEach(function(k) {
     var b = document.getElementById('bn-'+k);
     if (b) b.classList[k===pg ? 'add' : 'remove']('bn-on');
   });
   if (pg==='carrinho') renderCart();
+  if (pg==='pedidos') renderMeusPedidos();
   if (pg==='admin') { renderAdmin(); }
   // Limpa busca ao sair do cardápio
   if (pg !== 'cardapio') {
@@ -4973,6 +4982,100 @@ function pedirDeNovo() {
   showToast('🔁 Último pedido restaurado!');
 }
 atualizarPedirDeNovo();
+
+// ── MEUS PEDIDOS (histórico salvo no aparelho do cliente) ──
+function _historicoPedidos() {
+  try { return JSON.parse(localStorage.getItem('fael_historico') || '[]'); } catch(e) { return []; }
+}
+
+function salvarNoHistorico(orderId, itens, total) {
+  try {
+    var h = _historicoPedidos();
+    h.unshift({
+      id: orderId,
+      ts: Date.now(),
+      total: total,
+      itens: JSON.parse(JSON.stringify(itens)) // cópia independente do carrinho
+    });
+    localStorage.setItem('fael_historico', JSON.stringify(h.slice(0, 15))); // guarda os últimos 15
+  } catch(e) {}
+}
+
+function renderMeusPedidos() {
+  var box = document.getElementById('pedidos-lista');
+  if (!box) return;
+  var h = _historicoPedidos();
+  if (!h.length) {
+    box.innerHTML = '<div style="text-align:center;padding:3rem 1rem;background:#fff;border-radius:14px;color:#999">' +
+      '<div style="font-size:48px;margin-bottom:10px">🧾</div>' +
+      '<div style="font-weight:800;color:#555">Você ainda não fez pedidos</div>' +
+      '<div style="font-size:.82rem;margin-top:6px">Seus pedidos vão aparecer aqui para repetir em 1 toque!</div>' +
+      '<button onclick="showPage(\'cardapio\')" style="margin-top:16px;background:var(--r);color:#fff;border:none;padding:11px 24px;border-radius:10px;font-weight:800;cursor:pointer">🍔 Ver Cardápio</button></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < h.length; i++) {
+    var p = h[i];
+    var d = new Date(p.ts);
+    var dataTxt = ('0'+d.getDate()).slice(-2) + '/' + ('0'+(d.getMonth()+1)).slice(-2) + ' às ' + ('0'+d.getHours()).slice(-2) + 'h' + ('0'+d.getMinutes()).slice(-2);
+    var resumo = (p.itens || []).map(function(it){ return it.qty + 'x ' + it.name; }).join(', ');
+    var totalTxt = parseFloat(p.total || 0).toFixed(2).replace('.', ',');
+    var ehRecente = (Date.now() - p.ts) < 4 * 60 * 60 * 1000;
+    html += '<div style="background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.06)">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    html += '<span style="font-weight:800;font-size:.82rem;color:#888">📅 ' + dataTxt + '</span>';
+    html += '<span id="hist-status-' + p.id + '" style="font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:20px;background:#f3f4f6;color:#888">...</span>';
+    html += '</div>';
+    html += '<div style="font-size:.85rem;color:#444;line-height:1.5;margin-bottom:8px">' + resumo.replace(/</g,'&lt;') + '</div>';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f0f0f0;padding-top:10px">';
+    html += '<span style="font-weight:900;color:var(--bk)">R$ ' + totalTxt + '</span>';
+    html += '<span style="display:flex;gap:8px">';
+    if (ehRecente) {
+      html += '<button onclick="abrirMeuPedido()" style="background:#fff;color:var(--r);border:2px solid var(--r);padding:8px 14px;border-radius:9px;font-weight:800;font-size:.74rem;cursor:pointer">📦 Acompanhar</button>';
+    }
+    html += '<button onclick="repetirPedido(' + i + ')" style="background:var(--r);color:#fff;border:none;padding:8px 16px;border-radius:9px;font-weight:900;font-size:.74rem;cursor:pointer">🔁 REPETIR</button>';
+    html += '</span></div></div>';
+  }
+  box.innerHTML = html;
+  // Busca o status real dos pedidos das últimas 24h (sem expor dados pessoais)
+  h.forEach(function(p) {
+    if ((Date.now() - p.ts) > 24 * 60 * 60 * 1000) {
+      var elV = document.getElementById('hist-status-' + p.id);
+      if (elV) { elV.textContent = 'Finalizado'; }
+      return;
+    }
+    fetch('/api/orders/' + p.id + '/status')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var elS = document.getElementById('hist-status-' + p.id);
+        if (!elS || !d || !d.status) return;
+        var MAPA = { pendente: ['Recebido', '#fef3c7', '#92400e'], preparo: ['Em preparo', '#fde68a', '#92400e'], entrega: ['Saiu p/ entrega', '#dbeafe', '#1e40af'], entregue: ['Entregue ✓', '#dcfce7', '#166534'], cancelado: ['Cancelado', '#fee2e2', '#991b1b'] };
+        var s = MAPA[d.status] || ['—', '#f3f4f6', '#888'];
+        elS.textContent = s[0]; elS.style.background = s[1]; elS.style.color = s[2];
+      })
+      .catch(function() {});
+  });
+}
+
+function repetirPedido(idx) {
+  if (!isOpen()) { showToast('Estamos fechados agora!'); return; }
+  var h = _historicoPedidos();
+  var p = h[idx];
+  if (!p || !p.itens || !p.itens.length) return;
+  var itens = JSON.parse(JSON.stringify(p.itens));
+  itens.forEach(function(item) {
+    // Atualiza o preço pelo cardápio atual (produtos simples, sem acréscimos)
+    if (item.id && (!item.acrescimos || !item.acrescimos.length) && !item.isCombo && item.category !== 'pizzas_tam') {
+      var pr = allProducts.filter(function(x) { return x.id === item.id && x.active; })[0];
+      if (pr) item.price = parseFloat(pr.price);
+    }
+    item.cartId = (item.id || 'rep') + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+  });
+  cart = itens;
+  updateBadge();
+  showPage('carrinho');
+  showToast('🔁 Pedido restaurado! Confira e envie.');
+}
 
 // ── PWA: registra o service worker (instalável como app) ──
 if ('serviceWorker' in navigator) {
