@@ -290,6 +290,17 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 /* Subcategorias de lanches */
 /* Seções de pizza estilo iFood */
 .pzz-section{background:#fff;border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-bottom:1.5rem}
+/* Pizzas: escolha de tamanho dentro do card do sabor */
+.pzz-sizes{display:flex;gap:6px;margin-top:10px}
+.pzz-size-btn{flex:1;background:#fff;border:2px solid #2A9D8F;color:#2A9D8F;border-radius:10px;padding:7px 4px;cursor:pointer;font-family:Inter,sans-serif;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:1px;transition:all .15s}
+.pzz-size-btn:hover{background:#2A9D8F;color:#fff}
+.pzz-size-btn:active{transform:scale(.96)}
+.pzz-size-btn:disabled{opacity:.45;cursor:not-allowed}
+.pzz-size-btn .psb-tam{font-size:.78rem;line-height:1.1}
+.pzz-size-btn .psb-preco{font-size:.66rem;font-weight:700;opacity:.85}
+.pzz-cta{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.pzz-cta button{flex:1;min-width:150px;border:none;border-radius:12px;padding:13px 10px;cursor:pointer;font-family:Inter,sans-serif;font-weight:800;font-size:.82rem;box-shadow:0 3px 12px rgba(0,0,0,.12);transition:transform .15s}
+.pzz-cta button:active{transform:scale(.97)}
 .pzz-section.moda{box-shadow:0 4px 20px rgba(247,183,49,0.2);border:2px solid var(--y)}
 .pzz-header{background:#2A9D8F;color:#fff;padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .pzz-header.moda-header{background:linear-gradient(135deg,#F7B731,#E59E00)}
@@ -1470,6 +1481,9 @@ function updateStatus() {
     btns[i].disabled = !op;
     btns[i].textContent = op ? '+ Adicionar' : 'Fechado';
   }
+  // Botões de tamanho das pizzas (liga/desliga sem mexer no conteúdo)
+  var pbtns = document.querySelectorAll('.pzz-size-btn');
+  for (var j=0; j<pbtns.length; j++) pbtns[j].disabled = !op;
 }
 
 function loadConfigs() {
@@ -1640,7 +1654,7 @@ function renderProducts(cat, subcat) {
     return;
   }
 
-  // CATEGORIA PIZZAS - estilo iFood
+  // CATEGORIA PIZZAS — um card por sabor, tamanho escolhido no próprio card
   if (cat === 'pizzas_tam') {
     var pizzas = allProducts.filter(function(p) {
       if (p.category !== 'pizzas' || !p.active) return false;
@@ -1652,35 +1666,46 @@ function renderProducts(cat, subcat) {
       {cod:'GG', label:'GG', sub:'8 pedaços', preco:75},
       {cod:'GGG', label:'Família', sub:'12 pedaços', preco:90}
     ];
-    for (var t=0; t<tams.length; t++) {
-      var tam = tams[t];
-      html += '<div class="pzz-section">';
-      html += '<div class="pzz-header">';
-      html += '<div class="pzz-header-left"><span>🍕</span><div><div class="pzz-tam-label">Pizza '+tam.label+'</div><div class="pzz-tam-sub">'+tam.sub+'</div></div></div>';
-      html += '<div class="pzz-preco">R$ '+tam.preco.toFixed(2).replace('.',',')+'</div>';
-      html += '</div>';
-      html += '<div class="pg">';
-      for (var p=0; p<pizzas.length; p++) {
-        var pizza = pizzas[p];
-        var cleanPDesc = (pizza.description||'').replace(/##IMG:[^#]+##|##refri##|##suco-leite##|##suco-agua##/gi,'').trim();
-        var imgMatchP = (pizza.description||'').match(/##IMG:([^#]+)##/);
-        var imgUrlP = pizza.image_url || (imgMatchP ? imgMatchP[1].trim() : null);
-        html += '<div class="pc">';
-        if (imgUrlP) {
-          html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="'+imgUrlP+'" alt="'+pizza.name+'" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block"></div>';
-        } else {
-          html += '<div class="pi" style="background:linear-gradient(135deg,#e8f5f3,#c5e8e4);font-size:52px">'+( pizza.emoji||'🍕')+'</div>';
-        }
-        html += '<div class="pinfo">';
-        html += '<div class="pname">'+pizza.name+'</div>';
-        html += '<div class="pdesc">'+cleanPDesc+'</div>';
-        html += '<div class="pfooter">';
-        html += '<div class="pprice" style="color:#2A9D8F">R$ '+tam.preco.toFixed(2).replace('.',',')+'</div>';
-        html += '<button class="abtn" style="background:#2A9D8F;border-color:#2A9D8F" onclick="addCartTam(' + pizza.id + ',\''+tam.cod+'\','+ tam.preco +')" ' + (op?'':'disabled') + '>' + (op?'+ Adicionar':'Fechado') + '</button>';
-        html += '</div></div></div>';
+
+    // Atalhos para os outros modos de pizza (sem mudar nada neles)
+    html += '<div class="pzz-cta">';
+    html += '<button style="background:linear-gradient(135deg,#FFD60A,#FFC300);color:#1a1a1a" onclick="var b=document.querySelector(\'.ct[onclick*=moda_fael]\');if(b)b.click()">👑 Conheça a Moda do Fael</button>';
+    html += '<button style="background:linear-gradient(135deg,#2A9D8F,#21867a);color:#fff" onclick="abrirMetadeMetade()">🍕 Quer 2 sabores? Monte sua Pizza</button>';
+    html += '</div>';
+
+    // Cabeçalho único com a tabela de tamanhos
+    html += '<div class="pzz-section">';
+    html += '<div class="pzz-header">';
+    html += '<div class="pzz-header-left"><span>🍕</span><div><div class="pzz-tam-label">Pizzas Tradicionais</div><div class="pzz-tam-sub">G 6 pedaços • GG 8 pedaços • Família 12 pedaços</div></div></div>';
+    html += '</div>';
+    html += '<div class="pg">';
+    for (var p=0; p<pizzas.length; p++) {
+      var pizza = pizzas[p];
+      var cleanPDesc = (pizza.description||'').replace(/##IMG:[^#]+##|##refri##|##suco-leite##|##suco-agua##/gi,'').trim();
+      var imgMatchP = (pizza.description||'').match(/##IMG:([^#]+)##/);
+      var imgUrlP = pizza.image_url || (imgMatchP ? imgMatchP[1].trim() : null);
+      html += '<div class="pc">';
+      if (imgUrlP) {
+        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="'+imgUrlP+'" alt="'+pizza.name+'" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block"></div>';
+      } else {
+        html += '<div class="pi" style="background:linear-gradient(135deg,#e8f5f3,#c5e8e4);font-size:52px">'+( pizza.emoji||'🍕')+'</div>';
       }
+      html += '<div class="pinfo">';
+      html += '<div class="pname">'+pizza.name+'</div>';
+      html += '<div class="pdesc">'+cleanPDesc+'</div>';
+      // Botões de tamanho dentro do card: G / GG / Família com preço
+      html += '<div class="pzz-sizes">';
+      for (var t=0; t<tams.length; t++) {
+        var tam = tams[t];
+        html += '<button class="pzz-size-btn" onclick="addCartTam(' + pizza.id + ',\''+tam.cod+'\','+ tam.preco +')" ' + (op?'':'disabled') + ' title="'+tam.sub+'">';
+        html += '<span class="psb-tam">'+tam.label+'</span>';
+        html += '<span class="psb-preco">R$ '+tam.preco.toFixed(0)+'</span>';
+        html += '</button>';
+      }
+      html += '</div>';
       html += '</div></div>';
     }
+    html += '</div></div>';
     g.innerHTML = html;
     return;
   }
