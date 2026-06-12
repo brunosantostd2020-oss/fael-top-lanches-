@@ -152,7 +152,7 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
   if (!valid.includes(status)) return res.status(400).json({ error: 'Status inválido' });
   try {
     const r = await pool.query(
-      "UPDATE orders SET status = $1 WHERE id = $2 RETURNING id, client_name, client_phone, delivery_type, status",
+      "UPDATE orders SET status = $1, status_updated_at = NOW() WHERE id = $2 RETURNING id, client_name, client_phone, delivery_type, status",
       [status, parseInt(req.params.id)]
     );
     // WhatsApp automático para o cliente sobre a nova etapa (se Z-API configurada)
@@ -234,17 +234,38 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// ── AUTO-FINALIZAÇÃO DE PEDIDOS ──────────────────────────────
-// Se o estabelecimento esquecer de marcar como entregue, o sistema marca sozinho:
-// pedidos não finalizados (pendente/preparo/entrega) há mais de 3 horas viram 'entregue'.
-// Roda a cada 10 minutos. Pedidos cancelados nunca são alterados.
+// ── AVANÇO AUTOMÁTICO DE STATUS ──────────────────────────────
+// Se o estabelecimento esquecer de clicar, o sistema avança sozinho:
+//   EM PREPARO há mais de 20 min  → SAIU PARA ENTREGA (com WhatsApp, se Z-API ativa)
+//   EM ENTREGA há mais de 15 min  → ENTREGUE          (com WhatsApp, se Z-API ativa)
+//   PENDENTE   há mais de 3 horas → ENTREGUE (rede de segurança, sem WhatsApp)
+// Aceitar o pedido (pendente → preparo) continua sendo manual.
 setInterval(async () => {
   try {
-    const r = await pool.query(
-      "UPDATE orders SET status = 'entregue' WHERE status IN ('pendente','preparo','entrega') AND created_at < NOW() - INTERVAL '3 hours'"
+    // preparo → entrega (20 minutos)
+    const r1 = await pool.query(
+      `UPDATE orders SET status = 'entrega', status_updated_at = NOW()
+       WHERE status = 'preparo' AND status_updated_at < NOW() - INTERVAL '20 minutes'
+       RETURNING id, client_name, client_phone, delivery_type`
     );
-    if (r.rowCount > 0) console.log(`✅ Auto-finalização: ${r.rowCount} pedido(s) antigos marcados como entregues`);
-  } catch (e) { console.error('Erro na auto-finalização:', e.message); }
-}, 10 * 60 * 1000);
+    for (const o of r1.rows) notificarStatus('entrega', o);
+    if (r1.rowCount > 0) console.log(`🛵 Avanço automático: ${r1.rowCount} pedido(s) preparo → entrega`);
+
+    // entrega → entregue (15 minutos)
+    const r2 = await pool.query(
+      `UPDATE orders SET status = 'entregue', status_updated_at = NOW()
+       WHERE status = 'entrega' AND status_updated_at < NOW() - INTERVAL '15 minutes'
+       RETURNING id, client_name, client_phone, delivery_type`
+    );
+    for (const o of r2.rows) notificarStatus('entregue', o);
+    if (r2.rowCount > 0) console.log(`✅ Avanço automático: ${r2.rowCount} pedido(s) entrega → entregue`);
+
+    // Rede de segurança: pendente esquecido há 3h+ é finalizado em silêncio
+    const r3 = await pool.query(
+      "UPDATE orders SET status = 'entregue', status_updated_at = NOW() WHERE status = 'pendente' AND created_at < NOW() - INTERVAL '3 hours'"
+    );
+    if (r3.rowCount > 0) console.log(`🧹 Auto-finalização: ${r3.rowCount} pedido(s) pendentes antigos finalizados`);
+  } catch (e) { console.error('Erro no avanço automático:', e.message); }
+}, 2 * 60 * 1000); // verifica a cada 2 minutos
 
 module.exports = router;

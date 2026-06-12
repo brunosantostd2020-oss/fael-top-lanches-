@@ -4979,7 +4979,7 @@ function pedirDeNovo() {
   cart = itens;
   updateBadge();
   showPage('carrinho');
-  showToast('🔁 Último pedido restaurado!');
+  _pedirConfirmacaoBairro();
 }
 atualizarPedirDeNovo();
 
@@ -5074,7 +5074,7 @@ function repetirPedido(idx) {
   cart = itens;
   updateBadge();
   showPage('carrinho');
-  showToast('🔁 Pedido restaurado! Confira e envie.');
+  _pedirConfirmacaoBairro();
 }
 
 // ── PWA: registra o service worker (instalável como app) ──
