@@ -3142,6 +3142,8 @@ function doLogin() {
 
 function aTab(tab, el) {
   curATab = tab;
+  // Lembra a aba do admin para o F5 voltar no mesmo lugar
+  try { sessionStorage.setItem('fael_atab', tab); } catch(e) {}
   var tabs = document.querySelectorAll('.atab');
   for (var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
   el.classList.add('active');
@@ -4703,6 +4705,8 @@ function showPage(pg) {
   // (instantâneo para admin/gerenciamento — abre o painel direto, sem rolagem lenta)
   var instantaneo = (pg === 'admin' || pg === 'gerenciamento');
   window.scrollTo({top: 0, behavior: instantaneo ? 'auto' : 'smooth'});
+  // Lembra a página atual — ao dar F5 o site volta para o mesmo lugar
+  try { sessionStorage.setItem('fael_page', pg); } catch(e) {}
 }
 
 function showToast(msg) {
@@ -4935,6 +4939,33 @@ atualizarPedirDeNovo();
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(function() {});
 }
+
+// ── F5 VOLTA PARA A MESMA PÁGINA ────────────────────
+// Se estava no admin/gerenciamento e atualizou, continua lá (com a mesma aba)
+(function() {
+  var pg = null, tb = null;
+  try {
+    pg = sessionStorage.getItem('fael_page');
+    tb = sessionStorage.getItem('fael_atab');
+  } catch(e) {}
+  if (!pg || pg === 'cardapio') return;
+  if (pg === 'admin' && !adminToken) return;            // sem login, fica no cardápio
+  if (pg === 'gerenciamento' && !gerenciamentoToken) return;
+  if (!document.getElementById('page-' + pg)) return;
+  if (pg === 'admin' && tb) curATab = tb;               // restaura a aba antes de renderizar
+  showPage(pg);
+  if (pg === 'gerenciamento') {
+    try { loadGerenciamentoStats(); loadGerenciamentoContent(curGTab); } catch(e) {}
+  }
+  if (pg === 'admin' && tb) {
+    // Marca visualmente a aba certa
+    var btns = document.querySelectorAll('#page-admin .atab');
+    for (var i = 0; i < btns.length; i++) {
+      var liga = (btns[i].getAttribute('onclick') || '').indexOf("'" + tb + "'") >= 0;
+      btns[i].classList[liga ? 'add' : 'remove']('active');
+    }
+  }
+})();
 
 // ── CARRINHO PERSISTENTE NO SERVIDOR ───────────────
 var _carrinhoCode = null;
