@@ -3544,10 +3544,20 @@ function _exibirProximaNotif() {
   };
 
   c.appendChild(el);
-  // Some sozinho após 15 segundos — mas espera enquanto o mouse estiver em cima
+  // Some sozinho após 15 segundos
   var hideTimer = setTimeout(fecharCard, 15000);
   el.onmouseenter = function() { clearTimeout(hideTimer); };
   el.onmouseleave = function() { clearTimeout(hideTimer); hideTimer = setTimeout(fecharCard, 6000); };
+
+  function fecharCard() {
+    clearTimeout(hideTimer);
+    el.classList.add('hide');
+    setTimeout(function() {
+      el.remove();
+      _notifVisivel = false;
+      _exibirProximaNotif();
+    }, 450);
+  }
 
   // Notificação do sistema operacional (se permitida e aba em segundo plano)
   try {
