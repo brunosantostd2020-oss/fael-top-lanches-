@@ -3486,7 +3486,7 @@ function _exibirProximaNotif() {
     obs.textContent = '📝 ' + o.observations;
   }
 
-  // Rodapé: total + botões ACEITAR e VER
+  // Rodapé: total + botão VER
   var rodape = document.createElement('div');
   rodape.className = 'on-rodape';
   var tot = document.createElement('span');
@@ -3495,15 +3495,9 @@ function _exibirProximaNotif() {
   var botoes = document.createElement('span');
   botoes.style.display = 'flex';
   botoes.style.gap = '6px';
-  var aceitar = document.createElement('button');
-  aceitar.className = 'on-ver';
-  aceitar.style.background = '#16a34a';
-  aceitar.style.color = '#fff';
-  aceitar.textContent = '✅ ACEITAR';
   var ver = document.createElement('button');
   ver.className = 'on-ver';
-  ver.textContent = 'VER';
-  botoes.appendChild(aceitar);
+  ver.textContent = 'VER PEDIDO';
   botoes.appendChild(ver);
   rodape.appendChild(tot);
   rodape.appendChild(botoes);
@@ -3521,25 +3515,6 @@ function _exibirProximaNotif() {
   el.appendChild(rodape);
   el.appendChild(x);
 
-  // ACEITAR direto do card: marca "Em preparo" sem precisar abrir o painel
-  aceitar.onclick = function(ev) {
-    ev.stopPropagation();
-    aceitar.disabled = true;
-    aceitar.textContent = '...';
-    api('PATCH', '/orders/' + o.id + '/status', { status: 'preparo' }, true)
-      .then(function() {
-        showToast('✅ Pedido #' + o.id + ' aceito — Em preparo!');
-        fecharCard();
-        var pAdm = document.getElementById('page-admin');
-        if (pAdm && pAdm.classList.contains('active')) { loadAdmStats(); loadAdmContent(curATab); }
-      })
-      .catch(function(e) {
-        aceitar.disabled = false;
-        aceitar.textContent = '✅ ACEITAR';
-        showToast('Erro ao aceitar: ' + e.message);
-      });
-  };
-
   // Mostra quantos ainda estão na fila (evita flood de cards)
   if (_filaNotifs.length > 0) {
     var fila = document.createElement('div');
@@ -3548,7 +3523,8 @@ function _exibirProximaNotif() {
     el.appendChild(fila);
   }
 
-  function fecharCard() {
+  // VER: vai para o painel admin onde você clica manualmente nos botões de status
+  ver.onclick = function(ev) {
     clearTimeout(hideTimer);
     el.classList.add('hide');
     setTimeout(function() {
