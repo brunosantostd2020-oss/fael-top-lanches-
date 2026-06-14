@@ -103,7 +103,7 @@ router.get('/settings', requireAdmin, async (req, res) => {
 // GET configurações públicas (sem autenticação)
 router.get('/public-settings', async (req, res) => {
   try {
-    const r = await pool.query("SELECT key, value FROM settings WHERE key IN ('pix_chave', 'pix_nome', 'pix_cidade', 'whatsapp')");
+    const r = await pool.query("SELECT key, value FROM settings WHERE key IN ('pix_chave', 'pix_nome', 'pix_cidade', 'whatsapp', 'pizza_tamanhos')");
     const settings = {};
     r.rows.forEach(row => { settings[row.key] = row.value; });
     res.json(settings);

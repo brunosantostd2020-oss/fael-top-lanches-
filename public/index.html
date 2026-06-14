@@ -308,6 +308,11 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .sabor-chip.sel{border-color:var(--r);background:#fff5f5;color:var(--r)}
 .sabor-chip .sc-badge{position:absolute;top:-7px;right:-6px;background:var(--r);color:#fff;font-size:.58rem;font-weight:900;border-radius:10px;padding:2px 7px;display:none}
 .sabor-chip.sel .sc-badge{display:block}
+/* Evita seleção de texto ao tocar 2x nos botões (parecia "copiar" o texto) */
+.pizza-sim-btn,.tam-btn,.pzz-size-btn,.sabor-chip,.abtn,.ct,.qb,.po,.wb-opt,.bn-ico,#bottom-nav button{user-select:none;-webkit-user-select:none;-moz-user-select:none}
+/* Tamanho de pizza selecionado (botão inteiro pinta, incluindo o texto interno) */
+.tam-sel{background:var(--r)!important;border-color:var(--r)!important;color:#fff!important}
+.tam-sel span{color:rgba(255,255,255,.88)!important}
 .pzz-section.moda{box-shadow:0 4px 20px rgba(247,183,49,0.2);border:2px solid var(--y)}
 .pzz-header{background:#2A9D8F;color:#fff;padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .pzz-header.moda-header{background:linear-gradient(135deg,#F7B731,#E59E00)}
@@ -1297,11 +1302,7 @@ document.addEventListener('click', function(e) {
 
     <div style="margin-bottom:20px">
       <label style="display:block;font-weight:700;margin-bottom:8px;color:#333">Tamanho:</label>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <button class="pizza-sim-btn" onclick="selecionarTamPizzaSim('G',65)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">G<br><span style="font-size:.7rem;font-weight:600;color:#666">6 pedaços</span><br>R$ 65</button>
-        <button class="pizza-sim-btn" onclick="selecionarTamPizzaSim('GG',75)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">GG<br><span style="font-size:.7rem;font-weight:600;color:#666">8 pedaços</span><br>R$ 75</button>
-        <button class="pizza-sim-btn" onclick="selecionarTamPizzaSim('GGG',90)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">Família<br><span style="font-size:.7rem;font-weight:600;color:#666">12 pedaços</span><br>R$ 90</button>
-      </div>
+      <div id="pizza-sim-tams" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
     </div>
 
     <div style="margin-bottom:20px">
@@ -1327,11 +1328,7 @@ document.addEventListener('click', function(e) {
     
     <div style="margin-bottom:20px">
       <label style="display:block;font-weight:700;margin-bottom:8px;color:#333">Tamanho:</label>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <button class="tam-btn" onclick="selecionarTamMetade('G',65)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">G<br><span style="font-size:.7rem;font-weight:600;color:#666">6 pedaços</span><br>R$ 65</button>
-        <button class="tam-btn" onclick="selecionarTamMetade('GG',75)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">GG<br><span style="font-size:.7rem;font-weight:600;color:#666">8 pedaços</span><br>R$ 75</button>
-        <button class="tam-btn" onclick="selecionarTamMetade('GGG',90)" style="padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;transition:all .2s;font-size:.85rem">Família<br><span style="font-size:.7rem;font-weight:600;color:#666">12 pedaços</span><br>R$ 90</button>
-      </div>
+      <div id="metade-tams" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
     </div>
     
     <div style="margin-bottom:20px">
@@ -1407,6 +1404,20 @@ var PIX_CHAVE = '32999754142';
 var PIX_NOME = 'RAPHAEL GONZAGA CORDEIRO';
 var PIX_CIDADE = 'CATAGUASES';
 var OPEN_DAYS = [0,1,3,4,5,6];
+// Tamanhos e preços das pizzas — editáveis em Admin → Config (sem mexer em código)
+var PIZZA_TAMS = [
+  {cod:'G',   label:'G',       sub:'6 pedaços',  preco:65},
+  {cod:'GG',  label:'GG',      sub:'8 pedaços',  preco:75},
+  {cod:'GGG', label:'Família', sub:'12 pedaços', preco:90}
+];
+function aplicarPizzaTams(jsonStr) {
+  try {
+    var arr = JSON.parse(jsonStr);
+    if (Array.isArray(arr) && arr.length === 3 && arr.every(function(t){ return t.cod && t.label && !isNaN(parseFloat(t.preco)); })) {
+      PIZZA_TAMS = arr.map(function(t){ return {cod:t.cod, label:t.label, sub:t.sub||'', preco:parseFloat(t.preco)}; });
+    }
+  } catch(e) {}
+}
 var BAIRROS_GRATIS = ['TAQUARA PRETA','SAO MARCOS','SAO CRISTOVAO'];
 // Confirmado pelo dono: taxa de R$ 5 para TODOS os bairros taxados (as duas listas abaixo)
 var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','CIDADE NOVA','AVENIDA DAS INDUSTRIAS','AV DAS INDUSTRIAS','AVENIDA MANOEL INACIO PEIXOTO','AV MANOEL INACIO PEIXOTO','PONTE SABIA','PONTE DA SABIA','BEIRA RIO'];
@@ -1497,6 +1508,7 @@ function loadConfigs() {
       if (s.pix_chave) { PIX_CHAVE = s.pix_chave; }
       if (s.pix_nome) { PIX_NOME = s.pix_nome; }
       if (s.pix_cidade) { PIX_CIDADE = s.pix_cidade; }
+      if (s.pizza_tamanhos) { aplicarPizzaTams(s.pizza_tamanhos); }
     }).catch(function(e) {
       console.log('Erro ao carregar configurações:', e);
       // Mostrar erro no badge
@@ -1658,11 +1670,7 @@ function renderProducts(cat, subcat) {
       return !p.name.toLowerCase().includes('moda do fael');
     });
     if (!pizzas.length) { g.innerHTML = '<p style="color:#aaa;padding:2rem">Nenhuma pizza cadastrada</p>'; return; }
-    var tams = [
-      {cod:'G', label:'G', sub:'6 pedaços', preco:65},
-      {cod:'GG', label:'GG', sub:'8 pedaços', preco:75},
-      {cod:'GGG', label:'Família', sub:'12 pedaços', preco:90}
-    ];
+    var tams = PIZZA_TAMS; // editável em Admin → Config
 
     // Atalhos para os outros modos de pizza (sem mudar nada neles)
     html += '<div class="pzz-cta">';
@@ -1673,7 +1681,7 @@ function renderProducts(cat, subcat) {
     // Cabeçalho único com a tabela de tamanhos
     html += '<div class="pzz-section">';
     html += '<div class="pzz-header">';
-    html += '<div class="pzz-header-left"><span>🍕</span><div><div class="pzz-tam-label">Pizzas Tradicionais</div><div class="pzz-tam-sub">G 6 pedaços • GG 8 pedaços • Família 12 pedaços</div></div></div>';
+    html += '<div class="pzz-header-left"><span>🍕</span><div><div class="pzz-tam-label">Pizzas Tradicionais</div><div class="pzz-tam-sub">' + tams.map(function(t){ return t.label + ' ' + t.sub; }).join(' • ') + '</div></div></div>';
     html += '</div>';
     html += '<div class="pg">';
     for (var p=0; p<pizzas.length; p++) {
@@ -3683,18 +3691,33 @@ function advSt(id) {
   
   var newStatus = NS[o.status];
   
+  // Abre WhatsApp ANTES da chamada async (evita bloqueio de popup do navegador)
+  var waWin = null;
+  var mensagens = {
+    'preparo': '✅ Olá *' + o.client_name + '*!\n\nSeu pedido está sendo preparado com carinho! 👨‍🍳\n\nEm breve estará pronto! 🍔',
+    'entrega': '🚀 *' + o.client_name + '*, seu pedido saiu para entrega!\n\nO motoboy está a caminho! 🏍️',
+    'entregue': '🎉 Pedido entregue com sucesso!\n\n*Obrigado pela preferência, ' + o.client_name + '!*\n\nVolte sempre! ❤️🍕'
+  };
+  var msg = mensagens[newStatus];
+  if (msg && o.client_phone) {
+    var phone = o.client_phone.replace(/\D/g, '');
+    if (!phone.startsWith('55')) phone = '55' + phone;
+    var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+    waWin = window.open(url, '_blank');
+  }
+  
   api('PATCH', '/orders/'+id+'/status', {status:newStatus}, true)
     .then(function() { 
       o.status = newStatus; 
       var c=document.getElementById('oc-'+id); 
       if(c) c.outerHTML=oCard(o,true); 
       loadAdmStats(); 
-      showToast('Status atualizado!'); 
-      
-      // Enviar notificação WhatsApp automaticamente
-      enviarNotificacaoStatus(o, newStatus);
+      showToast('Status atualizado! ' + (waWin ? '📱 WhatsApp aberto!' : ''));
     })
-    .catch(function(e){showToast(e.message);});
+    .catch(function(e){
+      showToast(e.message);
+      if (waWin) waWin.close();
+    });
 }
 
 function enviarNotificacaoStatus(order, status) {
