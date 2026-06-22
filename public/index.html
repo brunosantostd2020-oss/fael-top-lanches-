@@ -309,7 +309,9 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .sabor-chip .sc-badge{position:absolute;top:-7px;right:-6px;background:var(--r);color:#fff;font-size:.58rem;font-weight:900;border-radius:10px;padding:2px 7px;display:none}
 .sabor-chip.sel .sc-badge{display:block}
 /* Evita seleção de texto ao tocar 2x nos botões (parecia "copiar" o texto) */
-.pizza-sim-btn,.tam-btn,.pzz-size-btn,.sabor-chip,.abtn,.ct,.qb,.po,.wb-opt,.bn-ico,#bottom-nav button{user-select:none;-webkit-user-select:none;-moz-user-select:none}
+.pizza-sim-btn,.tam-btn,.pzz-size-btn,.sabor-chip,.abtn,.ct,.qb,.po,.wb-opt,.bn-ico,#bottom-nav button{user-select:none;-webkit-user-select:none;-moz-user-select:none;-webkit-touch-callout:none}
+/* Evita o menu de "Copiar/Selecionar" do iOS ao tocar e segurar em qualquer botao do site */
+button{-webkit-touch-callout:none}
 /* Tamanho de pizza selecionado (botão inteiro pinta, incluindo o texto interno) */
 .tam-sel{background:var(--r)!important;border-color:var(--r)!important;color:#fff!important}
 .tam-sel span{color:rgba(255,255,255,.88)!important}
