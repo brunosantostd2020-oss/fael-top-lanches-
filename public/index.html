@@ -2178,6 +2178,17 @@ function _montarGradeSabores(containerId, fnNome) {
 function abrirModalPizzaSimples() {
   if (!isOpen()) { showToast('Estamos fechados!'); return; }
   _montarGradeSabores('pizza-sim-sabores', 'togglePizzaSimSabor');
+  // Monta os botões de tamanho (G / GG / Família) a partir de PIZZA_TAMS
+  var tamsHtml = '';
+  for (var k = 0; k < PIZZA_TAMS.length; k++) {
+    var t = PIZZA_TAMS[k];
+    tamsHtml += '<button type="button" class="pizza-sim-btn" onclick="selecionarTamPizzaSim(\'' + t.cod + '\',' + t.preco + ')" title="' + (t.sub||'') + '" style="border:2px solid #ddd;background:#fff;color:#333;border-radius:10px;padding:10px 4px;cursor:pointer;font-family:Inter,sans-serif;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s">';
+    tamsHtml += '<span style="font-size:.85rem">' + t.label + '</span>';
+    tamsHtml += '<span style="font-size:.68rem;opacity:.8">R$ ' + t.preco.toFixed(0) + '</span>';
+    tamsHtml += '</button>';
+  }
+  var tamsEl = document.getElementById('pizza-sim-tams');
+  if (tamsEl) tamsEl.innerHTML = tamsHtml;
   window._pizzaSimSaborId = null;
   var lbl = document.getElementById('pizza-sim-sabor-nome');
   if (lbl) lbl.textContent = '';
@@ -2288,6 +2299,18 @@ function abrirMetadeMetade() {
   window._metadeSabores = [];
   var lblM = document.getElementById('metade-sabores-nome');
   if (lblM) lblM.textContent = '';
+
+  // Monta os botões de tamanho (G / GG / Família) a partir de PIZZA_TAMS
+  var tamsHtmlM = '';
+  for (var k = 0; k < PIZZA_TAMS.length; k++) {
+    var t = PIZZA_TAMS[k];
+    tamsHtmlM += '<button type="button" class="tam-btn" onclick="selecionarTamMetade(\'' + t.cod + '\',' + t.preco + ')" title="' + (t.sub||'') + '" style="border:2px solid #ddd;background:#fff;color:#333;border-radius:10px;padding:10px 4px;cursor:pointer;font-family:Inter,sans-serif;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s">';
+    tamsHtmlM += '<span style="font-size:.85rem">' + t.label + '</span>';
+    tamsHtmlM += '<span style="font-size:.68rem;opacity:.8">R$ ' + t.preco.toFixed(0) + '</span>';
+    tamsHtmlM += '</button>';
+  }
+  var tamsElM = document.getElementById('metade-tams');
+  if (tamsElM) tamsElM.innerHTML = tamsHtmlM;
 
   // Resetar seleção
   metadeTamanho = null;
