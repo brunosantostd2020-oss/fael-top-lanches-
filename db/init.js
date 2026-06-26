@@ -122,6 +122,9 @@ async function initDB() {
 
     await client.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC(10,2) DEFAULT NULL`);
     await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee_override NUMERIC(10,2) DEFAULT NULL`);
+    // Sistema de cupom de desconto: guarda o codigo usado e o valor abatido no pedido
+    await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT DEFAULT NULL`);
+    await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(10,2) DEFAULT 0`);
     // Marca QUANDO o status mudou pela última vez (usado no avanço automático)
     await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS status_updated_at TIMESTAMP DEFAULT NOW()`);
     await client.query(`UPDATE orders SET status_updated_at = created_at WHERE status_updated_at IS NULL`);

@@ -17,12 +17,15 @@ async function initCuponsTable() {
       criado_em TIMESTAMP DEFAULT NOW()
     )
   `);
+  // Migrations seguras — ADD COLUMN IF NOT EXISTS
+  await pool.query(`ALTER TABLE cupons ADD COLUMN IF NOT EXISTS valor_minimo NUMERIC(10,2) DEFAULT 0`);
+  await pool.query(`ALTER TABLE cupons ADD COLUMN IF NOT EXISTS destaque BOOLEAN DEFAULT false`);
 }
 initCuponsTable().catch(console.error);
 
 // POST /api/cupons/validar — público (cliente usa)
 router.post('/validar', async (req, res) => {
-  const { codigo } = req.body;
+  const { codigo, subtotal } = req.body;
   if (!codigo) return res.status(400).json({ error: 'Informe o cupom' });
   try {
     const r = await pool.query(
@@ -33,18 +36,27 @@ router.post('/validar', async (req, res) => {
     if (!c.ativo) return res.status(400).json({ error: 'Cupom desativado' });
     if (new Date() > new Date(c.expira_em)) return res.status(400).json({ error: 'Cupom expirado' });
     if (c.usos_atuais >= c.usos_maximos) return res.status(400).json({ error: 'Cupom esgotado' });
+    const valorMinimo = parseFloat(c.valor_minimo) || 0;
+    const sub = parseFloat(subtotal) || 0;
+    if (valorMinimo > 0 && sub < valorMinimo) {
+      return res.status(400).json({
+        error: 'Pedido minimo para este cupom: R$ ' + valorMinimo.toFixed(2).replace('.', ','),
+        valor_minimo: valorMinimo
+      });
+    }
     res.json({
       valido: true,
       codigo: c.codigo,
       desconto_percent: parseFloat(c.desconto_percent),
-      usos_restantes: c.usos_maximos - c.usos_atuais
+      usos_restantes: c.usos_maximos - c.usos_atuais,
+      valor_minimo: valorMinimo
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // POST /api/cupons/usar — chamado ao finalizar pedido
 router.post('/usar', async (req, res) => {
-  const { codigo } = req.body;
+  const { codigo, subtotal } = req.body;
   if (!codigo) return res.status(400).json({ error: 'Informe o cupom' });
   try {
     const r = await pool.query(
@@ -54,6 +66,9 @@ router.post('/usar', async (req, res) => {
     const c = r.rows[0];
     if (!c.ativo || new Date() > new Date(c.expira_em) || c.usos_atuais >= c.usos_maximos)
       return res.status(400).json({ error: 'Cupom não pode ser usado' });
+    const valorMinimo = parseFloat(c.valor_minimo) || 0;
+    if (valorMinimo > 0 && (parseFloat(subtotal) || 0) < valorMinimo)
+      return res.status(400).json({ error: 'Pedido nao atinge o minimo deste cupom' });
     await pool.query(
       "UPDATE cupons SET usos_atuais = usos_atuais + 1 WHERE id = $1", [c.id]
     );
@@ -63,11 +78,15 @@ router.post('/usar', async (req, res) => {
 
 // POST /api/cupons/gerar — admin gera lote
 router.post('/gerar', requireAdmin, async (req, res) => {
-  const { quantidade, desconto_percent, usos_maximos, horas_validade } = req.body;
+  const { quantidade, desconto_percent, usos_maximos, horas_validade, valor_minimo } = req.body;
   const qtd = parseInt(quantidade) || 10;
-  const desc = parseFloat(desconto_percent) || 2;
+  let desc = parseFloat(desconto_percent);
+  if (isNaN(desc) || desc <= 0) desc = 2;
+  if (desc > 100) desc = 100; // nunca permite desconto acima de 100%
   const usos = parseInt(usos_maximos) || 5;
   const horas = parseInt(horas_validade) || 2;
+  let valorMin = parseFloat(valor_minimo);
+  if (isNaN(valorMin) || valorMin < 0) valorMin = 0;
   if (qtd > 1000) return res.status(400).json({ error: 'Máximo 1000 por vez' });
 
   const expira = new Date(Date.now() + horas * 60 * 60 * 1000);
@@ -81,8 +100,8 @@ router.post('/gerar', requireAdmin, async (req, res) => {
     for (let i = 0; i < 6; i++) cod += chars[Math.floor(Math.random() * chars.length)];
     try {
       const r = await pool.query(
-        "INSERT INTO cupons (codigo, desconto_percent, usos_maximos, expira_em) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING",
-        [cod, desc, usos, expira]
+        "INSERT INTO cupons (codigo, desconto_percent, usos_maximos, expira_em, valor_minimo) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
+        [cod, desc, usos, expira, valorMin]
       );
       if (r.rowCount > 0) gerados.push(cod); // só conta se realmente inseriu
     } catch (e) { /* skip duplicates */ }
@@ -91,11 +110,49 @@ router.post('/gerar', requireAdmin, async (req, res) => {
   res.json({ gerados, total: gerados.length, expira_em: expira });
 });
 
-// GET /api/cupons — admin lista cupons
+// GET /api/cupons/destaque — público, retorna o cupom marcado pra aparecer no banner do site (se ainda valido)
+router.get('/destaque', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT * FROM cupons
+       WHERE destaque = true AND ativo = true
+         AND expira_em > NOW() AND usos_atuais < usos_maximos
+       LIMIT 1`
+    );
+    if (!r.rows.length) return res.json(null);
+    const c = r.rows[0];
+    res.json({
+      codigo: c.codigo,
+      desconto_percent: parseFloat(c.desconto_percent),
+      valor_minimo: parseFloat(c.valor_minimo) || 0,
+      expira_em: c.expira_em
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/cupons — admin lista cupons (com total vendido por cada um)
 router.get('/', requireAdmin, async (req, res) => {
   try {
-    const r = await pool.query("SELECT * FROM cupons ORDER BY criado_em DESC LIMIT 200");
+    const r = await pool.query(`
+      SELECT c.*,
+        COALESCE((SELECT SUM(o.total) FROM orders o WHERE o.coupon_code = c.codigo AND o.status != 'cancelado'), 0) AS total_vendas,
+        COALESCE((SELECT COUNT(*) FROM orders o WHERE o.coupon_code = c.codigo AND o.status != 'cancelado'), 0) AS qtd_pedidos
+      FROM cupons c
+      ORDER BY c.criado_em DESC LIMIT 200
+    `);
     res.json(r.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PATCH /api/cupons/:id/destaque — marca/desmarca este cupom para aparecer no banner (so um por vez)
+router.patch('/:id/destaque', requireAdmin, async (req, res) => {
+  try {
+    const cur = await pool.query("SELECT destaque FROM cupons WHERE id = $1", [req.params.id]);
+    if (!cur.rows.length) return res.status(404).json({ error: 'Cupom não encontrado' });
+    const novoValor = !cur.rows[0].destaque;
+    if (novoValor) await pool.query("UPDATE cupons SET destaque = false"); // so um cupom em destaque por vez
+    await pool.query("UPDATE cupons SET destaque = $1 WHERE id = $2", [novoValor, req.params.id]);
+    res.json({ sucesso: true, destaque: novoValor });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

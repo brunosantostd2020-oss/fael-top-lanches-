@@ -88,7 +88,7 @@ router.get('/:id', requireAdmin, async (req, res) => {
 
 // POST create order
 router.post('/', async (req, res) => {
-  const { client_name, client_phone, address, complement, delivery_type, payment, change_for, items, observations, delivery_fee_override } = req.body;
+  const { client_name, client_phone, address, complement, delivery_type, payment, change_for, items, observations, delivery_fee_override, coupon_code } = req.body;
   if (!client_name || !client_phone || !items?.length)
     return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
 
@@ -107,16 +107,43 @@ router.post('/', async (req, res) => {
 
     const subtotal = items.reduce((s, i) => s + (parseFloat(i.unit_price) * parseInt(i.quantity)), 0);
     const delivery_fee = delivery_fee_override != null ? parseFloat(delivery_fee_override) : 0;
-    const total = subtotal + delivery_fee;
+
+    // Revalida o cupom no servidor (nunca confia no desconto enviado pelo cliente)
+    let discount_amount = 0;
+    let appliedCouponCode = null;
+    if (coupon_code) {
+      const cRes = await client.query(
+        "SELECT * FROM cupons WHERE UPPER(codigo) = UPPER($1) FOR UPDATE", [String(coupon_code).trim()]
+      );
+      const cupom = cRes.rows[0];
+      const cupomValido = cupom && cupom.ativo &&
+        new Date() <= new Date(cupom.expira_em) &&
+        cupom.usos_atuais < cupom.usos_maximos;
+      if (!cupomValido) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Cupom inválido, expirado ou esgotado' });
+      }
+      const valorMinimoCupom = parseFloat(cupom.valor_minimo) || 0;
+      if (valorMinimoCupom > 0 && subtotal < valorMinimoCupom) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Pedido nao atinge o minimo de R$ ' + valorMinimoCupom.toFixed(2).replace('.', ',') + ' exigido por este cupom' });
+      }
+      discount_amount = Math.round(subtotal * (parseFloat(cupom.desconto_percent) / 100) * 100) / 100;
+      if (discount_amount > subtotal) discount_amount = subtotal; // protecao extra: nunca abate mais que o subtotal
+      appliedCouponCode = cupom.codigo;
+      await client.query("UPDATE cupons SET usos_atuais = usos_atuais + 1 WHERE id = $1", [cupom.id]);
+    }
+
+    const total = subtotal + delivery_fee - discount_amount;
 
     const oRes = await client.query(
       `INSERT INTO orders
-        (client_name, client_phone, address, complement, delivery_type, payment, change_for, subtotal, delivery_fee, total, observations)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+        (client_name, client_phone, address, complement, delivery_type, payment, change_for, subtotal, delivery_fee, total, observations, coupon_code, discount_amount)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
       [client_name, client_phone, address || '', complement || '',
        delivery_type || 'entrega', payment || 'dinheiro',
        change_for ? parseFloat(change_for) : null,
-       subtotal, delivery_fee, total, observations || '']
+       subtotal, delivery_fee, total, observations || '', appliedCouponCode, discount_amount]
     );
     const order = oRes.rows[0];
 
