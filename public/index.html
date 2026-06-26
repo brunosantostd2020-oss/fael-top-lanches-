@@ -5113,6 +5113,10 @@ function showPage(pg) {
   if (pg==='carrinho') renderCart();
   if (pg==='pedidos') renderMeusPedidos();
   if (pg==='admin') { renderAdmin(); }
+  // Banner promocional (logo, foto, estrelas) só faz sentido no Cardápio —
+  // nas outras abas ele só empurra o conteúdo real para baixo da tela
+  var heroEl = document.querySelector('.hero');
+  if (heroEl) heroEl.style.display = (pg === 'cardapio') ? '' : 'none';
   // Limpa busca ao sair do cardápio
   if (pg !== 'cardapio') {
     var input = document.getElementById('busca-cardapio');
