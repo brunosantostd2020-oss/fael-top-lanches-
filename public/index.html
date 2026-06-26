@@ -132,13 +132,13 @@ nav button:hover,nav button.active{background:var(--r);color:#fff}
 .abtn{background:var(--r);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer}
 .abtn:hover{background:var(--rd)}
 .abtn:disabled{background:#bbb;cursor:not-allowed}
-.csec{display:grid;grid-template-columns:1fr 340px;gap:1.5rem}
-@media(max-width:780px){.csec{grid-template-columns:1fr}}
+.csec{display:grid;grid-template-columns:1fr 340px;gap:1.5rem;min-width:0}
+@media(max-width:780px){.csec{grid-template-columns:minmax(0,1fr)}}
 .citems{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden}
 .ch{background:var(--bk);color:#fff;padding:.9rem 1.3rem;font-weight:900;font-size:1rem}
 .ci{display:flex;align-items:center;gap:10px;padding:.9rem 1.3rem;border-bottom:1px solid #f0f0f0}
 .cie{font-size:30px}
-.cii{flex:1}
+.cii{flex:1;min-width:0}
 .cin{font-weight:800;font-size:.88rem}
 .cip{font-size:.78rem;color:var(--r);font-weight:700}
 .qc{display:flex;align-items:center;gap:6px}
