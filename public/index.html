@@ -1322,7 +1322,7 @@ document.addEventListener('click', function(e) {
     <button onclick="cancelarProduto()" style="width:100%;margin-top:8px;background:#fff5f5;color:#dc2626;border:2px solid #fca5a5;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">❌ Cancelar</button>
   </div>
 </div>
-<div id="modal-escolha" style="position:fixed;bottom:-200px;left:0;right:0;z-index:300;transition:bottom .35s cubic-bezier(.4,0,.2,1);pointer-events:none">
+<div id="modal-escolha" style="position:fixed;bottom:0;left:0;right:0;z-index:300;transform:translateY(110%);transition:transform .35s cubic-bezier(.4,0,.2,1);pointer-events:none">
   <div style="background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 30px rgba(0,0,0,.18);padding:16px 20px 24px;pointer-events:all">
     <div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 14px"></div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
@@ -1505,7 +1505,13 @@ function api(method, path, body, auth) {
         throw new Error(d.error || 'Erro');
       }
       return d;
+    }, function() {
+      // A resposta chegou mas nao era um JSON valido (proxy/erro de servidor)
+      throw new Error('Erro de conexão. Tente novamente em alguns instantes.');
     });
+  }, function() {
+    // O fetch nem chegou a completar (sem internet ou servidor fora do ar)
+    throw new Error('Sem conexão com a internet. Verifique e tente novamente.');
   });
 }
 
@@ -1631,7 +1637,7 @@ function loadProducts() {
       renderProducts('todos');
     })
     .catch(function(e) {
-      g.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--r)"><div style="font-size:40px">&#9888;</div><div style="font-weight:800;margin-top:8px">Erro ao carregar</div><div style="font-size:.82rem;margin-top:4px">' + e.message + '</div><button onclick="loadProducts()" style="margin-top:12px;background:var(--r);color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:800">Tentar novamente</button></div>';
+      g.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--r)"><div style="font-size:40px">&#9888;</div><div style="font-weight:800;margin-top:8px">Não foi possível carregar o cardápio</div><div style="font-size:.82rem;margin-top:4px;color:#888">Verifique sua conexão com a internet e tente novamente.</div><button onclick="loadProducts()" style="margin-top:12px;background:var(--r);color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:800">Tentar novamente</button></div>';
     });
 }
 
@@ -2177,12 +2183,12 @@ function cancelarProduto() {
 
 // FUNÇÕES DO MODAL DE ESCOLHA
 function abrirCarrinhoModal() {
-  var _me=document.getElementById('modal-escolha');_me.style.bottom='-200px';_me.style.pointerEvents='none';
+  var _me=document.getElementById('modal-escolha');_me.style.transform='translateY(110%)';_me.style.pointerEvents='none';
   showPage('carrinho');
 }
 
 function finalizarDiretoModal() {
-  var _me=document.getElementById('modal-escolha');_me.style.bottom='-200px';_me.style.pointerEvents='none';
+  var _me=document.getElementById('modal-escolha');_me.style.transform='translateY(110%)';_me.style.pointerEvents='none';
   showPage('carrinho');
   // Scroll até o formulário de finalização
   setTimeout(function() {
@@ -2192,7 +2198,7 @@ function finalizarDiretoModal() {
 }
 
 function continuarComprandoModal() {
-  var _me=document.getElementById('modal-escolha');_me.style.bottom='-200px';_me.style.pointerEvents='none';
+  var _me=document.getElementById('modal-escolha');_me.style.transform='translateY(110%)';_me.style.pointerEvents='none';
   showPage('cardapio');
 }
 
@@ -2510,7 +2516,7 @@ function mostrarModalProdutoAdicionado(nomeProduto) {
     }
   }
   var _me = document.getElementById('modal-escolha');
-  _me.style.bottom = '0';
+  _me.style.transform = 'translateY(0)';
   // Ignora toques nos primeiros 400ms (evita clique fantasma em "Finalizar"
   // logo após confirmar o modal anterior — mandava o cliente para o carrinho sem querer)
   _me.style.pointerEvents = 'none';
@@ -2518,7 +2524,7 @@ function mostrarModalProdutoAdicionado(nomeProduto) {
   // Fecha automaticamente após 9 segundos se não interagir (5s era rápido demais)
   clearTimeout(window._barrinhaTimer);
   window._barrinhaTimer = setTimeout(function() {
-    _me.style.bottom = '-200px';
+    _me.style.transform = 'translateY(110%)';
     _me.style.pointerEvents = 'none';
   }, 9000);
 }
@@ -2560,7 +2566,7 @@ function cancelarUltimoProduto() {
     showToast('Produto removido do carrinho');
   }
   var _me = document.getElementById('modal-escolha');
-  _me.style.bottom = '-200px';
+  _me.style.transform = 'translateY(110%)';
   _me.style.pointerEvents = 'none';
   clearTimeout(window._barrinhaTimer);
 }
