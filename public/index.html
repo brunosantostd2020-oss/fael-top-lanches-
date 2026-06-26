@@ -744,6 +744,10 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 
 /* ===== ADMIN: BADGES DE CUPOM ===== */
 .cup-destaque-badge{background:#f59e0b;color:#fff;font-size:.62rem;font-weight:900;padding:2px 7px;border-radius:10px;margin-left:6px;white-space:nowrap}
+
+/* ===== DESTAQUE DE CAMPO INVALIDO NO CHECKOUT ===== */
+.campo-erro{animation:campo-shake .4s;border-color:#dc2626!important;box-shadow:0 0 0 3px rgba(220,38,38,.22)!important;border-radius:8px}
+@keyframes campo-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 </style>
 </head>
 <body>
@@ -1893,7 +1897,7 @@ function renderProducts(cat, subcat) {
       if (imgMatch) cleanDesc = cleanDesc.replace(/##IMG:[^#]+##/gi,'').trim();
       html += '<div class="pc">';
       if (imageUrl) {
-        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" loading="lazy" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.style.fontSize=\'65px\';this.parentElement.textContent=\'' + (pr.emoji||'🍽') + '\'"></div>';
+        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.style.fontSize=\'65px\';this.parentElement.textContent=\'' + (pr.emoji||'🍽') + '\'"></div>';
       } else {
         html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
       }
@@ -1926,7 +1930,7 @@ function renderProducts(cat, subcat) {
     html += '<div class="pc">';
     // Se tem imagem, usa imagem; senão usa emoji
     if (imageUrl) {
-      html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" loading="lazy" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
+      html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
     } else {
       html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
     }
@@ -1999,7 +2003,7 @@ function filterBebidas(tipo) {
       html += '<div class="pc">';
       // Se tem imagem, usa imagem; senão usa emoji
       if (imageUrl) {
-        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" loading="lazy" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
+        html += '<div class="pi" style="background:#f5f5f5;padding:0"><img src="' + imageUrl + '" alt="' + pr.name + '" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + (pr.emoji||'&#127869;') + '\'"></div>';
       } else {
         html += '<div class="pi">' + (pr.emoji||'&#127869;') + '</div>';
       }
@@ -3208,27 +3212,41 @@ function getForm() {
   return {name:name, phone:phone, rua:rua, num:num, bairro:bairro, comp:comp, obs:obs, addr:addr, mesa:mesa};
 }
 
+function marcarErro(elOuId, msg) {
+  showToast(msg);
+  var el = typeof elOuId === 'string' ? document.getElementById(elOuId) : elOuId;
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.add('campo-erro');
+  setTimeout(function(){ el.classList.remove('campo-erro'); }, 1800);
+  if (el.tagName === 'INPUT' || el.tagName === 'SELECT') {
+    setTimeout(function(){ try { el.focus({preventScroll:true}); } catch(e) { el.focus(); } }, 350);
+  }
+}
+
 function valid() {
   if (!cart.length) { showToast('Carrinho vazio!'); return false; }
   var somenteBebidas = cart.length > 0 && cart.every(function(item) { return item.category === 'bebidas'; });
   if (somenteBebidas) {
     var totalUnid = 0;
     for (var ii = 0; ii < cart.length; ii++) totalUnid += cart[ii].qty;
-    if (totalUnid < 2) { showToast('Pedido mínimo: 2 bebidas ou adicione um lanche/pizza!'); return false; }
+    if (totalUnid < 2) { marcarErro('bebida-aviso', 'Pedido mínimo: 2 bebidas ou adicione um lanche/pizza!'); return false; }
   }
   var d = getForm();
-  if (!d.name) { showToast('Informe seu nome!'); return false; }
-  if (!d.phone) { showToast('Informe seu telefone!'); return false; }
+  var idNome = curDel==='entrega' ? 'c-name' : curDel==='mesa' ? 'c-name3' : 'c-name2';
+  var idTel  = curDel==='entrega' ? 'c-phone' : curDel==='mesa' ? 'c-phone3' : 'c-phone2';
+  if (!d.name) { marcarErro(idNome, 'Informe seu nome!'); return false; }
+  if (!d.phone) { marcarErro(idTel, 'Informe seu telefone!'); return false; }
   if (curDel==='entrega') {
-    if (!d.rua) { showToast('Informe a rua!'); return false; }
-    if (!d.num) { showToast('Informe o numero!'); return false; }
-    if (!d.bairro) { showToast('Informe o bairro!'); return false; }
-    if (!bairroOk) { showToast('Nao entregamos neste bairro!'); return false; }
+    if (!d.rua) { marcarErro('c-rua', 'Informe a rua!'); return false; }
+    if (!d.num) { marcarErro('c-num', 'Informe o numero!'); return false; }
+    if (!d.bairro) { marcarErro('c-bairro', 'Informe o bairro!'); return false; }
+    if (!bairroOk) { marcarErro('c-bairro', 'Nao entregamos neste bairro!'); return false; }
   }
   if (curDel==='mesa') {
-    if (!d.mesa) { showToast('Informe o número da mesa!'); return false; }
+    if (!d.mesa) { marcarErro('c-mesa', 'Informe o número da mesa!'); return false; }
   }
-  if (!curPay) { showToast('Selecione a forma de pagamento!'); return false; }
+  if (!curPay) { marcarErro(document.querySelector('.pays'), 'Selecione a forma de pagamento!'); return false; }
   return d;
 }
 
@@ -5143,9 +5161,30 @@ function _tentaDesbloquearAudio() {
 document.addEventListener('click', _tentaDesbloquearAudio);
 document.addEventListener('touchstart', _tentaDesbloquearAudio);
 // Reativa o áudio quando o admin volta para a aba (celular costuma suspender)
+var _ultimoEscondido = null;
 document.addEventListener('visibilitychange', function() {
   if (!document.hidden && adminToken && window._audioCtx) {
     try { window._audioCtx.resume(); } catch(e) {}
+  }
+  if (document.hidden) {
+    _ultimoEscondido = Date.now();
+    return;
+  }
+  // Cliente voltou para a aba (ex: depois de pagar no app do banco ou no WhatsApp)
+  atualizarChipPedido();
+  var p = _pedidoSalvo();
+  var ficouFora = _ultimoEscondido && (Date.now() - _ultimoEscondido) > 3000;
+  var pedidoRecente = p && (Date.now() - p.ts) < 4 * 60 * 60 * 1000;
+  if (ficouFora && pedidoRecente) {
+    var nomesStatus = {pendente:'recebido e na fila', preparo:'em preparo', entrega:'saiu para entrega/retirada', entregue:'entregue'};
+    fetch('/api/orders/' + p.id + '/status').then(function(r){ return r.json(); })
+      .then(function(d) {
+        var txt = (d && d.status && nomesStatus[d.status]) ? nomesStatus[d.status] : 'sendo preparado';
+        showToast('👋 Que bom que voltou! Seu pedido está ' + txt + '.');
+      })
+      .catch(function() {
+        showToast('👋 Bem-vindo de volta! Acompanhe seu pedido no botão flutuante.');
+      });
   }
 });
 loadProducts();
