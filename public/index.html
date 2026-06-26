@@ -733,9 +733,14 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 
 /* ===== BANNER DE CUPOM EM DESTAQUE ===== */
 .banner-cupom{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#fde68a,#fbbf24);color:#78350f;padding:10px 16px;font-weight:800;font-size:.84rem;position:relative}
-.banner-cupom .bc-codigo{background:#78350f;color:#fff;padding:2px 8px;border-radius:6px;font-weight:900;letter-spacing:.5px;flex-shrink:0}
-.banner-cupom .bc-txt{flex:1;min-width:0}
-.banner-cupom .bc-close{background:none;border:none;color:#78350f;font-size:1.2rem;font-weight:900;cursor:pointer;padding:2px 6px;flex-shrink:0;line-height:1}
+.banner-cupom .bc-codigo{background:#78350f;color:#fff;padding:6px 10px;min-height:32px;display:inline-flex;align-items:center;border-radius:6px;font-weight:900;letter-spacing:.5px;flex-shrink:0}
+.banner-cupom .bc-txt{flex:1;min-width:0;line-height:1.4}
+.banner-cupom .bc-close{background:none;border:none;color:#78350f;font-size:1.2rem;font-weight:900;cursor:pointer;padding:8px 12px;margin:-8px -6px -8px 0;flex-shrink:0;line-height:1}
+@media(max-width:600px){
+  .banner-cupom{padding:10px 12px;gap:8px;font-size:.78rem}
+  .banner-cupom .bc-codigo{font-size:.74rem;padding:7px 10px;min-height:36px}
+  .banner-cupom .bc-close{min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;margin:-2px -6px -2px 0}
+}
 
 /* ===== ADMIN: BADGES DE CUPOM ===== */
 .cup-destaque-badge{background:#f59e0b;color:#fff;font-size:.62rem;font-weight:900;padding:2px 7px;border-radius:10px;margin-left:6px;white-space:nowrap}
@@ -744,7 +749,7 @@ a,button,[onclick]{-webkit-tap-highlight-color:rgba(214,40,40,.15)}
 <body>
 <div id="closed-banner">Estamos <span>fechados</span> agora</div>
 <div class="banner-cupom" id="banner-cupom" style="display:none">
-  <span class="bc-codigo" id="bc-codigo"></span>
+  <span class="bc-codigo" id="bc-codigo" onclick="copiarCodigoBanner()" style="cursor:pointer" title="Toque para copiar"></span>
   <span class="bc-txt" id="bc-txt"></span>
   <button class="bc-close" onclick="fecharBannerCupom()" aria-label="Fechar">&times;</button>
 </div>
@@ -1130,8 +1135,8 @@ document.addEventListener('click', function(e) {
               <span style="font-weight:900;font-size:.85rem;color:#92400e">Tem um cupom de desconto?</span>
             </div>
             <div style="display:flex;gap:8px">
-              <input type="text" id="cupom-input" placeholder="Ex: FAEL-AB12CD" maxlength="20" style="flex:1;text-transform:uppercase;padding:11px 12px;border:1.5px solid #f0c36d;border-radius:8px;font-size:.88rem;font-weight:800;background:#fff">
-              <button type="button" id="cupom-btn" onclick="aplicarCupom()" style="background:#f59e0b;color:#fff;border:none;padding:0 18px;border-radius:8px;font-weight:900;font-size:.85rem;cursor:pointer;white-space:nowrap">Aplicar</button>
+              <input type="text" id="cupom-input" placeholder="Ex: FAEL-AB12CD" maxlength="20" style="flex:1;text-transform:uppercase;padding:11px 12px;min-height:48px;border:1.5px solid #f0c36d;border-radius:8px;font-size:.88rem;font-weight:800;background:#fff;box-sizing:border-box">
+              <button type="button" id="cupom-btn" onclick="aplicarCupom()" style="background:#f59e0b;color:#fff;border:none;padding:0 18px;min-height:48px;border-radius:8px;font-weight:900;font-size:.85rem;cursor:pointer;white-space:nowrap">Aplicar</button>
             </div>
             <div id="cupom-status" style="display:none;margin-top:10px;font-size:.8rem;font-weight:800"></div>
           </div>
@@ -2966,16 +2971,26 @@ function renderBannerCupom(c) {
   if (!c) { banner.style.display = 'none'; return; } // esgotou/expirou/foi removido — some automaticamente
   var fechado = sessionStorage.getItem('fael_banner_fechado');
   if (fechado === c.codigo) { banner.style.display = 'none'; return; } // cliente ja fechou esse mesmo cupom nesta sessao
-  document.getElementById('bc-codigo').textContent = c.codigo;
-  var txt = 'Use o cupom acima e ganhe ' + c.desconto_percent + '% de desconto';
-  if (c.valor_minimo > 0) txt += ' em pedidos acima de R$ ' + c.valor_minimo.toFixed(2).replace('.', ',');
+  document.getElementById('bc-codigo').setAttribute('data-codigo', c.codigo);
+  document.getElementById('bc-codigo').innerHTML = c.codigo + ' <span style="font-size:.85em;opacity:.8">📋</span>';
+  var txt = c.desconto_percent + '% OFF';
+  txt += c.valor_minimo > 0 ? (' acima de R$' + c.valor_minimo.toFixed(2).replace('.', ',')) : ' no seu pedido';
   document.getElementById('bc-txt').textContent = txt;
   banner.style.display = 'flex';
 }
 function fecharBannerCupom() {
   var codEl = document.getElementById('bc-codigo');
-  if (codEl && codEl.textContent) sessionStorage.setItem('fael_banner_fechado', codEl.textContent);
+  var cod = codEl ? codEl.getAttribute('data-codigo') : null;
+  if (cod) sessionStorage.setItem('fael_banner_fechado', cod);
   document.getElementById('banner-cupom').style.display = 'none';
+}
+function copiarCodigoBanner() {
+  var cod = document.getElementById('bc-codigo').getAttribute('data-codigo');
+  if (!cod) return;
+  var input = document.getElementById('cupom-input');
+  if (input && !input.disabled) input.value = cod; // ja deixa preenchido pra quando o cliente chegar no carrinho
+  if (navigator.clipboard) navigator.clipboard.writeText(cod).then(function(){ showToast('Cupom ' + cod + ' copiado e ja preenchido no carrinho!'); }).catch(function(){ fbCopy(cod); });
+  else fbCopy(cod);
 }
 
 function verificarSomenteBebidas() {
@@ -3827,7 +3842,7 @@ function oCard(o, isAdm, mostrarCheckbox) {
   html += '<div class="oib"><div class="oit">Itens</div><div class="oiv">'+iNames+'</div></div>';
   html += '<div class="oib"><div class="oit">Entrega</div><div class="oiv">'+(DM[o.delivery_type]||'--')+'</div><div style="font-size:.72rem;color:#888;margin-top:2px">'+(o.address||'')+(o.complement?' - '+o.complement:'')+'</div></div>';
   html += '<div class="oib"><div class="oit">Pagamento</div><div class="oiv">'+(PM[o.payment]||o.payment)+'</div>'+(o.change_for?'<div style="font-size:.72rem;color:#888">Troco p/ R$ '+parseFloat(o.change_for).toFixed(2).replace('.',',')+'</div>':'')+'</div>';
-  html += '<div class="oib"><div class="oit">Total</div><div class="oiv" style="color:var(--r);font-size:1rem">R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+'</div></div>';
+  html += '<div class="oib"><div class="oit">Total</div><div class="oiv" style="color:var(--r);font-size:1rem">R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+'</div>'+(o.discount_amount && parseFloat(o.discount_amount)>0 ? '<div style="font-size:.72rem;color:#16a34a;font-weight:800;margin-top:2px">🏷️ '+(o.coupon_code||'cupom')+' (-R$'+parseFloat(o.discount_amount).toFixed(2).replace('.',',')+')</div>' : '')+'</div>';
   if (o.observations) html += '<div class="oib" style="width:100%"><div class="oit">Obs</div><div class="oiv">'+o.observations+'</div></div>';
   html += '</div>';
   if (acts) html += '<div class="oa">'+acts+'</div>';
@@ -3975,7 +3990,9 @@ function waOrd(id) {
   msg += (o.address||'')+(o.complement?' - '+o.complement:'')+'\n====================\n';
   var items = o.items || [];
   for (var i=0; i<items.length; i++) msg += items[i].quantity+'x '+items[i].product_name+' - R$ '+parseFloat(items[i].subtotal).toFixed(2).replace('.',',')+'\n';
-  msg += '====================\nTOTAL: R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+' | '+(PM[o.payment]||o.payment);
+  msg += '====================\n';
+  if (o.discount_amount && parseFloat(o.discount_amount) > 0) msg += 'Cupom '+(o.coupon_code||'')+': -R$ '+parseFloat(o.discount_amount).toFixed(2).replace('.',',')+'\n';
+  msg += 'TOTAL: R$ '+parseFloat(o.total).toFixed(2).replace('.',',')+' | '+(PM[o.payment]||o.payment);
   var mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   window.open(mob?'whatsapp://send?phone='+WA+'&text='+encodeURIComponent(msg):'https://api.whatsapp.com/send?phone='+WA+'&text='+encodeURIComponent(msg),'_blank');
 }
@@ -4065,9 +4082,16 @@ function printOrd(id) {
   html += separador();
 
   // Total
-  if (o.delivery_fee && parseFloat(o.delivery_fee) > 0) {
-    html += row('Subtotal', 'R$' + parseFloat(o.total - o.delivery_fee).toFixed(2).replace('.', ','));
-    html += row('Taxa entrega', 'R$' + parseFloat(o.delivery_fee).toFixed(2).replace('.', ','));
+  var temDesconto = o.discount_amount && parseFloat(o.discount_amount) > 0;
+  var temTaxa = o.delivery_fee && parseFloat(o.delivery_fee) > 0;
+  if (temTaxa || temDesconto) {
+    html += row('Subtotal', 'R$' + parseFloat(o.subtotal).toFixed(2).replace('.', ','));
+    if (temDesconto) {
+      html += row('Cupom ' + (o.coupon_code || ''), '-R$' + parseFloat(o.discount_amount).toFixed(2).replace('.', ','));
+    }
+    if (temTaxa) {
+      html += row('Taxa entrega', 'R$' + parseFloat(o.delivery_fee).toFixed(2).replace('.', ','));
+    }
     html += separadorFino();
   }
   html += '<div style="font-weight:900">' + row('TOTAL', 'R$' + parseFloat(o.total).toFixed(2).replace('.', ',')) + '</div>';
