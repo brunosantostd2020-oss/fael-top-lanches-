@@ -1393,6 +1393,14 @@ document.addEventListener('click', function(e) {
     <button onclick="fecharModalMetade()" style="width:100%;margin-top:8px;background:#fff;color:#666;border:2px solid #ddd;padding:11px;border-radius:10px;font-weight:800;font-size:.9rem;cursor:pointer">Cancelar</button>
   </div>
 </div>
+<div class="mo" id="modal-refri-pizza">
+  <div class="md" style="max-width:420px">
+    <div style="font-size:48px;margin-bottom:8px">🥤</div>
+    <h2 style="margin-bottom:4px" id="refri-titulo">Escolha o refrigerante</h2>
+    <p style="margin-bottom:18px;font-size:.85rem;color:#888" id="refri-sub">Essa pizza acompanha um refrigerante. Qual você prefere?</p>
+    <div id="refri-opcoes" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+  </div>
+</div>
 <div class="mo" id="modal-produto-adicionado">
   <div class="md" style="max-width:420px">
     <div style="font-size:60px;margin-bottom:12px">✅</div>
@@ -2044,6 +2052,16 @@ function addCart(id) {
   // Buscar o produto para verificar a categoria
   var p = allProducts.filter(function(x){return x.id===id;})[0];
   if (!p) return;
+
+  // Pizza Moda do Fael acompanha refrigerante — cliente escolhe Fanta ou Coca-Cola
+  var isModaFael = p.category === 'moda_fael' || (p.category === 'pizzas' && p.name.toLowerCase().indexOf('moda do fael') >= 0);
+  if (isModaFael) {
+    abrirModalRefri(['Fanta','Coca-Cola'], 'Escolha o refrigerante', 'Essa Pizza Moda do Fael acompanha um refrigerante. Qual você prefere?', function(escolha) {
+      window._addLock = Date.now();
+      addCartDiretoComRefri(id, escolha);
+    });
+    return;
+  }
   
   // Categorias que permitem acréscimos
   var categoriasComAcrescimo = ['lanches', 'frango_desfiado', 'hamburguer_boi', 'pizzas_tam', 'omelete', 'cachorro_quente', 'porcoes'];
@@ -2056,6 +2074,41 @@ function addCart(id) {
   } else { 
     abrirModalRemocao(id, []); 
   }
+}
+
+function addCartDiretoComRefri(id, refri) {
+  if (!isOpen()) { showToast('Estamos fechados!'); return; }
+  var p = allProducts.filter(function(x){return x.id===id;})[0];
+  if (!p) return;
+  var nome = p.name + ' [🥤 Refrigerante: ' + refri + ']';
+  cart.push({id:p.id, cartId:id+'_'+Date.now(), name:nome, price:parseFloat(p.price), qty:1, emoji:p.emoji, category:p.category||'', acrescimos:[]});
+  updateBadge();
+  mostrarModalProdutoAdicionado((p.emoji||'') + ' ' + nome);
+}
+
+// ── MODAL GENÉRICO: ESCOLHA DE REFRIGERANTE ──────────
+var _refriCallback = null;
+function abrirModalRefri(opcoes, titulo, subtitulo, callback) {
+  _refriCallback = callback;
+  var tit = document.getElementById('refri-titulo');
+  var sub = document.getElementById('refri-sub');
+  if (tit) tit.textContent = titulo || 'Escolha o refrigerante';
+  if (sub) sub.textContent = subtitulo || 'Essa pizza acompanha um refrigerante. Qual você prefere?';
+  var box = document.getElementById('refri-opcoes');
+  var html = '';
+  for (var i = 0; i < opcoes.length; i++) {
+    html += '<button type="button" onclick="escolherRefri(\'' + opcoes[i].replace(/'/g,"\\'") + '\')" style="border:2px solid #ddd;background:#fff;color:#333;border-radius:12px;padding:18px 8px;cursor:pointer;font-family:Inter,sans-serif;font-weight:800;font-size:.95rem;transition:all .15s">🥤 ' + opcoes[i] + '</button>';
+  }
+  if (box) box.innerHTML = html;
+  var modal = document.getElementById('modal-refri-pizza');
+  if (modal) modal.classList.add('open');
+}
+function escolherRefri(nome) {
+  var modal = document.getElementById('modal-refri-pizza');
+  if (modal) modal.classList.remove('open');
+  var cb = _refriCallback;
+  _refriCallback = null;
+  if (cb) cb(nome);
 }
 
 function addCartTam(id, tam, preco) {
@@ -2072,14 +2125,26 @@ function addCartTam(id, tam, preco) {
   if (tam === 'G') tamNome = 'Grande';
   if (tam === 'GG') tamNome = 'Gigante';
   if (tam === 'GGG') tamNome = 'Tamanho Família';
-  
-  var cid = id + '_' + tam + '_' + Date.now();
-  var nomeProduto = 'Pizza '+p.name+' ('+tamNome+')';
-  cart.push({id:p.id, cartId:cid, name:nomeProduto, price:preco, qty:1, emoji:p.emoji, category:p.category||'', acrescimos:[]});
-  updateBadge();
-  
-  // Abrir modal "Produto Adicionado"
-  mostrarModalProdutoAdicionado((p.emoji||'') + ' ' + nomeProduto);
+
+  var _finalizarAddCartTam = function(refri) {
+    window._addLock = Date.now();
+    var cid = id + '_' + tam + '_' + Date.now();
+    var nomeProduto = 'Pizza '+p.name+' ('+tamNome+')';
+    if (refri) nomeProduto += ' [🥤 Refrigerante: ' + refri + ']';
+    cart.push({id:p.id, cartId:cid, name:nomeProduto, price:preco, qty:1, emoji:p.emoji, category:p.category||'', acrescimos:[]});
+    updateBadge();
+
+    // Abrir modal "Produto Adicionado"
+    mostrarModalProdutoAdicionado((p.emoji||'') + ' ' + nomeProduto);
+  };
+
+  // Pizza tamanho Família acompanha refrigerante — cliente escolhe Fanta ou Kuat
+  if (tam === 'GGG') {
+    abrirModalRefri(['Fanta','Kuat'], 'Escolha o refrigerante', 'A pizza Família acompanha um refrigerante. Qual você prefere?', _finalizarAddCartTam);
+    return;
+  }
+
+  _finalizarAddCartTam(null);
 }
 
 function addCartModaFael() {
@@ -2296,18 +2361,31 @@ function confirmarPizzaSimples() {
   window._pizzaSimPendente = {
     prod: prod,
     tamNome: tamNome,
-    preco: pizzaSimPreco
+    preco: pizzaSimPreco,
+    refri: null
   };
 
   fecharModalPizzaSimples();
 
-  // Passa por acréscimos se houver, usando ID real do produto
-  if (allAcrescimos.length > 0) {
-    // Guarda função de callback pós-acréscimos
-    window._pizzaSimCallback = true;
-    abrirModalAcr(prod.id);
+  var _prosseguirPizzaSimples = function() {
+    // Passa por acréscimos se houver, usando ID real do produto
+    if (allAcrescimos.length > 0) {
+      // Guarda função de callback pós-acréscimos
+      window._pizzaSimCallback = true;
+      abrirModalAcr(prod.id);
+    } else {
+      _adicionarPizzaSimples([]);
+    }
+  };
+
+  // Pizza tamanho Família acompanha refrigerante — cliente escolhe Fanta ou Kuat
+  if (pizzaSimTamanho === 'GGG') {
+    abrirModalRefri(['Fanta','Kuat'], 'Escolha o refrigerante', 'A pizza Família acompanha um refrigerante. Qual você prefere?', function(escolha) {
+      window._pizzaSimPendente.refri = escolha;
+      _prosseguirPizzaSimples();
+    });
   } else {
-    _adicionarPizzaSimples([]);
+    _prosseguirPizzaSimples();
   }
 }
 
@@ -2322,6 +2400,7 @@ function _adicionarPizzaSimples(acrescimos) {
   }
   var nomeCompleto = '🍕 Pizza ' + ctx.tamNome + ' - ' + ctx.prod.name;
   if (nomeAcr) nomeCompleto += ' (+' + nomeAcr + ')';
+  if (ctx.refri) nomeCompleto += ' [🥤 Refrigerante: ' + ctx.refri + ']';
   if (window._pizzaObs) { nomeCompleto += ' [Obs: ' + window._pizzaObs + ']'; window._pizzaObs = null; }
 
   cart.push({
