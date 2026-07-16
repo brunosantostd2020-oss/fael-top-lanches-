@@ -1474,6 +1474,13 @@ function aplicarPizzaTams(jsonStr) {
     }
   } catch(e) {}
 }
+// O tamanho "Família" é sempre o último item de PIZZA_TAMS (por convenção do negócio:
+// G / GG / Família, nessa ordem). Checar contra isso — em vez de comparar com o texto
+// fixo 'GGG' — evita que a pergunta do refrigerante pare de funcionar caso o código do
+// tamanho seja customizado em Admin → Config.
+function _isTamanhoFamilia(cod) {
+  return !!(PIZZA_TAMS && PIZZA_TAMS.length && cod === PIZZA_TAMS[PIZZA_TAMS.length - 1].cod);
+}
 var BAIRROS_GRATIS = ['TAQUARA PRETA','SAO MARCOS','SAO CRISTOVAO'];
 // Confirmado pelo dono: taxa de R$ 5 para TODOS os bairros taxados (as duas listas abaixo)
 var BAIRROS_TAXA5 = ['PARAISO','BOM PASTOR','DICO LEITE','SAO PEDRO','PRIMAVERA','MECA','SANTA CLARA','IBRAIM','CIDADE NOVA','AVENIDA DAS INDUSTRIAS','AV DAS INDUSTRIAS','AVENIDA MANOEL INACIO PEIXOTO','AV MANOEL INACIO PEIXOTO','PONTE SABIA','PONTE DA SABIA','BEIRA RIO'];
@@ -2124,7 +2131,7 @@ function addCartTam(id, tam, preco) {
   if (tam === 'M') tamNome = 'Média';
   if (tam === 'G') tamNome = 'Grande';
   if (tam === 'GG') tamNome = 'Gigante';
-  if (tam === 'GGG') tamNome = 'Tamanho Família';
+  if (_isTamanhoFamilia(tam)) tamNome = 'Tamanho Família';
 
   var _finalizarAddCartTam = function(refri) {
     window._addLock = Date.now();
@@ -2139,7 +2146,7 @@ function addCartTam(id, tam, preco) {
   };
 
   // Pizza tamanho Família acompanha refrigerante — cliente escolhe Fanta ou Kuat
-  if (tam === 'GGG') {
+  if (_isTamanhoFamilia(tam)) {
     abrirModalRefri(['Fanta','Kuat'], 'Escolha o refrigerante', 'A pizza Família acompanha um refrigerante. Qual você prefere?', _finalizarAddCartTam);
     return;
   }
@@ -2355,7 +2362,7 @@ function confirmarPizzaSimples() {
   var tamNome = pizzaSimTamanho;
   if (pizzaSimTamanho === 'G') tamNome = 'Grande';
   if (pizzaSimTamanho === 'GG') tamNome = 'Gigante';
-  if (pizzaSimTamanho === 'GGG') tamNome = 'Tamanho Família';
+  if (_isTamanhoFamilia(pizzaSimTamanho)) tamNome = 'Tamanho Família';
 
   // Salva o contexto da pizza para usar depois dos acréscimos/remoção
   window._pizzaSimPendente = {
@@ -2501,7 +2508,7 @@ function selecionarTamMetade(tam, preco) {
   var tamNome = tam;
   if (tam === 'G') tamNome = 'Grande';
   if (tam === 'GG') tamNome = 'Gigante';
-  if (tam === 'GGG') tamNome = 'Tamanho Família';
+  if (_isTamanhoFamilia(tam)) tamNome = 'Tamanho Família';
   
   document.getElementById('metade-total').textContent = 'R$ ' + preco.toFixed(2).replace('.',',');
   
@@ -2541,7 +2548,7 @@ function confirmarMetadeMetade() {
   var tamNome = metadeTamanho;
   if (metadeTamanho === 'G') tamNome = 'Grande';
   if (metadeTamanho === 'GG') tamNome = 'Gigante';
-  if (metadeTamanho === 'GGG') tamNome = 'Tamanho Família';
+  if (_isTamanhoFamilia(metadeTamanho)) tamNome = 'Tamanho Família';
   
   var nomeCompleto = '🍕 Pizza Metade/Metade (' + tamNome + ') - ' + p1.name + ' + ' + p2.name;
   
