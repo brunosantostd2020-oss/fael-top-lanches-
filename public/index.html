@@ -2224,7 +2224,7 @@ function confirmarAcrescimos() {
   // Se veio da pizza simples, usar callback próprio
   if (window._pizzaSimCallback) {
     window._pizzaObs = obs;
-    _adicionarPizzaSimples(acrs);
+    _finalizarPizzaSimplesComRefri(acrs);
     return;
   }
 
@@ -2367,25 +2367,26 @@ function confirmarPizzaSimples() {
 
   fecharModalPizzaSimples();
 
-  var _prosseguirPizzaSimples = function() {
-    // Passa por acréscimos se houver, usando ID real do produto
-    if (allAcrescimos.length > 0) {
-      // Guarda função de callback pós-acréscimos
-      window._pizzaSimCallback = true;
-      abrirModalAcr(prod.id);
-    } else {
-      _adicionarPizzaSimples([]);
-    }
-  };
+  // Passa por acréscimos se houver, usando ID real do produto
+  if (allAcrescimos.length > 0) {
+    // Guarda função de callback pós-acréscimos
+    window._pizzaSimCallback = true;
+    abrirModalAcr(prod.id);
+  } else {
+    _finalizarPizzaSimplesComRefri([]);
+  }
+}
 
-  // Pizza tamanho Família acompanha refrigerante — cliente escolhe Fanta ou Kuat
+// Após o modal de acréscimos (ou direto, se não houver acréscimos): se for tamanho
+// Família, pergunta o refrigerante (Fanta ou Kuat) antes de adicionar ao carrinho.
+function _finalizarPizzaSimplesComRefri(acrs) {
   if (pizzaSimTamanho === 'GGG') {
     abrirModalRefri(['Fanta','Kuat'], 'Escolha o refrigerante', 'A pizza Família acompanha um refrigerante. Qual você prefere?', function(escolha) {
       window._pizzaSimPendente.refri = escolha;
-      _prosseguirPizzaSimples();
+      _adicionarPizzaSimples(acrs);
     });
   } else {
-    _prosseguirPizzaSimples();
+    _adicionarPizzaSimples(acrs);
   }
 }
 
