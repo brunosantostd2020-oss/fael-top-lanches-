@@ -2060,6 +2060,16 @@ function addCart(id) {
   var p = allProducts.filter(function(x){return x.id===id;})[0];
   if (!p) return;
 
+  // Pizza de sabor comum (ex: encontrada pela busca do cardápio) — precisa passar
+  // pelo modal de tamanho/sabor para o nome e o preço saírem corretos
+  // (ex: "🍕 Pizza Grande - Frango Catupiry"), em vez de adicionar direto com
+  // o nome cru do produto e o preço base errado.
+  if (p.category === 'pizzas' && p.name.toLowerCase().indexOf('moda do fael') < 0) {
+    window._addLock = 0; // libera o lock: abrir o modal não conta como "adicionar"
+    abrirModalPizzaSimplesComSabor(id);
+    return;
+  }
+
   // Pizza Moda do Fael acompanha refrigerante — cliente escolhe Fanta ou Coca-Cola
   var isModaFael = p.category === 'moda_fael' || (p.category === 'pizzas' && p.name.toLowerCase().indexOf('moda do fael') >= 0);
   if (isModaFael) {
@@ -2300,6 +2310,13 @@ function _montarGradeSabores(containerId, fnNome) {
     html += '</button>';
   }
   el.innerHTML = html;
+}
+
+// Abre o modal de tamanho/sabor já com o sabor pré-selecionado — usado quando
+// a pizza é adicionada fora do card de tamanho (ex: pelo campo de busca do cardápio)
+function abrirModalPizzaSimplesComSabor(saborId) {
+  abrirModalPizzaSimples();
+  togglePizzaSimSabor(saborId);
 }
 
 function abrirModalPizzaSimples() {
